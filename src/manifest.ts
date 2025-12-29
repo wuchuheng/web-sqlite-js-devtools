@@ -34,13 +34,16 @@ export default defineManifest({
   side_panel: {
     default_path: 'sidepanel.html',
   },
+  content_security_policy: {
+    extension_pages: "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';",
+  },
   web_accessible_resources: [
     {
-      resources: ['img/logo-16.png', 'img/logo-32.png', 'img/logo-48.png', 'img/logo-128.png'],
-      matches: [],
-    },
+      resources: ['img/logo-16.png', 'img/logo-32.png', 'img/logo-48.png', 'img/logo-128.png', 'offscreen.html'],
+      matches: ['<all_urls>'],
+    }
   ],
-  permissions: ['sidePanel', 'storage'],
+  permissions: ['sidePanel', 'storage', 'offscreen'],
   chrome_url_overrides: {
     newtab: 'newtab.html',
   },
