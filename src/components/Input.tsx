@@ -9,7 +9,7 @@ export const Switch: React.FC<SwitchProps> = ({ enabled, onChange }) => {
         type="checkbox"
         className="peer sr-only"
         checked={enabled}
-        onChange={event => onChange(event.target.checked)}
+        onChange={(event) => onChange(event.target.checked)}
       />
       <div className="h-5 w-9 rounded-full bg-gray-200 transition peer-checked:bg-blue-500" />
       <div className="absolute left-1 top-1 h-3 w-3 rounded-full bg-white transition peer-checked:translate-x-4" />

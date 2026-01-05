@@ -1,13 +1,15 @@
-import React from 'react';
-import { createRoot, type Root } from 'react-dom/client';
+import React from "react";
+import { createRoot, type Root } from "react-dom/client";
 
 type InlinePosition =
-  | 'beforebegin' // before the element itself
-  | 'afterend' // after the element itself
-  | 'afterbegin' // just inside the element, before its first child
-  | 'beforeend'; // just inside the element, after its last child
+  | "beforebegin" // before the element itself
+  | "afterend" // after the element itself
+  | "afterbegin" // just inside the element, before its first child
+  | "beforeend"; // just inside the element, after its last child
 
-type MountType = { type: 'overlay' } | { type: 'inline'; position: InlinePosition };
+type MountType =
+  | { type: "overlay" }
+  | { type: "inline"; position: InlinePosition };
 
 type AnchorGetter = () => Promise<Element[] | NodeListOf<Element> | undefined>;
 
@@ -40,15 +42,26 @@ export function mountAnchoredUI(args: MountAnchoredUIArgs) {
   const run = async () => {
     try {
       const anchors = await resolveAnchors(args.anchor);
+
+      const mountedEntries = Array.from(mounted.entries());
+      for (const [anchor, record] of mountedEntries) {
+        if (!anchors?.includes(anchor)) {
+          record.root.unmount();
+          record.host.remove();
+          mounted.delete(anchor);
+        }
+      }
+
       if (!anchors || anchors.length === 0) return;
 
-      anchors.forEach(anchor => {
+      anchors.forEach((anchor) => {
         if (mounted.has(anchor)) return;
+        if (args.hostId && document.getElementById(args.hostId)) return;
         const record = mountOnAnchor(anchor, args);
         mounted.set(anchor, record);
       });
     } catch (error) {
-      console.error('mountAnchoredUI anchor error', error);
+      console.error("mountAnchoredUI anchor error", error);
     }
   };
 
@@ -61,18 +74,30 @@ export function mountAnchoredUI(args: MountAnchoredUIArgs) {
     }, debounceMs);
   });
 
-  observer.observe(document.documentElement, { childList: true, subtree: true });
+  observer.observe(document.documentElement, {
+    childList: true,
+    subtree: true,
+  });
+
+  window.addEventListener("popstate", () => {
+    if (debounceHandle) window.clearTimeout(debounceHandle);
+    void run().catch(console.error);
+  });
 }
 
-async function resolveAnchors(getter: AnchorGetter): Promise<Element[] | undefined> {
+async function resolveAnchors(
+  getter: AnchorGetter,
+): Promise<Element[] | undefined> {
   const result = await getter();
   if (!result) return undefined;
   const raw = Array.from(result);
-  const filtered = raw.filter(el => !el.hasAttribute('data-extension-shadow-host'));
+  const filtered = raw.filter(
+    (el) => !el.hasAttribute("data-extension-shadow-host"),
+  );
   // Deduplicate while preserving order
   const seen = new Set<Element>();
   const unique: Element[] = [];
-  filtered.forEach(el => {
+  filtered.forEach((el) => {
     if (!seen.has(el)) {
       seen.add(el);
       unique.push(el);
@@ -81,48 +106,55 @@ async function resolveAnchors(getter: AnchorGetter): Promise<Element[] | undefin
   return unique;
 }
 
-function mountOnAnchor(anchor: Element, args: MountAnchoredUIArgs): MountRecord {
-  const host = document.createElement('div');
+function mountOnAnchor(
+  anchor: Element,
+  args: MountAnchoredUIArgs,
+): MountRecord {
+  const host = document.createElement("div");
   const hostId = args.hostId ?? generateHostId();
   host.id = hostId;
-  host.setAttribute('data-extension-shadow-host', 'true');
-  host.style.all = 'initial';
+  host.setAttribute("data-extension-shadow-host", "true");
+  host.style.all = "initial";
 
   placeHost(anchor, host, args.mountType);
 
-  const shadowRoot = host.shadowRoot ?? host.attachShadow({ mode: 'open' });
+  const shadowRoot = host.shadowRoot ?? host.attachShadow({ mode: "open" });
   applyStyles(shadowRoot, args.style);
 
-  const existingContainer = shadowRoot.querySelector<HTMLElement>('[data-extension-react-root]');
-  const container = existingContainer ?? document.createElement('div');
+  const existingContainer = shadowRoot.querySelector<HTMLElement>(
+    "[data-extension-react-root]",
+  );
+  const container = existingContainer ?? document.createElement("div");
   if (!existingContainer) {
-    container.dataset.extensionReactRoot = 'true';
+    container.dataset.extensionReactRoot = "true";
     shadowRoot.appendChild(container);
   }
 
   const root = createRoot(container);
-  root.render(<React.StrictMode>{args.component()}</React.StrictMode>);
+  root.render(args.component());
 
   return { anchor, host, container, shadowRoot, root };
 }
 
 function placeHost(anchor: Element, host: HTMLElement, mountType: MountType) {
-  if (mountType.type === 'overlay') {
-    host.style.position = 'relative';
-    host.style.zIndex = '2147483647';
+  if (mountType.type === "overlay") {
+    host.style.position = "relative";
+    host.style.zIndex = "2147483647";
     document.body.appendChild(host);
     return;
   }
 
-  const position: InlinePosition = mountType.position ?? 'afterend';
+  const position: InlinePosition = mountType.position ?? "afterend";
   anchor.insertAdjacentElement(position, host);
 }
 
 function applyStyles(shadowRoot: ShadowRoot, cssText: string) {
-  const adoptedStyleSheets = (shadowRoot as ShadowRoot & { adoptedStyleSheets?: CSSStyleSheet[] })
-    .adoptedStyleSheets;
+  const adoptedStyleSheets = (
+    shadowRoot as ShadowRoot & { adoptedStyleSheets?: CSSStyleSheet[] }
+  ).adoptedStyleSheets;
   const supportsAdopted =
-    Array.isArray(adoptedStyleSheets) && 'replaceSync' in CSSStyleSheet.prototype;
+    Array.isArray(adoptedStyleSheets)
+    && "replaceSync" in CSSStyleSheet.prototype;
 
   if (supportsAdopted) {
     const currentSheets = adoptedStyleSheets ?? [];
@@ -139,11 +171,13 @@ function applyStyles(shadowRoot: ShadowRoot, cssText: string) {
     return;
   }
 
-  const existingStyle = shadowRoot.querySelector('style[data-extension-style="true"]');
+  const existingStyle = shadowRoot.querySelector(
+    'style[data-extension-style="true"]',
+  );
   if (existingStyle) return;
 
-  const styleEl = document.createElement('style');
-  styleEl.setAttribute('data-extension-style', 'true');
+  const styleEl = document.createElement("style");
+  styleEl.setAttribute("data-extension-style", "true");
   styleEl.textContent = cssText;
   shadowRoot.appendChild(styleEl);
 }

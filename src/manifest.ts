@@ -1,50 +1,56 @@
-import { defineManifest } from '@crxjs/vite-plugin'
-import packageData from '../package.json'
+import { defineManifest } from "@crxjs/vite-plugin";
+import packageData from "../package.json";
 
 //@ts-ignore
-const isDev = process.env.NODE_ENV == 'development'
+const isDev = process.env.NODE_ENV == "development";
 
 export default defineManifest({
-  name: `${packageData.displayName || packageData.name}${isDev ? ` ➡️ Dev` : ''}`,
+  name: `${packageData.displayName || packageData.name}${isDev ? ` ➡️ Dev` : ""}`,
   description: packageData.description,
   version: packageData.version,
   manifest_version: 3,
   icons: {
-    16: 'img/logo-16.png',
-    32: 'img/logo-32.png',
-    48: 'img/logo-48.png',
-    128: 'img/logo-128.png',
+    16: "img/logo-16.png",
+    32: "img/logo-32.png",
+    48: "img/logo-48.png",
+    128: "img/logo-128.png",
   },
   action: {
-    default_popup: 'popup.html',
-    default_icon: 'img/logo-48.png',
+    default_popup: "popup.html",
+    default_icon: "img/logo-48.png",
   },
-  options_page: 'options.html',
-  devtools_page: 'devtools.html',
+  options_page: "options.html",
+  devtools_page: "devtools.html",
   background: {
-    service_worker: 'src/background/index.ts',
-    type: 'module',
+    service_worker: "src/background/index.ts",
+    type: "module",
   },
   content_scripts: [
     {
-      matches: ['http://*/*', 'https://*/*'],
-      js: ['src/contentScript/index.tsx'],
+      matches: ["http://*/*", "https://*/*"],
+      js: ["src/contentScript/index.tsx"],
     },
   ],
   side_panel: {
-    default_path: 'sidepanel.html',
+    default_path: "sidepanel.html",
   },
   content_security_policy: {
     extension_pages: "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';",
   },
   web_accessible_resources: [
     {
-      resources: ['img/logo-16.png', 'img/logo-32.png', 'img/logo-48.png', 'img/logo-128.png', 'offscreen.html'],
-      matches: ['<all_urls>'],
-    }
+      resources: [
+        "img/logo-16.png",
+        "img/logo-32.png",
+        "img/logo-48.png",
+        "img/logo-128.png",
+        "offscreen.html",
+      ],
+      matches: ["<all_urls>"],
+    },
   ],
-  permissions: ['sidePanel', 'storage', 'offscreen'],
+  permissions: ["sidePanel", "storage", "offscreen"],
   chrome_url_overrides: {
-    newtab: 'newtab.html',
+    newtab: "newtab.html",
   },
-})
+});

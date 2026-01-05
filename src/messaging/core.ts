@@ -10,7 +10,7 @@ type Handler<Req, Res> = (request: Req) => Promise<Res> | Res;
  * Wire message format (requests, responses, registration)
  */
 interface WireMessage {
-  type: 'request' | 'response' | 'register' | 'unregister';
+  type: "request" | "response" | "register" | "unregister";
   channel: string;
   id?: string;
   payload?: unknown;
@@ -31,7 +31,8 @@ const canceledChannels = new Set<string>();
  */
 const isBackground = (): boolean => {
   return (
-    typeof ServiceWorkerGlobalScope !== 'undefined' && self instanceof ServiceWorkerGlobalScope
+    typeof ServiceWorkerGlobalScope !== "undefined"
+    && self instanceof ServiceWorkerGlobalScope
   );
 };
 
@@ -52,21 +53,23 @@ export function defineChannel<Req, Res>(channelName: string) {
 
     return chrome.runtime
       .sendMessage({
-        type: 'request',
+        type: "request",
         channel: channelName,
         id,
         payload,
       } as WireMessage)
-      .then(response => {
+      .then((response) => {
         const msg = response as WireMessage;
         if (chrome.runtime.lastError) {
           throw new Error(chrome.runtime.lastError.message);
         }
         if (!msg) {
-          throw new Error('No response received (receiver might not have called sendResponse)');
+          throw new Error(
+            "No response received (receiver might not have called sendResponse)",
+          );
         }
         if (msg.success === false) {
-          throw new Error(msg.error ?? 'Messaging error');
+          throw new Error(msg.error ?? "Messaging error");
         }
         return msg.payload as Res;
       });
@@ -82,8 +85,8 @@ export function defineChannel<Req, Res>(channelName: string) {
   const on = (handler: Handler<Req, Res>): (() => void) => {
     if (localHandlers.has(channelName)) {
       throw new Error(
-        `Channel "${channelName}" already has a handler. ` +
-          `Only one handler per channel is allowed.`
+        `Channel "${channelName}" already has a handler. `
+          + `Only one handler per channel is allowed.`,
       );
     }
 
@@ -91,7 +94,10 @@ export function defineChannel<Req, Res>(channelName: string) {
 
     if (isBackground()) {
       // Background: store handler locally
-      localHandlers.set(channelName, handler as unknown as Handler<unknown, unknown>);
+      localHandlers.set(
+        channelName,
+        handler as unknown as Handler<unknown, unknown>,
+      );
       handledChannels.add(channelName);
       // If it was previously canceled, remove from canceled set
       canceledChannels.delete(channelName);
@@ -108,30 +114,30 @@ export function defineChannel<Req, Res>(channelName: string) {
       const listener = (
         message: unknown,
         _sender: chrome.runtime.MessageSender,
-        sendResponse: (response?: unknown) => void
+        sendResponse: (response?: unknown) => void,
       ) => {
         const msg = message as WireMessage;
-        if (msg.type !== 'request' || msg.channel !== channelName) return false;
+        if (msg.type !== "request" || msg.channel !== channelName) return false;
 
         Promise.resolve()
           .then(() => handler(msg.payload as Req))
-          .then(result =>
+          .then((result) =>
             sendResponse({
-              type: 'response',
+              type: "response",
               channel: channelName,
               id: msg.id,
               success: true,
               payload: result,
-            })
+            }),
           )
-          .catch(err =>
+          .catch((err) =>
             sendResponse({
-              type: 'response',
+              type: "response",
               channel: channelName,
               id: msg.id,
               success: false,
               error: err instanceof Error ? err.message : String(err),
-            })
+            }),
           );
 
         return true;
@@ -142,11 +148,14 @@ export function defineChannel<Req, Res>(channelName: string) {
       // Register with background
       chrome.runtime
         .sendMessage<WireMessage>({
-          type: 'register',
+          type: "register",
           channel: channelName,
         })
-        .catch(err => {
-          console.warn(`Failed to register "${channelName}" with background:`, err);
+        .catch((err) => {
+          console.warn(
+            `Failed to register "${channelName}" with background:`,
+            err,
+          );
         });
 
       cancel = () => {
@@ -156,10 +165,12 @@ export function defineChannel<Req, Res>(channelName: string) {
         // Notify background of unregistration
         chrome.runtime
           .sendMessage<WireMessage>({
-            type: 'unregister',
+            type: "unregister",
             channel: channelName,
           })
-          .catch(err => console.warn(`Failed to unregister "${channelName}":`, err));
+          .catch((err) =>
+            console.warn(`Failed to unregister "${channelName}":`, err),
+          );
       };
     }
 
@@ -205,20 +216,20 @@ export function initRouter(options: RouterOptions = {}) {
     debug: debug ? globalThis.console.debug.bind(globalThis.console) : () => {},
   };
 
-  console.log('[Messaging] Router initialized');
+  console.log("[Messaging] Router initialized");
 
   chrome.runtime.onMessage.addListener(
     (
       message: unknown,
       sender: chrome.runtime.MessageSender,
-      sendResponse: (response?: unknown) => void
+      sendResponse: (response?: unknown) => void,
     ) => {
       const msg = message as WireMessage;
 
-      console.log('[Messaging] Received:', msg, 'from', sender);
+      console.log("[Messaging] Received:", msg, "from", sender);
 
       // Handle handler registration from non-background pages
-      if (msg.type === 'register' && msg.channel) {
+      if (msg.type === "register" && msg.channel) {
         console.log(`[Messaging] Registering channel: ${msg.channel}`);
         handledChannels.add(msg.channel);
         canceledChannels.delete(msg.channel);
@@ -226,7 +237,7 @@ export function initRouter(options: RouterOptions = {}) {
       }
 
       // Handle handler unregistration from non-background pages
-      if (msg.type === 'unregister' && msg.channel) {
+      if (msg.type === "unregister" && msg.channel) {
         console.log(`[Messaging] Unregistering channel: ${msg.channel}`);
         handledChannels.delete(msg.channel);
         canceledChannels.add(msg.channel);
@@ -234,7 +245,7 @@ export function initRouter(options: RouterOptions = {}) {
       }
 
       // Ignore invalid messages
-      if (msg.type !== 'request' || !msg.id || !msg.channel) return false;
+      if (msg.type !== "request" || !msg.id || !msg.channel) return false;
 
       const channel = msg.channel;
 
@@ -245,23 +256,23 @@ export function initRouter(options: RouterOptions = {}) {
 
         Promise.resolve()
           .then(() => handler(msg.payload))
-          .then(result =>
+          .then((result) =>
             sendResponse({
-              type: 'response',
+              type: "response",
               channel,
               id: msg.id,
               success: true,
               payload: result,
-            })
+            }),
           )
-          .catch(err =>
+          .catch((err) =>
             sendResponse({
-              type: 'response',
+              type: "response",
               channel,
               id: msg.id,
               success: false,
               error: err instanceof Error ? err.message : String(err),
-            })
+            }),
           );
 
         return true;
@@ -271,7 +282,7 @@ export function initRouter(options: RouterOptions = {}) {
       if (canceledChannels.has(channel)) {
         console.warn(`[Messaging] Channel canceled: ${channel}`);
         sendResponse({
-          type: 'response',
+          type: "response",
           channel,
           id: msg.id,
           success: false,
@@ -284,13 +295,13 @@ export function initRouter(options: RouterOptions = {}) {
       if (!handledChannels.has(channel)) {
         console.warn(`[Messaging] No handler for: ${channel}`);
         sendResponse({
-          type: 'response',
+          type: "response",
           channel,
           id: msg.id,
           success: false,
           error:
-            `No handler registered for channel "${channel}". ` +
-            `Call .on() in the appropriate context (background/offscreen/content/popup/etc).`,
+            `No handler registered for channel "${channel}". `
+            + `Call .on() in the appropriate context (background/offscreen/content/popup/etc).`,
         });
         return true;
       }
@@ -299,18 +310,18 @@ export function initRouter(options: RouterOptions = {}) {
       console.log(`[Messaging] Forwarding: ${channel}`);
       chrome.runtime
         .sendMessage(msg)
-        .then(response => sendResponse(response))
-        .catch(err =>
+        .then((response) => sendResponse(response))
+        .catch((err) =>
           sendResponse({
-            type: 'response',
+            type: "response",
             channel,
             id: msg.id,
             success: false,
             error: err.message || String(err),
-          })
+          }),
         );
 
       return true;
-    }
+    },
   );
 }

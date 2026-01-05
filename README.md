@@ -121,40 +121,40 @@ flowchart LR
 Overlay (body):
 
 ```tsx
-import HelloInCSUI from '@/components/HelloInCSUI'
-import styles from './style.css?inline'
-import { mountAnchoredUI } from '../utils/anchor-mounter'
+import HelloInCSUI from "@/components/HelloInCSUI";
+import styles from "./style.css?inline";
+import { mountAnchoredUI } from "../utils/anchor-mounter";
 
 void mountAnchoredUI({
   anchor: async () => [document.body],
-  mountType: { type: 'overlay' },
+  mountType: { type: "overlay" },
   component: () => <HelloInCSUI name="hello-world" />,
   style: styles,
-  hostId: 'extension-content-root',
-})
+  hostId: "extension-content-root",
+});
 ```
 
 Inline (next to specific elements):
 
 ```tsx
 void mountAnchoredUI({
-  anchor: async () => document.querySelectorAll('.product-card'),
-  mountType: { type: 'inline', position: 'afterend' },
+  anchor: async () => document.querySelectorAll(".product-card"),
+  mountType: { type: "inline", position: "afterend" },
   component: () => <HelloInCSUI name="inline-demo" />,
   style: styles,
-  hostId: 'extension-inline-root',
-})
+  hostId: "extension-inline-root",
+});
 ```
 
 Inline (first child inside target):
 
 ```tsx
 void mountAnchoredUI({
-  anchor: async () => document.querySelectorAll('#pricing'),
-  mountType: { type: 'inline', position: 'afterbegin' },
+  anchor: async () => document.querySelectorAll("#pricing"),
+  mountType: { type: "inline", position: "afterbegin" },
   component: () => <HelloInCSUI name="inline-inside" />,
   style: styles,
-})
+});
 ```
 
 - The helper debounces DOM mutations (500ms default) and only mounts new anchors to avoid loops when injecting inline.
@@ -200,45 +200,47 @@ sequenceDiagram
 1. **Initialize the router** in your background script (`src/background/index.ts`):
 
 ```typescript
-import { initRouter } from '@/messaging/core'
+import { initRouter } from "@/messaging/core";
 
 // Must be called once in the background context
-initRouter({ debug: true })
+initRouter({ debug: true });
 ```
 
 2. **Define a channel** in `src/messaging/channels.ts`:
 
 ```typescript
-import { defineChannel } from './core'
+import { defineChannel } from "./core";
 
 // Define <RequestType, ResponseType>
 // Recommendation: use 'sourceToTarget' naming convention
-export const myDataChannel = defineChannel<{ id: string }, { status: string }>('myDataChannel')
+export const myDataChannel = defineChannel<{ id: string }, { status: string }>(
+  "myDataChannel",
+);
 ```
 
 3. **Register a handler** in the receiving context (e.g., Popup or Background):
 
 ```typescript
-import { myDataChannel } from '@/messaging/channels'
+import { myDataChannel } from "@/messaging/channels";
 
 // Returns a cancel function to unregister
 const cancel = myDataChannel.on(async (req) => {
-  console.log('Received request:', req.id)
-  return { status: 'success' }
-})
+  console.log("Received request:", req.id);
+  return { status: "success" };
+});
 ```
 
 4. **Send a message** from any context:
 
 ```typescript
-import { myDataChannel } from '@/messaging/channels'
+import { myDataChannel } from "@/messaging/channels";
 
 try {
-  const response = await myDataChannel.send({ id: '123' })
-  console.log('Response status:', response.status)
+  const response = await myDataChannel.send({ id: "123" });
+  console.log("Response status:", response.status);
 } catch (err) {
   // Descriptive errors for: no handler, channel canceled, or handler error
-  console.error(err)
+  console.error(err);
 }
 ```
 

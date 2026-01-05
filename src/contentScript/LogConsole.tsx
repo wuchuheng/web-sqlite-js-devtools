@@ -1,13 +1,13 @@
-import { useRef, useLayoutEffect } from 'react';
-import { useLogContext } from './LogContext';
-import clsx from 'clsx';
-import type { LogLevel } from '@/types/logging';
+import { useRef, useLayoutEffect } from "react";
+import { useLogContext } from "./LogContext";
+import clsx from "clsx";
+import type { LogLevel } from "@/types/logging";
 
 const ICONS: Record<LogLevel, string> = {
-  info: '📄',
-  success: '✅',
-  warn: '⚠️',
-  error: '❌',
+  info: "📄",
+  success: "✅",
+  warn: "⚠️",
+  error: "❌",
 };
 
 export default function LogConsole() {
@@ -51,26 +51,32 @@ export default function LogConsole() {
           </div>
         )}
 
-        {logs.map(log => (
+        {logs.map((log) => (
           <div
             key={log.id}
             className={clsx(
-              'group flex items-start gap-2 p-2 rounded-md text-sm border shadow-sm animate-entry',
+              "group flex items-start gap-2 p-2 rounded-md text-sm border shadow-sm animate-entry",
               {
-                'bg-red-50 border-red-100 text-red-900': log.level === 'error',
-                'bg-amber-50 border-amber-100 text-amber-900': log.level === 'warn',
-                'bg-green-50 border-green-100 text-green-900': log.level === 'success',
-                'bg-white border-gray-100 text-gray-700': log.level === 'info',
-              }
+                "bg-red-50 border-red-100 text-red-900": log.level === "error",
+                "bg-amber-50 border-amber-100 text-amber-900":
+                  log.level === "warn",
+                "bg-green-50 border-green-100 text-green-900":
+                  log.level === "success",
+                "bg-white border-gray-100 text-gray-700": log.level === "info",
+              },
             )}
           >
-            <span className="flex-shrink-0 mt-0.5 select-none" role="img" aria-label={log.level}>
+            <span
+              className="flex-shrink-0 mt-0.5 select-none"
+              role="img"
+              aria-label={log.level}
+            >
               {ICONS[log.level]}
             </span>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-0.5">
                 <span className="text-[10px] font-mono text-gray-400">
-                  {log.timestamp.split(' ')[1] || log.timestamp}
+                  {log.timestamp.split(" ")[1] || log.timestamp}
                 </span>
                 {log.agentId && (
                   <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-black/5 text-black/60">
@@ -83,7 +89,11 @@ export default function LogConsole() {
           </div>
         ))}
 
-        {isLoading && <div className="text-center py-2 text-xs text-gray-400">Loading...</div>}
+        {isLoading && (
+          <div className="text-center py-2 text-xs text-gray-400">
+            Loading...
+          </div>
+        )}
       </div>
     </div>
   );

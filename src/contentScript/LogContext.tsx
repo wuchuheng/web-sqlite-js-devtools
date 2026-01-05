@@ -1,6 +1,12 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import type { LogEntry, LogLevel, LogPagination } from '@/types/logging';
-import { logAdd, logGet, logMeta, logClear } from '@/messaging/channels';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
+import type { LogEntry, LogLevel, LogPagination } from "@/types/logging";
+import { logAdd, logGet, logMeta, logClear } from "@/messaging/channels";
 
 interface LogContextType {
   logs: LogEntry[];
@@ -17,12 +23,14 @@ const LogContext = createContext<LogContextType | undefined>(undefined);
 export const useLogContext = () => {
   const context = useContext(LogContext);
   if (!context) {
-    throw new Error('useLogContext must be used within a LogProvider');
+    throw new Error("useLogContext must be used within a LogProvider");
   }
   return context;
 };
 
-export const LogProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const LogProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [totalLogs, setTotalLogs] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -34,7 +42,7 @@ export const LogProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const { total } = await logMeta.send({});
       setTotalLogs(total);
     } catch (error) {
-      console.error('Failed to fetch log metadata', error);
+      console.error("Failed to fetch log metadata", error);
     }
   }, []);
 
@@ -52,26 +60,26 @@ export const LogProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setTotalLogs(metaResp.total);
         setOffset(reqOffset);
       } catch (error) {
-        console.error('Failed to fetch logs', error);
+        console.error("Failed to fetch logs", error);
       } finally {
         setIsLoading(false);
       }
     },
-    [limit]
+    [limit],
   );
 
   const addLog = useCallback(
     async (level: LogLevel, message: string, agentId?: string) => {
       const timestamp = new Date()
-        .toLocaleString('sv-SE', {
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
+        .toLocaleString("sv-SE", {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
         })
-        .replace(' ', ' '); // Format: YYYY-MM-DD HH:mm:ss
+        .replace(" ", " "); // Format: YYYY-MM-DD HH:mm:ss
 
       try {
         // 1. Send to background (which routes to offscreen)
@@ -86,10 +94,10 @@ export const LogProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           setLogs(newLogs);
         }
       } catch (error) {
-        console.error('Failed to add log', error);
+        console.error("Failed to add log", error);
       }
     },
-    [offset, fetchMeta]
+    [offset, fetchMeta],
   );
 
   const clearLogs = useCallback(async () => {
@@ -99,7 +107,7 @@ export const LogProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setTotalLogs(0);
       setOffset(0);
     } catch (error) {
-      console.error('Failed to clear logs', error);
+      console.error("Failed to clear logs", error);
     }
   }, []);
 

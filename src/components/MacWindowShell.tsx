@@ -1,7 +1,7 @@
-import type React from 'react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import type React from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-type WindowState = 'normal' | 'maximized' | 'minimized';
+type WindowState = "normal" | "maximized" | "minimized";
 
 type ShellState = {
   windowState: WindowState;
@@ -19,14 +19,14 @@ type DragMeta = {
 };
 
 type ResizeDirection =
-  | 'right'
-  | 'left'
-  | 'top'
-  | 'bottom'
-  | 'top-left'
-  | 'top-right'
-  | 'bottom-left'
-  | 'bottom-right';
+  | "right"
+  | "left"
+  | "top"
+  | "bottom"
+  | "top-left"
+  | "top-right"
+  | "bottom-left"
+  | "bottom-right";
 
 type ResizeMeta = {
   startX: number;
@@ -55,7 +55,7 @@ type MacWindowShellProps = {
   storageKey: string;
 };
 
-type TrafficLightVariant = 'close' | 'minimize' | 'maximize';
+type TrafficLightVariant = "close" | "minimize" | "maximize";
 
 const PADDING = 12;
 const DEFAULT_SIZE = { width: 340 * 2, height: 240 * 3 } as const;
@@ -65,13 +65,25 @@ const trafficLightStyles: Record<
   TrafficLightVariant,
   { bg: string; border: string; ring: string }
 > = {
-  close: { bg: 'bg-red-500', border: 'border-red-300', ring: 'focus:ring-red-400' },
-  minimize: { bg: 'bg-yellow-400', border: 'border-yellow-300', ring: 'focus:ring-yellow-300' },
-  maximize: { bg: 'bg-green-500', border: 'border-green-300', ring: 'focus:ring-green-300' },
+  close: {
+    bg: "bg-red-500",
+    border: "border-red-300",
+    ring: "focus:ring-red-400",
+  },
+  minimize: {
+    bg: "bg-yellow-400",
+    border: "border-yellow-300",
+    ring: "focus:ring-yellow-300",
+  },
+  maximize: {
+    bg: "bg-green-500",
+    border: "border-green-300",
+    ring: "focus:ring-green-300",
+  },
 };
 
 const getViewport = () => {
-  if (typeof window === 'undefined') {
+  if (typeof window === "undefined") {
     return { width: 1024, height: 768 };
   }
   return { width: window.innerWidth, height: window.innerHeight };
@@ -79,7 +91,7 @@ const getViewport = () => {
 
 const clampPosition = (
   position: { x: number; y: number },
-  size: { width: number; height: number }
+  size: { width: number; height: number },
 ) => {
   const { width, height } = getViewport();
   const maxX = Math.max(width - size.width - PADDING, PADDING);
@@ -91,7 +103,10 @@ const clampPosition = (
   };
 };
 
-const clampSize = (size: { width: number; height: number }, position: { x: number; y: number }) => {
+const clampSize = (
+  size: { width: number; height: number },
+  position: { x: number; y: number },
+) => {
   const { width, height } = getViewport();
   const maxWidth = Math.max(MIN_SIZE.width, width - position.x - PADDING);
   const maxHeight = Math.max(MIN_SIZE.height, height - position.y - PADDING);
@@ -115,13 +130,13 @@ const getDefaultPosition = () => {
 
 const readPersistedShellState = (storageKey: string): ShellState => {
   const fallback: ShellState = {
-    windowState: 'normal',
+    windowState: "normal",
     isClosed: false,
     position: getDefaultPosition(),
     size: DEFAULT_SIZE,
   };
 
-  if (typeof window === 'undefined') {
+  if (typeof window === "undefined") {
     return fallback;
   }
 
@@ -130,23 +145,25 @@ const readPersistedShellState = (storageKey: string): ShellState => {
     if (!raw) return fallback;
 
     const parsed = JSON.parse(raw) as Partial<ShellState>;
-    if (!parsed || typeof parsed !== 'object') return fallback;
+    if (!parsed || typeof parsed !== "object") return fallback;
 
     const windowState: WindowState =
-      parsed.windowState === 'maximized' || parsed.windowState === 'minimized'
+      parsed.windowState === "maximized" || parsed.windowState === "minimized"
         ? parsed.windowState
-        : 'normal';
+        : "normal";
 
     const isClosed = Boolean(parsed.isClosed);
     const position =
-      parsed.position &&
-      typeof parsed.position.x === 'number' &&
-      typeof parsed.position.y === 'number'
+      parsed.position
+      && typeof parsed.position.x === "number"
+      && typeof parsed.position.y === "number"
         ? parsed.position
         : getDefaultPosition();
 
     const rawSize =
-      parsed.size && typeof parsed.size.width === 'number' && typeof parsed.size.height === 'number'
+      parsed.size
+      && typeof parsed.size.width === "number"
+      && typeof parsed.size.height === "number"
         ? { width: parsed.size.width, height: parsed.size.height }
         : DEFAULT_SIZE;
 
@@ -165,7 +182,7 @@ const readPersistedShellState = (storageKey: string): ShellState => {
 };
 
 const persistShellState = (storageKey: string, state: ShellState) => {
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(storageKey, JSON.stringify(state));
   } catch {
@@ -205,18 +222,22 @@ const Toolbar = ({
 }: ToolbarProps) => (
   <div
     className={`flex items-center gap-3 border-b border-gray-100 px-4 py-3 ${
-      windowState === 'normal' ? 'cursor-move select-none' : ''
+      windowState === "normal" ? "cursor-move select-none" : ""
     }`}
     onPointerDown={onPointerDown}
     onDoubleClick={onDoubleClick}
   >
     <div className="flex items-center gap-2">
       <TrafficLightButton variant="close" label="Close" onClick={onClose} />
-      <TrafficLightButton variant="minimize" label="Minimize" onClick={onMinimize} />
+      <TrafficLightButton
+        variant="minimize"
+        label="Minimize"
+        onClick={onMinimize}
+      />
       <TrafficLightButton
         variant="maximize"
-        label={windowState === 'maximized' ? 'Normal' : 'Maximize'}
-        onClick={windowState === 'maximized' ? onRestore : onMaximize}
+        label={windowState === "maximized" ? "Normal" : "Maximize"}
+        onClick={windowState === "maximized" ? onRestore : onMaximize}
       />
     </div>
 
@@ -253,18 +274,18 @@ const ResizeHandle = ({
 }: {
   direction: ResizeDirection;
   onPointerDown: (
-    direction: ResizeDirection
+    direction: ResizeDirection,
   ) => (event: React.PointerEvent<HTMLDivElement>) => void;
 }) => {
   const directionClasses: Record<ResizeDirection, string> = {
-    right: 'right-0 top-2 bottom-2 w-2 cursor-ew-resize',
-    left: 'left-0 top-2 bottom-2 w-2 cursor-ew-resize',
-    top: 'top-0 left-2 right-2 h-2 cursor-ns-resize',
-    bottom: 'bottom-0 left-2 right-2 h-2 cursor-ns-resize',
-    'top-left': 'top-0 left-0 h-4 w-4 cursor-nwse-resize',
-    'top-right': 'top-0 right-0 h-4 w-4 cursor-nesw-resize',
-    'bottom-left': 'bottom-0 left-0 h-4 w-4 cursor-nesw-resize',
-    'bottom-right': 'bottom-0 right-0 h-4 w-4 cursor-nwse-resize',
+    right: "right-0 top-2 bottom-2 w-2 cursor-ew-resize",
+    left: "left-0 top-2 bottom-2 w-2 cursor-ew-resize",
+    top: "top-0 left-2 right-2 h-2 cursor-ns-resize",
+    bottom: "bottom-0 left-2 right-2 h-2 cursor-ns-resize",
+    "top-left": "top-0 left-0 h-4 w-4 cursor-nwse-resize",
+    "top-right": "top-0 right-0 h-4 w-4 cursor-nesw-resize",
+    "bottom-left": "bottom-0 left-0 h-4 w-4 cursor-nesw-resize",
+    "bottom-right": "bottom-0 right-0 h-4 w-4 cursor-nwse-resize",
   };
 
   return (
@@ -276,9 +297,13 @@ const ResizeHandle = ({
   );
 };
 
-export default function MacWindowShell({ title, children, storageKey }: MacWindowShellProps) {
+export default function MacWindowShell({
+  title,
+  children,
+  storageKey,
+}: MacWindowShellProps) {
   const [shellState, setShellState] = useState<ShellState>(() =>
-    readPersistedShellState(storageKey)
+    readPersistedShellState(storageKey),
   );
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
@@ -287,8 +312,9 @@ export default function MacWindowShell({ title, children, storageKey }: MacWindo
   const resizeMetaRef = useRef<ResizeMeta | null>(null);
 
   const { windowState, isClosed, position, size } = shellState;
-  const showPanel = !isClosed && windowState !== 'minimized';
-  const motionClass = !isDragging && !isResizing ? 'transition-all duration-300 ease-in-out' : '';
+  const showPanel = !isClosed && windowState !== "minimized";
+  const motionClass =
+    !isDragging && !isResizing ? "transition-all duration-300 ease-in-out" : "";
 
   useEffect(() => {
     persistShellState(storageKey, shellState);
@@ -299,7 +325,7 @@ export default function MacWindowShell({ title, children, storageKey }: MacWindo
   }, [storageKey]);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
 
     const clampToViewport = () => {
       const container = containerRef.current;
@@ -307,21 +333,22 @@ export default function MacWindowShell({ title, children, storageKey }: MacWindo
         ? { width: container.offsetWidth, height: container.offsetHeight }
         : DEFAULT_SIZE;
 
-      setShellState(prev => {
+      setShellState((prev) => {
         const nextSize = clampSize(prev.size ?? measuredSize, prev.position);
         const nextPosition = clampPosition(prev.position, nextSize);
         return { ...prev, size: nextSize, position: nextPosition };
       });
     };
 
-    window.addEventListener('resize', clampToViewport);
-    return () => window.removeEventListener('resize', clampToViewport);
+    window.addEventListener("resize", clampToViewport);
+    return () => window.removeEventListener("resize", clampToViewport);
   }, []);
 
   const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (windowState !== 'normal' || isClosed) return;
+    if (windowState !== "normal" || isClosed) return;
     const target = event.target as HTMLElement;
-    if (target.closest('button') || target.closest('[data-resize-handle]')) return;
+    if (target.closest("button") || target.closest("[data-resize-handle]"))
+      return;
 
     const container = containerRef.current;
     const measuredSize = container
@@ -337,9 +364,9 @@ export default function MacWindowShell({ title, children, storageKey }: MacWindo
     };
 
     setIsDragging(true);
-    window.addEventListener('pointermove', handlePointerMove);
-    window.addEventListener('pointerup', handlePointerUp);
-    window.addEventListener('pointercancel', handlePointerUp);
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", handlePointerUp);
+    window.addEventListener("pointercancel", handlePointerUp);
   };
 
   const handlePointerMove = useCallback((event: PointerEvent) => {
@@ -352,18 +379,18 @@ export default function MacWindowShell({ title, children, storageKey }: MacWindo
 
     const nextPosition = clampPosition(
       { x: dragMeta.originX + deltaX, y: dragMeta.originY + deltaY },
-      dragMeta.size
+      dragMeta.size,
     );
 
-    setShellState(prev => ({ ...prev, position: nextPosition }));
+    setShellState((prev) => ({ ...prev, position: nextPosition }));
   }, []);
 
   const handlePointerUp = useCallback(() => {
     dragMetaRef.current = null;
     setIsDragging(false);
-    window.removeEventListener('pointermove', handlePointerMove);
-    window.removeEventListener('pointerup', handlePointerUp);
-    window.removeEventListener('pointercancel', handlePointerUp);
+    window.removeEventListener("pointermove", handlePointerMove);
+    window.removeEventListener("pointerup", handlePointerUp);
+    window.removeEventListener("pointercancel", handlePointerUp);
   }, [handlePointerMove]);
 
   const handleResizeMove = useCallback((event: PointerEvent) => {
@@ -378,10 +405,10 @@ export default function MacWindowShell({ title, children, storageKey }: MacWindo
     const rightEdge = resizeMeta.originX + resizeMeta.originWidth;
     const bottomEdge = resizeMeta.originY + resizeMeta.originHeight;
 
-    const affectLeft = resizeMeta.direction.includes('left');
-    const affectRight = resizeMeta.direction.includes('right');
-    const affectTop = resizeMeta.direction.includes('top');
-    const affectBottom = resizeMeta.direction.includes('bottom');
+    const affectLeft = resizeMeta.direction.includes("left");
+    const affectRight = resizeMeta.direction.includes("right");
+    const affectTop = resizeMeta.direction.includes("top");
+    const affectBottom = resizeMeta.direction.includes("bottom");
 
     let nextX = resizeMeta.originX;
     let nextY = resizeMeta.originY;
@@ -390,12 +417,18 @@ export default function MacWindowShell({ title, children, storageKey }: MacWindo
 
     if (affectRight) {
       const maxWidth = viewport.width - PADDING - resizeMeta.originX;
-      nextWidth = Math.max(MIN_SIZE.width, Math.min(maxWidth, resizeMeta.originWidth + deltaX));
+      nextWidth = Math.max(
+        MIN_SIZE.width,
+        Math.min(maxWidth, resizeMeta.originWidth + deltaX),
+      );
     }
 
     if (affectBottom) {
       const maxHeight = viewport.height - PADDING - resizeMeta.originY;
-      nextHeight = Math.max(MIN_SIZE.height, Math.min(maxHeight, resizeMeta.originHeight + deltaY));
+      nextHeight = Math.max(
+        MIN_SIZE.height,
+        Math.min(maxHeight, resizeMeta.originHeight + deltaY),
+      );
     }
 
     if (affectLeft) {
@@ -405,7 +438,10 @@ export default function MacWindowShell({ title, children, storageKey }: MacWindo
       proposedX = Math.max(PADDING, proposedX);
       const maxWidth = viewport.width - PADDING - proposedX;
       nextX = proposedX;
-      nextWidth = Math.max(MIN_SIZE.width, Math.min(maxWidth, rightEdge - proposedX));
+      nextWidth = Math.max(
+        MIN_SIZE.width,
+        Math.min(maxWidth, rightEdge - proposedX),
+      );
     }
 
     if (affectTop) {
@@ -415,40 +451,47 @@ export default function MacWindowShell({ title, children, storageKey }: MacWindo
       proposedY = Math.max(PADDING, proposedY);
       const maxHeight = viewport.height - PADDING - proposedY;
       nextY = proposedY;
-      nextHeight = Math.max(MIN_SIZE.height, Math.min(maxHeight, bottomEdge - proposedY));
+      nextHeight = Math.max(
+        MIN_SIZE.height,
+        Math.min(maxHeight, bottomEdge - proposedY),
+      );
     }
 
-    setShellState(prev => ({
+    setShellState((prev) => ({
       ...prev,
       position: { x: nextX, y: nextY },
-      size: clampSize({ width: nextWidth, height: nextHeight }, { x: nextX, y: nextY }),
+      size: clampSize(
+        { width: nextWidth, height: nextHeight },
+        { x: nextX, y: nextY },
+      ),
     }));
   }, []);
 
   const handleResizeUp = useCallback(() => {
     resizeMetaRef.current = null;
     setIsResizing(false);
-    window.removeEventListener('pointermove', handleResizeMove);
-    window.removeEventListener('pointerup', handleResizeUp);
-    window.removeEventListener('pointercancel', handleResizeUp);
+    window.removeEventListener("pointermove", handleResizeMove);
+    window.removeEventListener("pointerup", handleResizeUp);
+    window.removeEventListener("pointercancel", handleResizeUp);
   }, [handleResizeMove]);
 
   useEffect(
     () => () => {
-      if (typeof window === 'undefined') return;
-      window.removeEventListener('pointermove', handlePointerMove);
-      window.removeEventListener('pointerup', handlePointerUp);
-      window.removeEventListener('pointercancel', handlePointerUp);
-      window.removeEventListener('pointermove', handleResizeMove);
-      window.removeEventListener('pointerup', handleResizeUp);
-      window.removeEventListener('pointercancel', handleResizeUp);
+      if (typeof window === "undefined") return;
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
+      window.removeEventListener("pointercancel", handlePointerUp);
+      window.removeEventListener("pointermove", handleResizeMove);
+      window.removeEventListener("pointerup", handleResizeUp);
+      window.removeEventListener("pointercancel", handleResizeUp);
     },
-    [handlePointerMove, handlePointerUp, handleResizeMove, handleResizeUp]
+    [handlePointerMove, handlePointerUp, handleResizeMove, handleResizeUp],
   );
 
   const handleResizeStart =
-    (direction: ResizeDirection) => (event: React.PointerEvent<HTMLDivElement>) => {
-      if (windowState !== 'normal' || isClosed) return;
+    (direction: ResizeDirection) =>
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      if (windowState !== "normal" || isClosed) return;
       event.preventDefault();
       event.stopPropagation();
 
@@ -466,31 +509,43 @@ export default function MacWindowShell({ title, children, storageKey }: MacWindo
       };
 
       setIsResizing(true);
-      window.addEventListener('pointermove', handleResizeMove);
-      window.addEventListener('pointerup', handleResizeUp);
-      window.addEventListener('pointercancel', handleResizeUp);
+      window.addEventListener("pointermove", handleResizeMove);
+      window.addEventListener("pointerup", handleResizeUp);
+      window.addEventListener("pointercancel", handleResizeUp);
     };
 
   const handleMaximize = () =>
-    setShellState(prev => ({ ...prev, windowState: 'maximized', isClosed: false }));
+    setShellState((prev) => ({
+      ...prev,
+      windowState: "maximized",
+      isClosed: false,
+    }));
 
   const handleMinimize = () =>
-    setShellState(prev => ({ ...prev, windowState: 'minimized', isClosed: false }));
+    setShellState((prev) => ({
+      ...prev,
+      windowState: "minimized",
+      isClosed: false,
+    }));
 
   const handleRestore = () =>
-    setShellState(prev => ({ ...prev, windowState: 'normal', isClosed: false }));
+    setShellState((prev) => ({
+      ...prev,
+      windowState: "normal",
+      isClosed: false,
+    }));
 
   const handleToggleMaximize = () =>
-    setShellState(prev =>
-      prev.windowState === 'maximized'
-        ? { ...prev, windowState: 'normal', isClosed: false }
-        : { ...prev, windowState: 'maximized', isClosed: false }
+    setShellState((prev) =>
+      prev.windowState === "maximized"
+        ? { ...prev, windowState: "normal", isClosed: false }
+        : { ...prev, windowState: "maximized", isClosed: false },
     );
 
   const handleClose = () =>
-    setShellState(prev => ({
+    setShellState((prev) => ({
       ...prev,
-      windowState: 'normal',
+      windowState: "normal",
       isClosed: true,
     }));
 
@@ -498,7 +553,9 @@ export default function MacWindowShell({ title, children, storageKey }: MacWindo
     <>
       {isClosed && <OpenPanelButton onClick={handleRestore} />}
 
-      {!isClosed && windowState === 'minimized' && <MiniRestoreButton onClick={handleRestore} />}
+      {!isClosed && windowState === "minimized" && (
+        <MiniRestoreButton onClick={handleRestore} />
+      )}
 
       {showPanel && (
         <div
@@ -506,19 +563,18 @@ export default function MacWindowShell({ title, children, storageKey }: MacWindo
           role="dialog"
           aria-label="Extension panel"
           className={` fixed z-50 flex flex-col overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-gray-200 border border-gray-400 ${motionClass} ${
-            windowState === 'maximized' ? 'inset-0 sm:inset-4 md:inset-6' : ''
+            windowState === "maximized" ? "inset-0 sm:inset-4 md:inset-6" : ""
           }`}
           style={
-            windowState === 'normal'
+            windowState === "normal"
               ? {
                   top: position.y,
                   left: position.x,
                   width: size.width,
                   height: size.height,
-                  border: '1px solid #D3D3D3',
+                  border: "1px solid #D3D3D3",
                 }
               : undefined
-              
           }
         >
           <Toolbar
@@ -532,18 +588,41 @@ export default function MacWindowShell({ title, children, storageKey }: MacWindo
             onDoubleClick={handleToggleMaximize}
           />
 
-          <div className="flex-1 space-y-2 overflow-auto px-4 py-3">{children}</div>
+          <div className="flex-1 space-y-2 overflow-auto px-4 py-3">
+            {children}
+          </div>
 
-          {windowState === 'normal' && (
+          {windowState === "normal" && (
             <>
               <ResizeHandle direction="top" onPointerDown={handleResizeStart} />
-              <ResizeHandle direction="right" onPointerDown={handleResizeStart} />
-              <ResizeHandle direction="bottom" onPointerDown={handleResizeStart} />
-              <ResizeHandle direction="left" onPointerDown={handleResizeStart} />
-              <ResizeHandle direction="top-left" onPointerDown={handleResizeStart} />
-              <ResizeHandle direction="top-right" onPointerDown={handleResizeStart} />
-              <ResizeHandle direction="bottom-right" onPointerDown={handleResizeStart} />
-              <ResizeHandle direction="bottom-left" onPointerDown={handleResizeStart} />
+              <ResizeHandle
+                direction="right"
+                onPointerDown={handleResizeStart}
+              />
+              <ResizeHandle
+                direction="bottom"
+                onPointerDown={handleResizeStart}
+              />
+              <ResizeHandle
+                direction="left"
+                onPointerDown={handleResizeStart}
+              />
+              <ResizeHandle
+                direction="top-left"
+                onPointerDown={handleResizeStart}
+              />
+              <ResizeHandle
+                direction="top-right"
+                onPointerDown={handleResizeStart}
+              />
+              <ResizeHandle
+                direction="bottom-right"
+                onPointerDown={handleResizeStart}
+              />
+              <ResizeHandle
+                direction="bottom-left"
+                onPointerDown={handleResizeStart}
+              />
             </>
           )}
         </div>
