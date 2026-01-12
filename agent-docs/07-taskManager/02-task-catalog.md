@@ -49,11 +49,12 @@ NOTES
     - EmptyState with helpful instructions
     - DatabaseList, OPFSLink navigation items
 
-- [ ] **TASK-03**: Content Script Proxy & Background Messaging
+- [x] **TASK-03**: Content Script Proxy & Background Messaging
   - **Priority**: P0 (Blocker)
   - **Dependencies**: TASK-01
   - **Boundary**: `src/contentScript/`, `src/background/`
   - **Maps to**: ADR-0001, ADR-0004, FR-039
+  - **Micro-Spec**: [completed](agent-docs/08-task/active/TASK-03.md)
   - **DoD**:
     - Content script message listener routing by channel
     - Background service message routing (panel ↔ content script)

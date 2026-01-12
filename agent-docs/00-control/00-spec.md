@@ -40,8 +40,8 @@ NOTES
 
 - **Current stage (1-8)**: Stage 8 - Implementation (Worker)
 - **Active release**: v1.0.0 (MVP) - Target: 2026-01-27
-- **Status summary**: TASK-01 and TASK-02 completed, 10 tasks remaining for MVP
-- **Last updated (YYYY-MM-DD)**: 2026-01-13 (TASK-02 - Sidebar UI & Navigation)
+- **Status summary**: TASK-01, TASK-02, TASK-03 completed, 9 tasks remaining for MVP
+- **Last updated (YYYY-MM-DD)**: 2026-01-13 (TASK-03 - Content Script Proxy & Background Messaging)
 
 ## 4) Technology stack (chosen in Stage 2)
 

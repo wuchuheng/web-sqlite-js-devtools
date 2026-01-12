@@ -1,10 +1,13 @@
 /**
  * Content Script App
- * This script runs in the context of web pages to provide access to window.__web_sqlite API
- * For TASK-01, this is a minimal placeholder - full proxy implementation comes in TASK-03
+ *
+ * @remarks
+ * Runs in the context of web pages to provide access to window.__web_sqlite API.
+ * Implements Content Script Proxy Pattern (ADR-0001) for DevTools panel communication.
  */
 
 import { useEffect } from "react";
+import { registerAllHandlers } from "./messaging/handlers";
 
 // Declare web-sqlite-js global type
 declare global {
@@ -20,11 +23,25 @@ declare global {
 
 /**
  * Main content script component
- * Detects and logs web-sqlite-js API availability
+ *
+ * @remarks
+ * Registers all message channel handlers on mount to enable
+ * DevTools panel → Background SW → Content Script → window.__web_sqlite communication.
  */
 export default function App() {
   useEffect(() => {
-    // Check if web-sqlite-js API is available on the page
+    /**
+     * 1. Register all message handlers for content script proxy
+     * 2. Enables GET_DATABASES, HEARTBEAT, and 8 stub channels
+     * 3. Called once on content script mount
+     */
+    registerAllHandlers();
+
+    /**
+     * 1. Check if web-sqlite-js API is available on the page
+     * 2. Log detection for debugging
+     * 3. Log available databases if API present
+     */
     const hasWebSqlite = typeof window.__web_sqlite !== "undefined";
 
     if (hasWebSqlite) {
@@ -41,17 +58,17 @@ export default function App() {
       );
     }
 
-    // TODO: TASK-03 - Implement message proxy handlers for:
-    // - GET_DATABASES
-    // - GET_TABLE_LIST
-    // - GET_TABLE_SCHEMA
-    // - QUERY_TABLE_DATA
-    // - EXEC_SQL
-    // - SUBSCRIBE_LOGS / UNSCRIBE_LOGS
-    // - DEV_RELEASE / DEV_ROLLBACK
-    // - GET_DB_VERSION
-    // - GET_OPFS_FILES / DOWNLOAD_OPFS_FILE
-    // - HEARTBEAT / ICON_STATE
+    /**
+     * 1. Cleanup function (optional)
+     * 2. Handlers persist until page unload
+     * 3. No explicit cleanup needed for content script lifecycle
+     */
+    return () => {
+      // Handlers automatically cleaned up on page unload
+      console.log(
+        "[Web Sqlite DevTools Content Script] Unmounting (page unloading)",
+      );
+    };
   }, []);
 
   // Content script doesn't render any UI - it runs in the background

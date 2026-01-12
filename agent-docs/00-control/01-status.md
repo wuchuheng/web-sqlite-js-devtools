@@ -15,27 +15,28 @@ NOTES
 ## 1) Project stage
 
 - **Current stage**: Stage 8 - Implementation (Worker)
-- **Current focus**: TASK-02 completed, TASK-03 ready to start
-- **Last updated**: 2026-01-13 (TASK-02 - Sidebar UI & Navigation)
+- **Current focus**: TASK-03 completed, TASK-04 ready to start
+- **Last updated**: 2026-01-13 (TASK-03 - Content Script Proxy & Background Messaging)
 
 ## 2) Active work
 
-| Item                                            | Owner     | Status | Evidence |
-| ----------------------------------------------- | --------- | ------ | -------- |
-| (None - awaiting next task selection)           | S8:worker | -      | -        |
+| Item                                  | Owner     | Status | Evidence |
+| ------------------------------------- | --------- | ------ | -------- |
+| (None - awaiting next task selection) | S8:worker | -      | -        |
 
 ## 3) Done (Recent)
 
-| Task                              | Owner     | Evidence                                             |
-| --------------------------------- | --------- | ---------------------------------------------------- |
-| TASK-02: Sidebar UI & Navigation  | S8:worker | `src/devtools/components/Sidebar/`, `EmptyState/`    |
-| TASK-01: Project Setup (Bug Fix)  | S8:worker | `devtools.html` panel creation script added          |
-| TASK-01: Project Setup (Original) | S8:worker | `src/manifest.ts`, `src/messaging/`, `src/devtools/` |
+| Task                                       | Owner     | Evidence                                                 |
+| ------------------------------------------ | --------- | -------------------------------------------------------- |
+| TASK-03: Content Script Proxy & Messaging  | S8:worker | `src/contentScript/messaging/`, `src/background/messaging/` |
+| TASK-02: Sidebar UI & Navigation           | S8:worker | `src/devtools/components/Sidebar/`, `EmptyState/`        |
+| TASK-01: Project Setup (Bug Fix)           | S8:worker | `devtools.html` panel creation script added             |
+| TASK-01: Project Setup (Original)          | S8:worker | `src/manifest.ts`, `src/messaging/`, `src/devtools/`      |
 
 ## 4) Upcoming
 
-- **Next task**: TASK-03 - Content Script Proxy & Background Messaging
-- **Next review date**: After TASK-03 completion
+- **Next task**: TASK-04 - Icon State & Auto-Reconnect
+- **Next review date**: After TASK-04 completion
 
 ## 5) Risks / blockers
 
