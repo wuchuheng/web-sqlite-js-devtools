@@ -13,9 +13,11 @@ NOTES
 # ADR-0002: React Router HashRouter for Navigation
 
 ## Status
+
 Accepted
 
 ## Context
+
 - **Issue**: DevTools panel requires navigation between different views (database list, table browser, query editor, OPFS browser) while running in Chrome's isolated DevTools context.
 - **Constraints**:
   - DevTools panel URL is `chrome-extension://<id>/devtools.html`
@@ -25,16 +27,20 @@ Accepted
 - **Why decide now**: Routing architecture affects component structure and state management throughout the application.
 
 ## Decision
+
 We will use **react-router-dom v6 with HashRouter** for all navigation within the DevTools panel.
 
 Route structure:
+
 - `/` - Empty state / default
 - `/openedDB/:dbname` - Database overview with 6 tabs
 - `/openedDB/:dbname/:tableName` - Specific table view
 - `/opfs` - OPFS file browser
 
 ## Alternatives Considered
+
 ### Option 1: React Router HashRouter (CHOSEN)
+
 - **Pros**:
   - Standard, well-documented routing library
   - Hash-based routing works in Chrome extension context
@@ -48,6 +54,7 @@ Route structure:
   - Overkill for very simple navigation
 
 ### Option 2: State-Based Routing (Custom)
+
 - **Pros**:
   - No additional dependency
   - Full control over routing logic
@@ -59,6 +66,7 @@ Route structure:
   - Harder to implement nested routes
 
 ### Option 3: URL Search Parameters
+
 - **Pros**:
   - Native browser API
   - No additional dependency
@@ -68,6 +76,7 @@ Route structure:
   - No built-in route matching
 
 ## Consequences
+
 - **Positive**:
   - Declarative route configuration with JSX
   - Easy to implement active state styling for sidebar

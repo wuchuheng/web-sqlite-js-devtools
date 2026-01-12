@@ -13,6 +13,7 @@ NOTES
 # 01 Message Types & Data Structures
 
 ## 0) Document Map
+
 ```text
 agent-docs/05-design/
   01-contracts/01-api.md
@@ -29,6 +30,7 @@ agent-docs/05-design/
 ## 1) Type Definitions
 
 ### Primitive Types
+
 ```typescript
 // SQL value types (from web-sqlite-js)
 type SqlValue =
@@ -45,12 +47,13 @@ type SQLParams = SqlValue[] | Record<string, SqlValue>;
 ```
 
 ### Database Types
+
 ```typescript
 // Database record (serialized form of window.__web_sqlite.databases[key])
 interface DatabaseRecord {
   name: string;
-  migrationSQL: Array<[string, string]>;  // [version, SQL] pairs (Map→Array)
-  seedSQL: Array<[string, string]>;       // [version, SQL] pairs
+  migrationSQL: Array<[string, string]>; // [version, SQL] pairs (Map→Array)
+  seedSQL: Array<[string, string]>; // [version, SQL] pairs
 }
 
 // Table information
@@ -64,7 +67,7 @@ interface TableInfo {
     dflt_value: any;
     pk: number;
   }>;
-  ddl: string;  // Complete CREATE TABLE SQL
+  ddl: string; // Complete CREATE TABLE SQL
 }
 
 // Query result
@@ -76,6 +79,7 @@ interface QueryResult {
 ```
 
 ### Message Types (Request/Response)
+
 ```typescript
 // Generic response
 interface Response<T = unknown> {
@@ -225,6 +229,7 @@ interface IconStateResponse extends Response<void> {};
 ```
 
 ### Event Types
+
 ```typescript
 // Database change event
 interface DatabaseChangedEvent {
@@ -252,13 +257,14 @@ interface MigrationTestEvent {
 ## 2) Component State Types
 
 ### DevTools Panel State
+
 ```typescript
 interface PanelState {
   connectionState: "connected" | "connecting" | "reconnecting" | "disconnected";
-  currentRoute: string;  // HashRouter location
+  currentRoute: string; // HashRouter location
   sidebarCollapsed: boolean;
   selectedDatabase?: string;
-  subscriptions: Map<string, string>;  // dbname → subscriptionId
+  subscriptions: Map<string, string>; // dbname → subscriptionId
 }
 
 interface TableTabState {
@@ -287,19 +293,23 @@ interface LogTabState {
   }>;
   filter?: {
     levels?: Array<"info" | "debug" | "error">;
-    fields?: string[];  // sql, action, event
+    fields?: string[]; // sql, action, event
   };
 }
 ```
 
 ### Content Script State
+
 ```typescript
 interface ContentScriptState {
-  subscriptions: Map<string, {
-    dbname: string;
-    unsubscribe: () => void;
-    buffer: LogEntry[];
-  }>;
+  subscriptions: Map<
+    string,
+    {
+      dbname: string;
+      unsubscribe: () => void;
+      buffer: LogEntry[];
+    }
+  >;
 }
 
 interface LogEntry {
@@ -312,6 +322,7 @@ interface LogEntry {
 ## 3) React Props/Contracts
 
 ### Component Props
+
 ```typescript
 // Sidebar
 interface SidebarProps {

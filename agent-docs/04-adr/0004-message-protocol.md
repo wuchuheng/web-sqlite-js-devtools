@@ -13,9 +13,11 @@ NOTES
 # ADR-0004: Message Protocol for Cross-Context Communication
 
 ## Status
+
 Accepted
 
 ## Context
+
 - **Issue**: Need a standardized protocol for communication between DevTools panel, background service worker, and content script.
 - **Constraints**:
   - Chrome Extension messaging uses `chrome.runtime.sendMessage` (async)
@@ -26,6 +28,7 @@ Accepted
 - **Why decide now**: Message protocol is the contract between all extension contexts; changes require updates across multiple files.
 
 ## Decision
+
 We will use a **typed message protocol** with:
 
 1. **Named channels** (defined in `src/messaging/channels.ts`):
@@ -41,12 +44,13 @@ We will use a **typed message protocol** with:
    - `HEARTBEAT` - Connection health check
 
 2. **Standardized response format**:
+
    ```typescript
    type Response<T> = {
      success: boolean;
      data?: T;
      error?: string;
-   }
+   };
    ```
 
 3. **Map serialization**: Convert `Map<string, string>` to `Array<[key, value]>` before sending
@@ -54,7 +58,9 @@ We will use a **typed message protocol** with:
 4. **Event streaming**: Log events sent via separate `LOG_EVENT` message type
 
 ## Alternatives Considered
+
 ### Option 1: Typed Message Protocol (CHOSEN)
+
 - **Pros**:
   - Type-safe with TypeScript
   - Clear contract between contexts
@@ -67,6 +73,7 @@ We will use a **typed message protocol** with:
   - Map→Array conversion required
 
 ### Option 2: Dynamic RPC-style
+
 - **Pros**:
   - Less boilerplate
   - Can call functions directly by name
@@ -77,6 +84,7 @@ We will use a **typed message protocol** with:
   - Security concerns (arbitrary function execution)
 
 ### Option 3: WebSocket-style duplex channel
+
 - **Pros**:
   - Real-time bidirectional communication
 - **Cons**:
@@ -85,6 +93,7 @@ We will use a **typed message protocol** with:
   - More complex state management
 
 ## Consequences
+
 - **Positive**:
   - Type-safe communication between contexts
   - Clear debugging (channel names visible in Chrome DevTools)
@@ -101,6 +110,7 @@ We will use a **typed message protocol** with:
   - **R3**: Message size limits for large query results (mitigation: pagination limits query size to 100 rows)
 
 ## Implementation Notes
+
 - Channels defined in: `src/messaging/channels.ts`
 - Types defined in: `src/messaging/types.ts`
 - Handlers in: `src/devtools/messaging/`, `src/background/messaging/`, `src/contentScript/messaging/`

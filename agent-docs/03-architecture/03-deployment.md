@@ -13,6 +13,7 @@ NOTES
 # 03 Deployment & Infrastructure
 
 ## 1) Deployment Topology (Production)
+
 - **Platform**: Chrome Web Store
 - **Distribution**: Public listing (free extension)
 - **Update Strategy**: Chrome Web Store auto-update (manifest version must increment)
@@ -35,15 +36,17 @@ C4Deployment
 ```
 
 ## 2) Environment Strategy
-| Feature | Development | Staging | Production |
-|---------|-------------|---------|------------|
-| **Build** | `npm run dev` (HMR, file watch) | `npm run build` (local test) | `npm run build` (CWS upload) |
-| **Load Mode** | `npm run dev` (unpacked extension) | Load unpacked (manual) | Chrome Web Store (signed) |
-| **Data Source** | Local web-sqlite-js apps | Test websites with sample DBs | User's web applications |
-| **Error Reporting** | Console logs | Console + error summary | Console (user can report bugs) |
-| **Update Cadence** | Live reload (HMR) | Manual reinstall | CWS auto-update |
+
+| Feature             | Development                        | Staging                       | Production                     |
+| ------------------- | ---------------------------------- | ----------------------------- | ------------------------------ |
+| **Build**           | `npm run dev` (HMR, file watch)    | `npm run build` (local test)  | `npm run build` (CWS upload)   |
+| **Load Mode**       | `npm run dev` (unpacked extension) | Load unpacked (manual)        | Chrome Web Store (signed)      |
+| **Data Source**     | Local web-sqlite-js apps           | Test websites with sample DBs | User's web applications        |
+| **Error Reporting** | Console logs                       | Console + error summary       | Console (user can report bugs) |
+| **Update Cadence**  | Live reload (HMR)                  | Manual reinstall              | CWS auto-update                |
 
 **Development Setup**:
+
 ```bash
 # Terminal 1: Run dev server (Vite HMR)
 npm run dev
@@ -57,6 +60,7 @@ npm run build -- --watch
 ```
 
 ## 3) Capacity & Scaling
+
 - **Expected Load**:
   - Single user per browser instance (no multi-tenant)
   - 1-10 DevTools panels open concurrently (user can debug multiple tabs)
@@ -70,6 +74,7 @@ npm run build -- --watch
   - Log entries: Ring buffer in content script (500 entries)
 
 ## 4) Disaster Recovery (DR)
+
 - **RPO (Data Loss)**: N/A (extension doesn't persist data)
 - **RTO (Downtime)**: N/A (extension is client-side)
 - **Backup Policy**: N/A (no server-side data)
@@ -79,16 +84,18 @@ npm run build -- --watch
   - Critical bug: Disable extension on CWS, push hotfix
 
 ## 5) Network & Security
+
 ### 5.1 Extension Permissions
+
 ```json
 {
   "permissions": [
-    "activeTab",      // Access current tab's content script
-    "tabs"            // Query tab info for reconnection
+    "activeTab", // Access current tab's content script
+    "tabs" // Query tab info for reconnection
   ],
   "host_permissions": [
-    "http://*/*",     // Content script injected on all pages
-    "https://*/*"     // (only accesses window.__web_sqlite)
+    "http://*/*", // Content script injected on all pages
+    "https://*/*" // (only accesses window.__web_sqlite)
   ],
   "content_security_policy": {
     "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';"
@@ -97,12 +104,14 @@ npm run build -- --watch
 ```
 
 ### 5.2 Content Security Policy (CSP)
+
 - **Extension pages**: `script-src 'self' 'wasm-unsafe-eval'; object-src 'self'`
   - `'wasm-unsafe-eval'` required for web-sqlite-js WASM (if loaded in extension context)
   - Note: web-sqlite-js runs in page context, not extension context
 - **Content scripts**: Inherits page CSP (must be compatible)
 
 ### 5.3 Update Mechanism
+
 - **Manifest Version**: Must be incremented (Semantic Versioning: MAJOR.MINOR.PATCH)
 - **Update Flow**:
   1. Deploy new version to Chrome Web Store
@@ -114,6 +123,7 @@ npm run build -- --watch
 ## 6) Build & Release Process
 
 ### 6.1 Build Command
+
 ```bash
 # Development (HMR)
 npm run dev
@@ -126,6 +136,7 @@ npm run zip
 ```
 
 ### 6.2 Build Artifacts
+
 ```
 /build/
   ├── manifest.json          # Generated from src/manifest.ts
@@ -144,6 +155,7 @@ npm run zip
 ```
 
 ### 6.3 Version Bumping
+
 ```bash
 # Update package.json version
 npm version patch  # 1.0.0 -> 1.0.1
@@ -157,6 +169,7 @@ npm run build && npm run zip
 ```
 
 ### 6.4 Release Checklist
+
 - [ ] Update version in `package.json`
 - [ ] Update `CHANGELOG.md` with release notes
 - [ ] Run `npm run build` and test locally
@@ -168,22 +181,26 @@ npm run build && npm run zip
 - [ ] Once approved, announce update
 
 ## 7) Monitoring & Observability
+
 - **Crash Reporting**: None (Chrome handles extension crashes)
 - **Usage Analytics**: None (privacy-focused, no telemetry)
 - **Error Tracking**: Console errors visible to user (DevTools Console)
 - **Performance**: Local only (NFRs measured manually during development)
 
 ## 8) Rollback Strategy
+
 - **Critical Bug**: Disable extension on Chrome Web Store (takes effect immediately)
 - **New Version**: Push previous version as hotfix
 - **User Recovery**: Users can reinstall previous version manually (if backed up)
 
 ## 9) Browser Compatibility
+
 - **Primary**: Chrome 86+ (Full OPFS + SharedArrayBuffer support)
 - **Secondary**: Edge 86+ (Chromium-based, same support)
 - **Future**: Firefox/Safari when COOP/COEP headers more widely adopted
 
 ## 10) Dependencies & Third-Party Services
+
 - **External Services**: None (fully offline-capable)
 - **CDN Dependencies**: None (all dependencies bundled)
 - **Update Server**: Chrome Web Store (managed by Google)

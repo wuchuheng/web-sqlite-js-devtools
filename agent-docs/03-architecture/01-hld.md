@@ -13,6 +13,7 @@ NOTES
 # 01 High-Level Design (HLD) — Structure
 
 ## 1) Architecture Style & Principles
+
 - **Pattern**: **Content Script Proxy Pattern** (Chrome Extension specific)
   - DevTools Panel → Background Service Worker → Content Script → Page Context (`window.__web_sqlite`)
 - **Key Principles**:
@@ -23,6 +24,7 @@ NOTES
   - **Stateless Panel**: DevTools panel can be closed/reopened without losing page context
 
 ## 2) System Boundary (C4 Context)
+
 - **Users**: Frontend developers, full-stack developers, QA engineers using Chrome DevTools
 - **External Systems**: web-sqlite-js library (via `window.__web_sqlite` global namespace)
 
@@ -40,6 +42,7 @@ C4Context
 ```
 
 ## 3) Containers & Tech Stack (C4 Container)
+
 - **DevTools Panel**: React 18 + TypeScript + Tailwind CSS + react-router-dom
   - **Reason**: Leverages existing template, provides declarative UI and routing
 - **Content Script**: TypeScript + Chrome Extension APIs
@@ -70,6 +73,7 @@ C4Container
 ```
 
 ## 4) Data Architecture Strategy
+
 - **Ownership**: Content Script owns the connection to `window.__web_sqlite`; DevTools panel owns UI state
 - **Caching**:
   - Table list: Cached in DevTools panel until database changes
@@ -84,6 +88,7 @@ C4Container
 ## 5) Cross-cutting Concerns (Implementation View)
 
 ### 5.1 Message Protocol
+
 - **Channel Names**: Defined in `src/messaging/channels.ts`
   - `GET_DATABASES`: List all opened databases
   - `GET_TABLE_LIST`: Get tables for a database
@@ -96,22 +101,26 @@ C4Container
 - **Error Handling**: Standard `{ success: boolean, data?: T, error?: string }` response format
 
 ### 5.2 Reconnection Strategy
+
 - **Heartbeat**: Content script sends heartbeat every 5 seconds
 - **Timeout**: DevTools panel shows error after 15 seconds without heartbeat
 - **Auto-Reconnect**: Panel attempts to reconnect on route change or user action
 - **Page Refresh**: Panel detects page navigation via chrome.tabs.onUpdated
 
 ### 5.3 Observability
+
 - **Logs**: Internal extension logs to console.debug (DevTools only)
 - **Error Tracking**: Error boundaries in React, log to console.error
 - **Performance**: Measure panel open time, query execution time
 
 ### 5.4 Security
+
 - **Permissions**: Minimal Chrome permissions (`activeTab`, `tabs`)
 - **Content Security Policy**: Strict CSP for extension pages
 - **No eval():** No dynamic code execution (SQL sent to web-sqlite-js only)
 
 ## 6) Code Structure Strategy (High-Level File Tree)
+
 **Repo Structure**: Monorepo (single Chrome extension)
 
 ```text
@@ -171,6 +180,7 @@ C4Container
 ```
 
 ## 7) Component Hierarchy (DevTools Panel)
+
 ```text
 DevTools (Root)
 ├── HashRouter

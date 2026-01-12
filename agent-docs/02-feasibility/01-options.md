@@ -13,12 +13,14 @@ NOTES
 # 01 Options — Feasibility & Tech Choices
 
 ## 1) Decision drivers (what matters most)
+
 - **D1 (Speed to MVP)**: Existing template has React + Tailwind + Vite + @crxjs setup, want to leverage this
 - **D2 (Extension bundle size)**: Chrome extensions have size limits, especially with CodeMirror
 - **D3 (DevTools context isolation)**: DevTools panel cannot directly access page's `window.__web_sqlite`
 - **D4 (User experience)**: Real-time updates, fast query execution, responsive UI
 
 ## 2) Constraints recap (from Stage 1)
+
 - **Key constraints**:
   - Must use Manifest V3 for Chrome extension
   - React for UI components (per existing template)
@@ -36,6 +38,7 @@ NOTES
 ## 3) Options (A/B/C)
 
 ### Option A — Content Script Proxy with React Router
+
 - **Summary**: Use existing DevTools page → chrome.runtime.sendMessage → Content Script → `window.__web_sqlite`. Hash routing via react-router-dom.
 - **Pros**:
   - Leverages existing template infrastructure (Vite + @crxjs + React + Tailwind)
@@ -54,6 +57,7 @@ NOTES
 - **Fits success criteria?**: **Yes** - Message overhead is minimal (~1-5ms per call), well within performance targets
 
 ### Option B — Offscreen Document as Message Bridge
+
 - **Summary**: DevTools → background → offscreen document → content script → `window.__web_sqlite`. Offscreen doc handles state caching.
 - **Pros**:
   - Offscreen document has full DOM and longer lifecycle than DevTools panel
@@ -72,6 +76,7 @@ NOTES
 - **Fits success criteria?**: **Partial** - May exceed 500ms panel open time due to extra message hops
 
 ### Option C (fallback) — Direct Page Script Injection
+
 - **Summary**: DevTools panel dynamically injects script into active page to access `window.__web_sqlite` directly via postMessage.
 - **Pros**:
   - Direct access to page context without content script proxy
@@ -87,17 +92,19 @@ NOTES
   - For specific features that need synchronous access
 
 ## 4) Tradeoff table
-| Dimension | Option A (Content Script Proxy) | Option B (Offscreen Bridge) | Option C (Direct Injection) |
-|-----------|--------------------------------|----------------------------|----------------------------|
-| **Speed** | Fast (2 hops, ~1-5ms overhead) | Slower (4 hops, ~10-20ms) | Medium (injection cost) |
-| **Cost** | Low (uses existing template) | Medium (more complexity) | Medium (injection logic) |
-| **Ops complexity** | Low (standard pattern) | High (4-hop messaging) | Medium (lifecycle mgmt) |
-| **Scalability** | High (works for all features) | Medium (latency concerns) | Low (injection limits) |
-| **Security** | High (Chrome APIs validate) | High (same as A) | Medium (postMessage risks) |
-| **Bundle size** | ~500KB (React + deps) | ~600KB (extra offscreen code) | ~450KB (slightly less) |
-| **Maintenance** | Low (well-documented) | Medium (custom architecture) | Medium (custom injection) |
+
+| Dimension          | Option A (Content Script Proxy) | Option B (Offscreen Bridge)   | Option C (Direct Injection) |
+| ------------------ | ------------------------------- | ----------------------------- | --------------------------- |
+| **Speed**          | Fast (2 hops, ~1-5ms overhead)  | Slower (4 hops, ~10-20ms)     | Medium (injection cost)     |
+| **Cost**           | Low (uses existing template)    | Medium (more complexity)      | Medium (injection logic)    |
+| **Ops complexity** | Low (standard pattern)          | High (4-hop messaging)        | Medium (lifecycle mgmt)     |
+| **Scalability**    | High (works for all features)   | Medium (latency concerns)     | Low (injection limits)      |
+| **Security**       | High (Chrome APIs validate)     | High (same as A)              | Medium (postMessage risks)  |
+| **Bundle size**    | ~500KB (React + deps)           | ~600KB (extra offscreen code) | ~450KB (slightly less)      |
+| **Maintenance**    | Low (well-documented)           | Medium (custom architecture)  | Medium (custom injection)   |
 
 ## 5) Recommendation
+
 - **Recommended baseline**: **Option A — Content Script Proxy with React Router**
 - **Why (tie to decision drivers and success criteria)**:
   - **D1 (Speed)**: Leverages existing Vite + @crxjs + React + Tailwind setup, no new infrastructure
@@ -111,6 +118,7 @@ NOTES
   - Advanced keyboard shortcuts (P1 feature FR-107) - add after core features work
 
 ## 6) Open questions / Needs spikes
+
 - **Q1**: Can chrome.runtime.sendMessage properly serialize `Map<string, string>` from `migrationSQL` and `seedSQL` fields in `DatabaseRecord`?
   - **Spike needed?**: **Yes** - 1 hour spike to test message serialization
 - **Q2**: What is the actual message overhead for chrome.runtime.sendMessage with query results (100+ rows)?

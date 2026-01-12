@@ -15,6 +15,7 @@ NOTES
 ## 1) Critical Business Flows
 
 ### Flow 1: Open DevTools Panel and List Databases
+
 **Goal**: Display list of opened databases when user opens DevTools panel
 **Concurrency**: Single request, no conflicts
 
@@ -46,6 +47,7 @@ sequenceDiagram
 ```
 
 ### Flow 2: Query Table Data
+
 **Goal**: Execute SELECT query and display paginated results
 **Concurrency**: Multiple queries can be executed concurrently (no shared state)
 
@@ -76,6 +78,7 @@ sequenceDiagram
 ```
 
 ### Flow 3: Execute SQL (INSERT/UPDATE/DELETE)
+
 **Goal**: Execute non-SELECT SQL and show results
 **Concurrency**: Auto-rollback on error (handled by web-sqlite-js transaction)
 
@@ -111,6 +114,7 @@ sequenceDiagram
 ```
 
 ### Flow 4: Subscribe to Log Events
+
 **Goal**: Stream real-time logs from database to DevTools panel
 **Concurrency**: Multiple subscribers per database (ring buffer manages overflow)
 
@@ -145,6 +149,7 @@ sequenceDiagram
 ```
 
 ### Flow 5: Icon State Update (Database Change)
+
 **Goal**: Update extension icon when database is opened/closed
 **Concurrency**: Event-driven, no conflicts
 
@@ -169,6 +174,7 @@ sequenceDiagram
 ```
 
 ### Flow 6: Migration Playground (Safe Testing)
+
 **Goal**: Create dev version, test migration, auto-rollback
 **Concurrency**: Single dev version per database (mutex lock)
 
@@ -211,7 +217,8 @@ sequenceDiagram
 ```
 
 ### Flow 7: Page Refresh (Auto-Reconnect)
-**Goal**: Detect page refresh and reconnect to window.__web_sqlite
+
+**Goal**: Detect page refresh and reconnect to window.\_\_web_sqlite
 **Concurrency**: Timeout-based retry with exponential backoff
 
 ```mermaid
@@ -252,6 +259,7 @@ sequenceDiagram
 ```
 
 ### Flow 8: OPFS File Download
+
 **Goal**: Download file from OPFS to user's machine
 **Concurrency**: Multiple files can be downloaded concurrently
 
@@ -284,9 +292,11 @@ sequenceDiagram
 ```
 
 ## 2) Asynchronous Event Flows
+
 **Pattern**: Message-based event streaming via `chrome.runtime` (Pub/Sub)
 
 ### Event: Database Changed
+
 - **Event**: `DATABASE_CHANGED`
 - **Producer**: Content Script (listens to `window.__web_sqlite.onDatabaseChange`)
 - **Consumers**: Background Service Worker (icon state), DevTools Panel (refresh DB list)
@@ -302,6 +312,7 @@ flowchart LR
 ```
 
 ### Event: Log Entry
+
 - **Event**: `LOG_ENTRY`
 - **Producer**: Content Script (subscribes to `db.onLog()`)
 - **Consumers**: DevTools Panel (LogTab), Multiple panels can subscribe
@@ -321,6 +332,7 @@ flowchart LR
 ## 3) Entity State Machines
 
 ### Entity: DevTools Panel Connection
+
 ```mermaid
 stateDiagram-v2
     [*] --> Connecting: Panel opens
@@ -334,6 +346,7 @@ stateDiagram-v2
 ```
 
 ### Entity: Icon State
+
 ```mermaid
 stateDiagram-v2
     [*] --> Inactive: Extension loaded
@@ -345,6 +358,7 @@ stateDiagram-v2
 ```
 
 ### Entity: Migration Test
+
 ```mermaid
 stateDiagram-v2
     [*] --> Idle: User opens MigrationTab
@@ -359,6 +373,7 @@ stateDiagram-v2
 ```
 
 ## 4) Consistency & Recovery
+
 - **Distributed Transactions**: None (single content script per page)
 - **Idempotency**:
   - Query requests are idempotent (SELECT statements)

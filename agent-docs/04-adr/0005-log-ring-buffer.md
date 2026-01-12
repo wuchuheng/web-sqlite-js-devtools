@@ -13,9 +13,11 @@ NOTES
 # ADR-0005: Ring Buffer for Log Streaming (500 Entry Limit)
 
 ## Status
+
 Accepted
 
 ## Context
+
 - **Issue**: Log tab needs to display real-time logs from `db.onLog()` subscription. Unbounded log retention would cause memory leaks in long DevTools sessions.
 - **Constraints**:
   - `db.onLog()` can fire frequently (every query, transaction, etc.)
@@ -26,9 +28,11 @@ Accepted
 - **Why decide now**: Log streaming is a core feature (FR-029, FR-030); memory management strategy affects implementation.
 
 ## Decision
+
 We will use a **ring buffer (circular buffer)** with a fixed size of **500 log entries** in the content script.
 
 Design:
+
 - Content script maintains ring buffer for each subscribed database
 - New logs overwrite oldest entries when buffer is full
 - Logs batch-sent to DevTools panel every 100ms or when buffer reaches 50 entries
@@ -36,7 +40,9 @@ Design:
 - Filter by level (info/debug/error) and fields (sql/action/event) on the panel side
 
 ## Alternatives Considered
+
 ### Option 1: Ring Buffer - 500 entries (CHOSEN)
+
 - **Pros**:
   - Fixed memory footprint (O(1) space)
   - No memory leaks (oldest entries auto-evicted)
@@ -49,6 +55,7 @@ Design:
   - Fixed limit may not suit all use cases
 
 ### Option 2: Unlimited Log Retention
+
 - **Pros**:
   - Full log history available
   - No missed logs
@@ -58,6 +65,7 @@ Design:
   - Could cause DevTools to crash
 
 ### Option 3: Time-Based Retention (e.g., 5 minutes)
+
 - **Pros**:
   - Adaptive based on log frequency
   - Guarantees recent logs visible
@@ -67,6 +75,7 @@ Design:
   - May still use too much memory if logs are frequent
 
 ### Option 4: 1000 Entry Limit
+
 - **Pros**:
   - More history than 500
 - **Cons**:
@@ -74,6 +83,7 @@ Design:
   - 500 is sufficient for debugging (typically <50 queries per session)
 
 ## Consequences
+
 - **Positive**:
   - Predictable memory usage (~500KB for log buffer)
   - No memory leaks from log accumulation
@@ -90,6 +100,7 @@ Design:
   - **R3**: Batch sending may delay log visibility (mitigation: 100ms max delay, acceptable for debugging)
 
 ## Implementation Notes
+
 - Ring buffer implementation: `src/contentScript/subscriptions/LogRingBuffer.ts`
 - Batch interval: 100ms or 50 entries (whichever comes first)
 - Log entry format: `{ level: "info"|"debug"|"error", data: unknown, timestamp: number }`

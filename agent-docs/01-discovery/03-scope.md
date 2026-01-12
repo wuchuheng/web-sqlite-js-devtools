@@ -13,6 +13,7 @@ NOTES
 # 03 Scope & Glossary
 
 ## 1) In scope
+
 - **IS1**: Chrome DevTools extension for web-sqlite-js library debugging
 - **IS2**: Detection and activation based on `window.__web_sqlite` global namespace presence
 - **IS3**: Real-time icon state updates via `onDatabaseChange` event listener
@@ -28,6 +29,7 @@ NOTES
 - **IS13**: Seed playground for safe testing (P1 feature)
 
 ## 2) Out of scope
+
 - **OS1**: Modifying web-sqlite-js library code or behavior
 - **OS2**: Supporting non-Chrome browsers (Firefox, Safari) in initial release
 - **OS3**: Direct binary file editing of SQLite databases
@@ -40,6 +42,7 @@ NOTES
 - **OS10**: Query result visualization (charts, graphs, etc.)
 
 ## 3) Boundary (interfaces with outside world)
+
 - **External systems**:
   - **Chrome DevTools Protocol**: Extension panels, messaging, runtime
   - **web-sqlite-js library**: Via `window.__web_sqlite` global namespace
@@ -57,48 +60,51 @@ NOTES
   - OPFS file downloads via browser download API
 
 ## 4) Glossary
-| Term | Meaning |
-|------|---------|
-| **web-sqlite-js** | Browser-based SQLite library compiled to WebAssembly, using OPFS for storage |
-| **OPFS** | Origin Private File System - browser API for private, efficient file storage |
-| **DevTools Panel** | Custom tab within Chrome DevTools (not popup or options page) |
-| **Content Script** | Extension script injected into web pages to access `window.__web_sqlite` |
-| **DevTools Script** | Extension script running in DevTools context, communicates with content script |
-| **Background Script** | Service worker for extension lifecycle and event handling |
-| **Hash Routing** | URL-based navigation using #/ prefixes (e.g., #/openedDB/myapp.sqlite3) |
-| **Sidebar** | Left navigation panel (20% width, collapsible) |
-| **DDL** | Data Definition Language - SQL CREATE TABLE statements |
-| **Migration** | Schema evolution SQL applied during version upgrades |
-| **Seed** | Initial data population SQL |
-| **Dev Version** | Test database version with `.dev` suffix, not persisted to release |
-| **COOP/COEP** | Cross-Origin headers required for SharedArrayBuffer in SQLite WASM |
-| **PRAGMA** | SQLite-specific commands for introspection (table_info, foreign_key_list, etc.) |
-| **Lazy Loading** | Loading file tree nodes on-demand when expanded |
-| **Active State** | Visual indicator showing currently selected menu item or tab |
-| **About Tab** | Database information panel showing metadata, version, table/row counts, OPFS file info, and library version |
+
+| Term                  | Meaning                                                                                                     |
+| --------------------- | ----------------------------------------------------------------------------------------------------------- |
+| **web-sqlite-js**     | Browser-based SQLite library compiled to WebAssembly, using OPFS for storage                                |
+| **OPFS**              | Origin Private File System - browser API for private, efficient file storage                                |
+| **DevTools Panel**    | Custom tab within Chrome DevTools (not popup or options page)                                               |
+| **Content Script**    | Extension script injected into web pages to access `window.__web_sqlite`                                    |
+| **DevTools Script**   | Extension script running in DevTools context, communicates with content script                              |
+| **Background Script** | Service worker for extension lifecycle and event handling                                                   |
+| **Hash Routing**      | URL-based navigation using #/ prefixes (e.g., #/openedDB/myapp.sqlite3)                                     |
+| **Sidebar**           | Left navigation panel (20% width, collapsible)                                                              |
+| **DDL**               | Data Definition Language - SQL CREATE TABLE statements                                                      |
+| **Migration**         | Schema evolution SQL applied during version upgrades                                                        |
+| **Seed**              | Initial data population SQL                                                                                 |
+| **Dev Version**       | Test database version with `.dev` suffix, not persisted to release                                          |
+| **COOP/COEP**         | Cross-Origin headers required for SharedArrayBuffer in SQLite WASM                                          |
+| **PRAGMA**            | SQLite-specific commands for introspection (table_info, foreign_key_list, etc.)                             |
+| **Lazy Loading**      | Loading file tree nodes on-demand when expanded                                                             |
+| **Active State**      | Visual indicator showing currently selected menu item or tab                                                |
+| **About Tab**         | Database information panel showing metadata, version, table/row counts, OPFS file info, and library version |
 
 ## 6) Icon Mapping (React Icons)
-| Location | Icon | Import |
-|----------|------|--------|
-| DevTools panel title | SiSqlite | `import { SiSqlite } from "react-icons/si"` |
-| Sidebar - App branding | SiSqlite | `import { SiSqlite } from "react-icons/si"` |
-| Sidebar - Opened DB | FaDatabase | `import { FaDatabase } from "react-icons/fa6"` |
-| Sidebar - OPFS | FaFile | `import { FaFile } from "react-icons/fa"` |
-| Sidebar - Collapse (expanded) | FaAngleLeft | `import { FaAngleLeft } from "react-icons/fa"` |
-| Sidebar - Collapse (collapsed) | FaAngleRight | `import { FaAngleRight } from "react-icons/fa"` |
-| Tab - Table | CiViewTable | `import { CiViewTable } from "react-icons/ci"` |
-| Tab - Query | BsFiletypeSql | `import { BsFiletypeSql } from "react-icons/bs"` |
-| Tab - Log | LuLogs | `import { LuLogs } from "react-icons/lu"` |
-| Tab - Migration | MdOutlineQueryBuilder | `import { MdOutlineQueryBuilder } from "react-icons/md"` |
-| Tab - Seed | FaSeedling | `import { FaSeedling } from "react-icons/fa6"` |
-| Tab - About | FaInfoCircle | `import { FaInfoCircle } from "react-icons/fa"` |
-| Table tab close | FaXmark | `import { FaXmark } from "react-icons/fa6"` |
-| Pagination refresh | FaRotate | `import { FaRotate } from "react-icons/fa"` |
-| OPFS Folder (closed) | FaFolder | `import { FaFolder } from "react-icons/fa"` |
-| OPFS Folder (open) | FaFolderOpen | `import { FaFolderOpen } from "react-icons/fa"` |
-| OPFS Download | FaDownload | `import { FaDownload } from "react-icons/fa"` |
+
+| Location                       | Icon                  | Import                                                   |
+| ------------------------------ | --------------------- | -------------------------------------------------------- |
+| DevTools panel title           | SiSqlite              | `import { SiSqlite } from "react-icons/si"`              |
+| Sidebar - App branding         | SiSqlite              | `import { SiSqlite } from "react-icons/si"`              |
+| Sidebar - Opened DB            | FaDatabase            | `import { FaDatabase } from "react-icons/fa6"`           |
+| Sidebar - OPFS                 | FaFile                | `import { FaFile } from "react-icons/fa"`                |
+| Sidebar - Collapse (expanded)  | FaAngleLeft           | `import { FaAngleLeft } from "react-icons/fa"`           |
+| Sidebar - Collapse (collapsed) | FaAngleRight          | `import { FaAngleRight } from "react-icons/fa"`          |
+| Tab - Table                    | CiViewTable           | `import { CiViewTable } from "react-icons/ci"`           |
+| Tab - Query                    | BsFiletypeSql         | `import { BsFiletypeSql } from "react-icons/bs"`         |
+| Tab - Log                      | LuLogs                | `import { LuLogs } from "react-icons/lu"`                |
+| Tab - Migration                | MdOutlineQueryBuilder | `import { MdOutlineQueryBuilder } from "react-icons/md"` |
+| Tab - Seed                     | FaSeedling            | `import { FaSeedling } from "react-icons/fa6"`           |
+| Tab - About                    | FaInfoCircle          | `import { FaInfoCircle } from "react-icons/fa"`          |
+| Table tab close                | FaXmark               | `import { FaXmark } from "react-icons/fa6"`              |
+| Pagination refresh             | FaRotate              | `import { FaRotate } from "react-icons/fa"`              |
+| OPFS Folder (closed)           | FaFolder              | `import { FaFolder } from "react-icons/fa"`              |
+| OPFS Folder (open)             | FaFolderOpen          | `import { FaFolderOpen } from "react-icons/fa"`          |
+| OPFS Download                  | FaDownload            | `import { FaDownload } from "react-icons/fa"`            |
 
 ## 5) Risks (early)
+
 - **R1**: **Chrome Extension Permissions** - Need `activeTab` or broader permissions to access `window.__web_sqlite`. Mitigation: Request minimal permissions, document clearly.
 - **R2**: **OPFS Access Restrictions** - DevTools context may not directly access page's OPFS. Mitigation: Use content script as proxy for file operations.
 - **R3**: **Cross-Context Messaging** - Content script and DevTools panel communication complexity. Mitigation: Use chrome.runtime.sendMessage with clear protocol.

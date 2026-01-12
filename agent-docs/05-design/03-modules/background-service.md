@@ -13,6 +13,7 @@ NOTES
 # Module: Background Service Worker
 
 ## 0) File Tree (Design + Code)
+
 ```text
 agent-docs/05-design/03-modules/background-service.md
 src/background/
@@ -28,11 +29,13 @@ src/background/
 ```
 
 ## 1) Assets (Traceability)
+
 - **API**: Routes messages between panel and content script
 - **Events**: Handles `ICON_STATE` events, forwards `LOG_EVENT`
 - **Types**: See `Message Types` in `02-schema/01-message-types.md`
 
 ## 2) Responsibilities
+
 - Act as message router between DevTools panel and content script
 - Update popup icon based on database availability
 - Manage extension lifecycle on install/update
@@ -42,6 +45,7 @@ src/background/
 ## 3) Internal Logic (Flow)
 
 ### Message Routing Flow
+
 ```mermaid
 flowchart TD
     P[DevTools Panel] -->|sendMessage| BG[Background Service Worker]
@@ -51,6 +55,7 @@ flowchart TD
 ```
 
 ### Icon State Update Flow
+
 ```mermaid
 flowchart TD
     CS[Content Script] -->|ICON_STATE| BG[Background]
@@ -60,6 +65,7 @@ flowchart TD
 ```
 
 ### Log Event Forwarding Flow
+
 ```mermaid
 flowchart TD
     CS[Content Script] -->|LOG_EVENT| BG[Background]
@@ -70,6 +76,7 @@ flowchart TD
 ## 4) Classes / Functions
 
 ### Service Worker (src/background/index.ts)
+
 - **onInstall**
   - Set up context menu (if needed)
   - Initialize default state
@@ -83,6 +90,7 @@ flowchart TD
   - Notify panel of connection loss (if panel open)
 
 ### Icon State Management (src/background/iconState/)
+
 - **updateIcon(hasDatabase)**
   - Sets `active` or `inactive` icon
   - Updates badge text (optional: show DB count)
@@ -109,6 +117,7 @@ flowchart TD
   - Returns: `void` (fire-and-forget for events)
 
 ### Internal Handlers (src/background/messaging/)
+
 - **handleHeartbeat**
   - Responds immediately to panel heartbeat
   - Returns: `{ success: true, timestamp }`
@@ -118,11 +127,13 @@ flowchart TD
   - Returns: `{ success: true }`
 
 ## 5) Dependencies
+
 - **External**: None (vanilla TypeScript)
 - **Internal**: `src/messaging/channels.ts`, `src/messaging/types.ts`
 - **Chrome APIs**: chrome.runtime, chrome.tabs, chrome.action
 
 ### Icon Assets
+
 - Active icon: `public/icons/logo-active-48.png`
 - Inactive icon: `public/icons/logo-inactive-48.png`
 - Note: May need to generate these (grayscale for inactive)

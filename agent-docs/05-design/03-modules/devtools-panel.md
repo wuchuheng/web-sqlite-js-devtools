@@ -13,6 +13,7 @@ NOTES
 # Module: DevTools Panel
 
 ## 0) File Tree (Design + Code)
+
 ```text
 agent-docs/05-design/03-modules/devtools-panel.md
 src/devtools/
@@ -68,11 +69,13 @@ src/devtools/
 ```
 
 ## 1) Assets (Traceability)
+
 - **API**: See `### Module: Database Inspection`, `### Module: Query Execution` in `01-contracts/01-api.md`
 - **Events**: See `LOG_ENTRY`, `DATABASE_CHANGED` in `01-contracts/02-events.md`
 - **Types**: See `Component State Types` in `02-schema/01-message-types.md`
 
 ## 2) Responsibilities
+
 - Render UI for all 6 tabs (Table, Query, Log, Migration, Seed, About)
 - Manage routing via react-router HashRouter
 - Send requests via chrome.runtime.sendMessage
@@ -84,6 +87,7 @@ src/devtools/
 ## 3) Internal Logic (Flow)
 
 ### Database Query Flow
+
 ```mermaid
 flowchart TD
     U[User Action] --> R[React State Update]
@@ -99,6 +103,7 @@ flowchart TD
 ```
 
 ### Log Subscription Flow
+
 ```mermaid
 flowchart TD
     M[Mount LogTab] --> S[Send SUBSCRIBE_LOGS]
@@ -116,6 +121,7 @@ flowchart TD
 ## 4) Classes / Functions
 
 ### Components
+
 - **DevTools (Root)**
   - `render()`: Main layout with Sidebar + MainContent
   - `useEffect()`: Initialize connection on mount
@@ -155,6 +161,7 @@ flowchart TD
   - `handleDownload(path)`: Send DOWNLOAD_OPFS_FILE request
 
 ### Hooks
+
 - **useDatabase(dbname)**
   - `databases`: List of available databases
   - `tables`: List of tables for selected database
@@ -179,6 +186,7 @@ flowchart TD
   - Returns: `{ state, retry }`
 
 ### Message Senders (src/devtools/messaging/index.ts)
+
 - `sendGetDatabases()`: Request database list
 - `sendGetTableList(dbname)`: Request table list
 - `sendGetTableSchema(dbname, tableName)`: Request table DDL
@@ -192,6 +200,7 @@ flowchart TD
 - `sendDownloadOpfsFile(path)`: Download OPFS file
 
 ## 5) Dependencies
+
 - **External**: React, react-router-dom, react-icons, CodeMirror
 - **Internal**: `src/messaging/channels.ts`, `src/messaging/types.ts`
 - **Chrome APIs**: chrome.runtime.sendMessage

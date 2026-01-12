@@ -13,9 +13,11 @@ NOTES
 # ADR-0006: Auto-Reconnect with Exponential Backoff for Page Refresh Handling
 
 ## Status
+
 Accepted
 
 ## Context
+
 - **Issue**: When user refreshes the web page, the content script is destroyed and reloaded, but the DevTools panel remains open. The panel loses connection to `window.__web_sqlite` and needs to reconnect.
 - **Constraints**:
   - Content script reload is asynchronous (timing unknown)
@@ -26,26 +28,32 @@ Accepted
 - **Why decide now**: Page refresh handling is critical for UX; reconnection strategy affects panel state management.
 
 ## Decision
+
 We will use **heartbeat-based detection with exponential backoff reconnection**:
 
 **Detection:**
+
 - Panel sends heartbeat every 5 seconds via `HEARTBEAT` channel
 - Content script responds immediately
 - Panel declares timeout after 15 seconds without response (3 missed heartbeats)
 
 **Reconnection:**
+
 - On timeout, panel enters "Reconnecting" state
 - Retry attempts at: 1s, 2s, 4s, 8s, 15s, 15s, 15s... (exponential then fixed)
 - Show loading state with spinner
 - After 3 failed retries (or 30s total), show error state with "Retry" button
 
 **User Actions:**
+
 - User can click "Retry" button to immediately attempt reconnection
 - Panel automatically reconnects when user navigates (hash change)
 - On successful reconnect, restore previous route state
 
 ## Alternatives Considered
+
 ### Option 1: Heartbeat + Exponential Backoff (CHOSEN)
+
 - **Pros**:
   - Robust detection of connection loss
   - Automatic recovery without user intervention
@@ -58,6 +66,7 @@ We will use **heartbeat-based detection with exponential backoff reconnection**:
   - Reconnection delay up to 30s
 
 ### Option 2: Polling with Fixed Interval
+
 - **Pros**:
   - Simpler implementation
   - Predictable retry timing
@@ -67,6 +76,7 @@ We will use **heartbeat-based detection with exponential backoff reconnection**:
   - No backoff strategy
 
 ### Option 3: chrome.tabs.onUpdated Listener
+
 - **Pros**:
   - Direct notification of page refresh
 - **Cons**:
@@ -75,6 +85,7 @@ We will use **heartbeat-based detection with exponential backoff reconnection**:
   - Cannot detect content script readiness directly
 
 ### Option 4: No Auto-Reconnect (Manual Only)
+
 - **Pros**:
   - Simplest implementation
   - No overhead
@@ -83,6 +94,7 @@ We will use **heartbeat-based detection with exponential backoff reconnection**:
   - Violates NFR-041 requirement
 
 ## Consequences
+
 - **Positive**:
   - Automatic recovery from page refresh
   - Graceful degradation (shows error if cannot reconnect)
@@ -99,6 +111,7 @@ We will use **heartbeat-based detection with exponential backoff reconnection**:
   - **R3**: Multiple tabs open with same extension could cause heartbeat confusion (mitigation: heartbeats are tab-scoped via chrome.tabs.sendMessage)
 
 ## Implementation Notes
+
 - Heartbeat interval: 5000ms
 - Timeout threshold: 15000ms (3 missed heartbeats)
 - Retry delays: [1000, 2000, 4000, 8000, 15000, 15000, ...]

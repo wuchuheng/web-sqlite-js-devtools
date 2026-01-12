@@ -13,6 +13,7 @@ NOTES
 # Module: Content Script Proxy
 
 ## 0) File Tree (Design + Code)
+
 ```text
 agent-docs/05-design/03-modules/content-script-proxy.md
 src/contentScript/
@@ -40,11 +41,13 @@ src/contentScript/
 ```
 
 ## 1) Assets (Traceability)
+
 - **API**: Handles all channels defined in `01-contracts/01-api.md`
 - **Events**: Emits `LOG_ENTRY`, `DATABASE_CHANGED` events
 - **Types**: See `Content Script State` in `02-schema/01-message-types.md`
 
 ## 2) Responsibilities
+
 - Inject into web page context
 - Access `window.__web_sqlite` API
 - Forward requests from DevTools panel to web-sqlite-js
@@ -58,6 +61,7 @@ src/contentScript/
 ## 3) Internal Logic (Flow)
 
 ### Request Handling Flow
+
 ```mermaid
 flowchart TD
     BG[Background Message] --> L[chrome.runtime.onMessage Listener]
@@ -80,6 +84,7 @@ flowchart TD
 ```
 
 ### Log Subscription Flow
+
 ```mermaid
 flowchart TD
     REQ[SUBSCRIBE_LOGS Request] --> SM[Subscription Manager]
@@ -94,6 +99,7 @@ flowchart TD
 ```
 
 ### Database Change Detection Flow
+
 ```mermaid
 flowchart TD
     API[window.__web_sqlite.onDatabaseChange] --> CB[Callback Handler]
@@ -106,6 +112,7 @@ flowchart TD
 ## 4) Classes / Functions
 
 ### Proxy Functions (src/contentScript/proxy/)
+
 - **getDatabaseRecord(dbname)**
   - Returns: `DatabaseRecord` (with Map→Array conversion)
   - Converts `migrationSQL` Map to `Array<[string, string]>`
@@ -125,6 +132,7 @@ flowchart TD
   - Returns: `TableInfo`
 
 ### Subscription Manager (src/contentScript/subscriptions/SubscriptionManager.ts)
+
 - **create(dbname)**
   - Creates new subscription with ring buffer
   - Calls `db.onLog(callback)`
@@ -144,6 +152,7 @@ flowchart TD
   - Runs every 100ms or when 50 entries accumulated
 
 ### Log Ring Buffer (src/contentScript/subscriptions/LogRingBuffer.ts)
+
 - **add(entry)**
   - Adds log entry to buffer
   - Overwrites oldest entry if buffer full (500 entries)
@@ -201,6 +210,7 @@ flowchart TD
   - Returns: `{ timestamp }`
 
 ## 5) Dependencies
+
 - **External**: None (vanilla TypeScript)
 - **Internal**: `src/messaging/channels.ts`, `src/messaging/types.ts`
 - **Browser APIs**: chrome.runtime, navigator.storage.getDirectory

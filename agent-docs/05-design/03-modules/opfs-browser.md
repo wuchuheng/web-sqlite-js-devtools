@@ -13,6 +13,7 @@ NOTES
 # Module: OPFS Browser
 
 ## 0) File Tree (Design + Code)
+
 ```text
 agent-docs/05-design/03-modules/opfs-browser.md
 src/contentScript/proxy/opfsProxy.ts  # OPFS operations in content script
@@ -24,11 +25,13 @@ src/devtools/components/OPFSBrowser/
 ```
 
 ## 1) Assets (Traceability)
+
 - **API**: See `### Module: OPFS File Browser` in `01-contracts/01-api.md`
 - **Events**: None (request/response only)
 - **Types**: See `OPFS File Types` in `02-schema/01-message-types.md`
 
 ## 2) Responsibilities
+
 - List OPFS files and directories
 - Lazy-load directory contents on expand
 - Display file sizes in human-readable format
@@ -38,6 +41,7 @@ src/devtools/components/OPFSBrowser/
 ## 3) Internal Logic (Flow)
 
 ### OPFS File Listing Flow
+
 ```mermaid
 flowchart TD
     U[User Expands Folder] --> P[OPFSBrowser Component]
@@ -49,6 +53,7 @@ flowchart TD
 ```
 
 ### File Download Flow
+
 ```mermaid
 flowchart TD
     U[User Clicks Download] --> B[DownloadButton]
@@ -63,6 +68,7 @@ flowchart TD
 ## 4) Classes / Functions
 
 ### Content Script Proxy (src/contentScript/proxy/opfsProxy.ts)
+
 - **getOpfsFiles(path, dbname)**
   - Calls: `navigator.storage.getDirectory()`
   - Navigates to `path` if provided
@@ -81,17 +87,20 @@ flowchart TD
 ### Components
 
 **FileTree (src/devtools/components/OPFSBrowser/FileTree.tsx)**
+
 - Props: `{ path: string, dbname?: string, level: number }`
 - State: `{ expanded: boolean, loading: boolean, entries: OpfsEntry[] }`
 - `handleExpand()`: Fetches child entries, sets expanded=true
 - `render()`: Recursive tree with indentation based on level
 
 **FileNode (src/devtools/components/OPFSBrowser/FileNode.tsx)**
+
 - Props: `{ entry: OpfsEntry, level: number, onExpand: () => void }`
 - `render()`: Displays folder/file icon + name + size (files only)
 - Icons: `FaFolder` (closed), `FaFolderOpen` (open), `FaFile` (file)
 
 **DownloadButton (src/devtools/components/OPFSBrowser/DownloadButton.tsx)**
+
 - Props: `{ path: string, filename: string }`
 - `handleClick()`: Sends DOWNLOAD_OPFS_FILE request
 - Creates hidden `<a>` tag with `download` attribute
@@ -99,12 +108,13 @@ flowchart TD
 - Revokes blob URL after download
 
 ### Type Definitions
+
 ```typescript
 interface OpfsEntry {
   name: string;
   kind: "file" | "directory";
-  size?: string;  // Human-readable
-  path: string;   // Full path from OPFS root
+  size?: string; // Human-readable
+  path: string; // Full path from OPFS root
 }
 
 interface OpfsFile extends OpfsEntry {
@@ -118,11 +128,13 @@ interface OpfsDirectory extends OpfsEntry {
 ```
 
 ## 5) Dependencies
+
 - **External**: react-icons (FaFolder, FaFolderOpen, FaFile, FaDownload)
 - **Internal**: `src/messaging/channels.ts`, `src/messaging/types.ts`
 - **Browser APIs**: navigator.storage.getDirectory, URL.createObjectURL
 
 ## 6) Error Handling
+
 - **OPFS_NOT_SUPPORTED**: Browser doesn't support OPFS
   - Display: Empty state with message "OPFS not supported in this browser"
   - Action: None (user cannot upgrade browser via extension)
