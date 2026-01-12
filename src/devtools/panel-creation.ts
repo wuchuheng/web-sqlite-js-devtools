@@ -10,18 +10,13 @@ if (
   && chrome.devtools
   && chrome.devtools.panels
 ) {
-  chrome.devtools.panels.create(
-    "Sqlite",
-    "",
-    "devtools.html",
-    function (panel) {
-      console.log("[Web Sqlite DevTools] Panel created successfully");
-      panel.onShown.addListener(function (window) {
-        console.log("[Web Sqlite DevTools] Panel shown");
-      });
-      panel.onHidden.addListener(function () {
-        console.log("[Web Sqlite DevTools] Panel hidden");
-      });
-    },
-  );
+  chrome.devtools.panels.create("Sqlite", "", "panel.html", function (panel) {
+    console.log("[Web Sqlite DevTools] Panel created successfully");
+    panel.onShown.addListener(function (window) {
+      console.log("[Web Sqlite DevTools] Panel shown");
+    });
+    panel.onHidden.addListener(function () {
+      console.log("[Web Sqlite DevTools] Panel hidden");
+    });
+  });
 }
