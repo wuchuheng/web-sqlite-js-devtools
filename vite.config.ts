@@ -32,6 +32,8 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         input: {
           offscreen: path.resolve(__dirname, "offscreen.html"),
+          devtools: path.resolve(__dirname, "devtools.html"),
+          panel: path.resolve(__dirname, "panel.html"),
         },
         output: {
           chunkFileNames: "assets/chunk-[hash].js",

@@ -24,7 +24,7 @@ export const DevTools = () => {
 
   return (
     <HashRouter>
-      <div className="h-screen w-screen flex">
+      <div className="devtools-panel">
         <Routes>
           {/* Default route - landing page */}
           <Route
