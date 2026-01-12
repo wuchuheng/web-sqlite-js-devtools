@@ -21,7 +21,6 @@ interface EvaluationExceptionInfo {
  * Result type from chrome.devtools.inspectedWindow.eval
  */
 interface InspectWindowResult {
-  contentScriptActive: boolean;
   webSqliteDetected: boolean;
   success: boolean;
 }
@@ -74,8 +73,8 @@ export const useConnection = (): UseConnectionReturn => {
   const isMounted = useRef(true);
 
   /**
-   * 1. Execute code in inspected page to check content script status
-   * 2. Verify web-sqlite-js API is available
+   * 1. Execute code in inspected page to check web-sqlite-js availability
+   * 2. Verify window.__web_sqlite is present
    * 3. Set status to connected on success
    *
    * @remarks
@@ -87,16 +86,14 @@ export const useConnection = (): UseConnectionReturn => {
     if (!isMounted.current) return;
 
     /**
-     * 1. Check if content script shadow host exists
-     * 2. Check if web-sqlite-js API is available
-     * 3. Return true if both conditions met
+     * 1. Check if web-sqlite-js API is available
+     * 2. Return true when API exists
+     * 3. Surface eval success flag
      */
     const checkScript = `(
       () => {
-        const shadowHost = document.getElementById('extension-content-root');
         const hasWebSqlite = typeof window.__web_sqlite !== 'undefined';
         return {
-          contentScriptActive: !!shadowHost && !!shadowHost.shadowRoot,
           webSqliteDetected: hasWebSqlite,
           success: true
         };
@@ -118,7 +115,7 @@ export const useConnection = (): UseConnectionReturn => {
           return;
         }
 
-        if (result.contentScriptActive && result.webSqliteDetected) {
+        if (result.webSqliteDetected) {
           setStatus("connected");
           setError(undefined);
           retryCount.current = 0;

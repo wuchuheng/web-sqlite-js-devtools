@@ -69,17 +69,18 @@ NOTES
   - **Micro-Spec**: [completed](agent-docs/08-task/active/TASK-04.md)
   - **DoD**:
     - Content script detects `window.__web_sqlite` availability
-    - ICON_STATE channel with active/inactive states
+    - ICON_STATE message with active/inactive states
     - Icon assets (active: colored, inactive: grayscale)
     - Heartbeat every 5s with exponential backoff (1s, 2s, 4s, 8s, 15s)
 
-- [ ] **TASK-05**: Database List & Table Browser
+- [x] **TASK-05**: Database List & Table Browser
   - **Priority**: P0 (Blocker)
   - **Dependencies**: TASK-03, TASK-02
-  - **Boundary**: `src/contentScript/proxy/databaseProxy.ts`, `src/devtools/components/Sidebar/DatabaseList.tsx`
+  - **Boundary**: `src/devtools/inspectedWindow.ts`, `src/devtools/components/Sidebar/DatabaseList.tsx`, `src/devtools/components/TableTab/`
   - **Maps to**: FR-001, FR-008, FR-009, FR-016, FR-017
+  - **Micro-Spec**: [completed](agent-docs/08-task/active/TASK-05.md)
   - **DoD**:
-    - GET_TABLE_LIST handler with PRAGMA queries, alphabetical sort
+    - inspectedWindow eval with PRAGMA queries, alphabetical sort
     - DatabaseList in sidebar, nested under "Opened DB"
     - Clicking database navigates to `/openedDB/:dbname`
     - TableList component with alphabetical tables, active state styling

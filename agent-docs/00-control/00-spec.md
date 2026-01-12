@@ -40,8 +40,8 @@ NOTES
 
 - **Current stage (1-8)**: Stage 8 - Implementation (Worker)
 - **Active release**: v1.0.0 (MVP) - Target: 2026-01-27
-- **Status summary**: TASK-01, TASK-02, TASK-03, TASK-04 completed, 8 tasks remaining for MVP
-- **Last updated (YYYY-MM-DD)**: 2026-01-13 (TASK-04 - Icon State & Auto-Reconnect)
+- **Status summary**: TASK-01, TASK-02, TASK-03, TASK-04, TASK-05 completed, 7 tasks remaining for MVP
+- **Last updated (YYYY-MM-DD)**: 2026-01-13 (Refactor - inspectedWindow eval access)
 
 ## 4) Technology stack (chosen in Stage 2)
 
@@ -101,3 +101,5 @@ NOTES
 - **2026-01-13**: Stage 4 ADR completed - 6 ADRs created (Content Script Proxy, React Router, CodeMirror, Message Protocol, Log Ring Buffer, Auto-Reconnect)
 - **2026-01-13**: Stage 5 Design completed - API contracts (10 channels), events (6 types), error standards, message types, and 4 module LLDs
 - **2026-01-13**: Stage 7 Task Management completed - 6-phase roadmap (14 days) and 12 actionable tasks created
+- **2026-01-13**: TASK-05 completed - Database List & Table Browser (inspectedWindow eval, sidebar DB list, table list)
+- **2026-01-13**: Architecture refactor - replace channel messaging with inspectedWindow eval for DB access

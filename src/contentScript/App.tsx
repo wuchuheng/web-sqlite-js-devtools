@@ -2,13 +2,12 @@
  * Content Script App
  *
  * @remarks
- * Runs in the context of web pages to provide access to window.__web_sqlite API.
- * Implements Content Script Proxy Pattern (ADR-0001) for DevTools panel communication.
+ * Runs in the context of web pages to monitor window.__web_sqlite availability.
+ * Sends icon state updates to the background service worker.
  */
 
 import { useEffect } from "react";
-import { registerAllHandlers } from "./messaging/handlers";
-import { ICON_STATE } from "@/messaging/channels";
+import { ICON_STATE_MESSAGE } from "@/shared/messages";
 
 // Declare web-sqlite-js global type
 declare global {
@@ -26,19 +25,10 @@ declare global {
  * Main content script component
  *
  * @remarks
- * Registers all message channel handlers on mount to enable
- * DevTools panel → Background SW → Content Script → window.__web_sqlite communication.
- * Also sends ICON_STATE messages to update extension icon based on database availability.
+ * Sends ICON_STATE_MESSAGE updates to the background service worker.
  */
 export default function App() {
   useEffect(() => {
-    /**
-     * 1. Register all message handlers for content script proxy
-     * 2. Enables GET_DATABASES, HEARTBEAT, and 8 stub channels
-     * 3. Called once on content script mount
-     */
-    registerAllHandlers();
-
     /**
      * 1. Check if web-sqlite-js API is available on the page
      * 2. Log detection for debugging
@@ -62,7 +52,7 @@ export default function App() {
 
     /**
      * 1. Check if databases Map has entries
-     * 2. Send ICON_STATE message with hasDatabase boolean
+     * 2. Send ICON_STATE_MESSAGE with hasDatabase boolean
      * 3. Called on mount and on database changes
      *
      * @remarks
@@ -76,14 +66,13 @@ export default function App() {
       const hasDatabase = webSqlite?.databases && webSqlite.databases.size > 0;
 
       /**
-       * 1. Send ICON_STATE message to background
+       * 1. Send ICON_STATE_MESSAGE to background
        * 2. chrome.runtime.sendMessage delivers to background service worker
        * 3. Background updates icon based on hasDatabase boolean
        */
       chrome.runtime.sendMessage({
-        type: "request",
-        channel: ICON_STATE,
-        payload: { hasDatabase },
+        type: ICON_STATE_MESSAGE,
+        hasDatabase,
       });
     };
 

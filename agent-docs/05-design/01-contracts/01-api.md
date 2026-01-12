@@ -12,6 +12,9 @@ NOTES
 
 # 01 API Contract (Chrome Extension Messaging)
 
+> **Note**: Channel-based API contracts are deprecated. DevTools data access now uses
+> `chrome.devtools.inspectedWindow.eval` directly.
+
 ## 0) Document Map
 
 ```text

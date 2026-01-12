@@ -14,13 +14,14 @@ NOTES
 
 ## 1) Architecture Style & Principles
 
-- **Pattern**: **Content Script Proxy Pattern** (Chrome Extension specific)
-  - DevTools Panel → Background Service Worker → Content Script → Page Context (`window.__web_sqlite`)
+- **Pattern**: **DevTools Inspected Window Access**
+  - DevTools Panel → `chrome.devtools.inspectedWindow.eval` → Page Context (`window.__web_sqlite`)
+  - Content script retained only for icon state updates
 - **Key Principles**:
-  - **Context Isolation**: DevTools panel cannot directly access page context; content script acts as bridge
-  - **Message-Based Communication**: All cross-context communication via `chrome.runtime.sendMessage`
+  - **Context Isolation**: DevTools accesses the page via inspected window eval
+  - **Minimal Messaging**: Runtime messaging only for icon state updates
   - **Hash-Based Routing**: Single-page application navigation via URL hash (react-router-dom)
-  - **Real-Time Updates**: Event-driven updates via `onDatabaseChange` and `db.onLog()` subscriptions
+  - **Real-Time Updates**: Polling/requests via eval (streaming TBD)
   - **Stateless Panel**: DevTools panel can be closed/reopened without losing page context
 
 ## 2) System Boundary (C4 Context)
@@ -37,7 +38,7 @@ C4Context
   System_Ext(lib, "web-sqlite-js", "SQLite WASM Library")
 
   Rel(dev, ext, "Opens DevTools Panel")
-  Rel(ext, page, "Content Script Injection")
+  Rel(ext, page, "DevTools eval access + icon state content script")
   Rel(page, lib, "Uses DB API")
 ```
 
@@ -46,9 +47,9 @@ C4Context
 - **DevTools Panel**: React 18 + TypeScript + Tailwind CSS + react-router-dom
   - **Reason**: Leverages existing template, provides declarative UI and routing
 - **Content Script**: TypeScript + Chrome Extension APIs
-  - **Reason**: Acts as proxy to access `window.__web_sqlite` from page context
+  - **Reason**: Monitors `window.__web_sqlite` for icon state updates
 - **Background Service Worker**: TypeScript + Chrome Extension APIs
-  - **Reason**: Manages extension lifecycle, icon state, and message routing
+  - **Reason**: Manages extension lifecycle, icon state, and offscreen logging
 - **Routing**: react-router-dom (HashRouter)
   - **Reason**: Hash-based routing required for DevTools panel URLs
 - **SQL Editor**: CodeMirror 6
@@ -61,20 +62,18 @@ C4Container
   title Container Diagram
   Container(panel, "DevTools Panel", "React + TS", "UI: Tables, Queries, Logs, OPFS")
   Container(bg, "Background SW", "TypeScript", "Icon State, Extension Lifecycle")
-  Container(cs, "Content Script", "TypeScript", "Proxy to window.__web_sqlite")
+  Container(cs, "Content Script", "TypeScript", "Icon State Monitor")
   System_Ext(page, "Web Page", "web-sqlite-js", "SQLite Databases")
   System_Ext(opfs, "OPFS", "Browser API", "File System Access")
 
-  Rel(panel, bg, "chrome.runtime.sendMessage")
-  Rel(bg, cs, "chrome.tabs.sendMessage")
-  Rel(cs, page, "Direct Access (window.__web_sqlite)")
+  Rel(panel, page, "chrome.devtools.inspectedWindow.eval")
+  Rel(cs, page, "Detects window.__web_sqlite")
   Rel(cs, opfs, "navigator.storage.getDirectory")
-  Rel(panel, cs, "Query/Log Subscriptions")
 ```
 
 ## 4) Data Architecture Strategy
 
-- **Ownership**: Content Script owns the connection to `window.__web_sqlite`; DevTools panel owns UI state
+- **Ownership**: DevTools panel accesses `window.__web_sqlite` via eval; content script only tracks icon state
 - **Caching**:
   - Table list: Cached in DevTools panel until database changes
   - Query results: Not cached (always fresh from database)
@@ -89,23 +88,16 @@ C4Container
 
 ### 5.1 Message Protocol
 
-- **Channel Names**: Defined in `src/messaging/channels.ts`
-  - `GET_DATABASES`: List all opened databases
-  - `GET_TABLE_LIST`: Get tables for a database
-  - `QUERY_SQL`: Execute SQL query
-  - `EXEC_SQL`: Execute SQL statement (INSERT/UPDATE/DELETE)
-  - `SUBSCRIBE_LOGS`: Subscribe to log events
-  - `GET_OPFS_FILES`: List OPFS files
-  - `DOWNLOAD_OPFS_FILE`: Download OPFS file
-- **Serialization**: Maps converted to Arrays before sending (Spike S-001 result)
-- **Error Handling**: Standard `{ success: boolean, data?: T, error?: string }` response format
+- **DevTools Data Access**: Uses `chrome.devtools.inspectedWindow.eval` directly
+- **Runtime Messaging**: Only icon state updates and offscreen log storage
+- **Error Handling**: Standard `{ success: boolean, data?: T, error?: string }` response format for eval
 
 ### 5.2 Reconnection Strategy
 
-- **Heartbeat**: Content script sends heartbeat every 5 seconds
-- **Timeout**: DevTools panel shows error after 15 seconds without heartbeat
+- **Heartbeat**: DevTools panel evaluates `window.__web_sqlite` every 5 seconds
+- **Timeout**: DevTools panel shows error after 15 seconds without successful eval
 - **Auto-Reconnect**: Panel attempts to reconnect on route change or user action
-- **Page Refresh**: Panel detects page navigation via chrome.tabs.onUpdated
+- **Page Refresh**: Panel detects refresh via failed eval and retries
 
 ### 5.3 Observability
 
@@ -115,9 +107,9 @@ C4Container
 
 ### 5.4 Security
 
-- **Permissions**: Minimal Chrome permissions (`activeTab`, `tabs`)
+- **Permissions**: Minimal Chrome permissions (sidePanel, storage, offscreen)
 - **Content Security Policy**: Strict CSP for extension pages
-- **No eval():** No dynamic code execution (SQL sent to web-sqlite-js only)
+- **Eval Usage**: Only `chrome.devtools.inspectedWindow.eval` within DevTools
 
 ## 6) Code Structure Strategy (High-Level File Tree)
 
@@ -137,22 +129,21 @@ C4Container
         /AboutTab       # Database info
         /OPFSBrowser    # OPFS file tree
       /hooks            # Custom React hooks
-      /messaging        # DevTools message handlers
       /utils            # Utilities
+      inspectedWindow.ts # DevTools eval helpers
       DevTools.tsx      # Main DevTools component
       index.tsx         # Entry point
-    /contentScript      # Content Script (Proxy)
-      /messaging        # Content script message handlers
-      /proxy            # window.__web_sqlite wrapper
-      /subscriptions    # Log subscription manager
+    /contentScript      # Content Script (Icon State)
+      App.tsx           # Icon state updater
       index.tsx         # Entry point
     /background         # Background Service Worker
       /iconState        # Icon activation logic
-      /messaging        # Background message routing
       index.ts          # Entry point
-    /messaging          # Shared message types
-      channels.ts       # Channel name constants
-      types.ts          # Message/request/response types
+    /messaging          # Offscreen log channels
+      channels.ts       # Offscreen log channels
+      core.ts           # Channel core
+    /shared             # Shared constants
+      messages.ts       # Runtime message IDs
     /components         # Shared React components
       /CodeMirrorEditor # Reusable SQL editor
       /DataTable        # Reusable table display
@@ -163,20 +154,20 @@ C4Container
   agent-docs            # Architecture documentation
 ```
 
-**Module Pattern**: Layered architecture (Presentation → Messaging → Proxy → External API)
+**Module Pattern**: Layered architecture (Presentation → Eval Helpers → External API)
 
 ```text
 /src/devtools
   /components          # Presentation Layer (React components)
-  /hooks               # Custom hooks (useDatabase, useQuery, useLogs)
-  /messaging           # Messaging Layer (send/receive messages)
+  /hooks               # Custom hooks (useConnection, useInspectedWindowRequest)
+  /utils               # Route/database helpers
+  inspectedWindow.ts   # Eval helpers (window.__web_sqlite access)
 /src/contentScript
-  /messaging           # Messaging Layer (handle requests from panel)
-  /proxy               # Proxy Layer (wrap window.__web_sqlite)
-  /subscriptions       # Subscription Layer (log streaming)
+  App.tsx              # Icon state monitor
 /src/background
   /iconState           # Icon State Management
-  /messaging           # Message Routing (panel ↔ content script)
+/src/shared
+  messages.ts          # Runtime message IDs
 ```
 
 ## 7) Component Hierarchy (DevTools Panel)

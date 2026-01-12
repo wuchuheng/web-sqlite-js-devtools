@@ -49,5 +49,6 @@ export default defineManifest({
       matches: ["<all_urls>"],
     },
   ],
-  permissions: ["sidePanel", "storage", "offscreen", "scripting", "tabs"],
+  permissions: ["sidePanel", "storage", "offscreen"],
+  host_permissions: ["<all_urls>"],
 });

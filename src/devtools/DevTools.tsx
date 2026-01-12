@@ -2,6 +2,7 @@ import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect } from "react";
 import { Sidebar } from "./components/Sidebar/Sidebar";
 import { EmptyState } from "./components/EmptyState/EmptyState";
+import { DatabaseView } from "./components/TableTab/DatabaseView";
 import { useConnection } from "./hooks/useConnection";
 import "./DevTools.css";
 
@@ -81,7 +82,7 @@ export const DevTools = () => {
       <div className="devtools-panel flex">
         <Sidebar />
 
-        <main className="flex-1 h-full overflow-auto flex flex-col">
+        <main className="flex-1 h-full overflow-auto flex flex-col text-left">
           {/* Connection status indicator */}
           {renderConnectionStatus()}
 
@@ -91,21 +92,10 @@ export const DevTools = () => {
             {/* 3. Implements FR-042 (helpful instructions) */}
             <Route path="/" element={<EmptyState />} />
 
-            {/* 1. Database view routes (to be implemented in TASK-05) */}
-            {/* 2. Placeholder for database detail pages */}
-            {/* 3. Will show table browser, query editor, logs, etc. */}
-            <Route
-              path="/openedDB/:dbname"
-              element={
-                <div className="p-4">
-                  <h2 className="text-lg font-semibold">Database View</h2>
-                  <p className="text-sm text-gray-600">
-                    Database: <span id="dbname-display"></span>
-                  </p>
-                  <p className="text-xs text-gray-400 mt-2">Coming soon...</p>
-                </div>
-              }
-            />
+            {/* 1. Database view route */}
+            {/* 2. Shows table list and placeholder content */}
+            {/* 3. Table data view implemented in TASK-06 */}
+            <Route path="/openedDB/:dbname" element={<DatabaseView />} />
 
             {/* 1. OPFS browser route (to be implemented in TASK-10) */}
             {/* 2. Placeholder for OPFS file tree */}

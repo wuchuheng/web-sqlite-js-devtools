@@ -64,8 +64,7 @@ src/devtools/
     useQuery.ts             # Query execution hook
     useLogs.ts              # Log subscription hook
     useConnection.ts        # Connection state hook
-  messaging/
-    index.ts                # Message senders
+  inspectedWindow.ts        # Inspected window eval helpers
 ```
 
 ## 1) Assets (Traceability)
@@ -78,7 +77,7 @@ src/devtools/
 
 - Render UI for all 6 tabs (Table, Query, Log, Migration, Seed, About)
 - Manage routing via react-router HashRouter
-- Send requests via chrome.runtime.sendMessage
+- Query data via inspected window eval helpers
 - Handle responses and update UI state
 - Subscribe to log events and update in real-time
 - Display connection state and errors
@@ -91,14 +90,10 @@ src/devtools/
 ```mermaid
 flowchart TD
     U[User Action] --> R[React State Update]
-    R --> M[Send Message via Hook]
-    M --> BG[Background Service Worker]
-    BG --> CS[Content Script Proxy]
-    CS --> API[window.__web_sqlite]
-    API --> CS[Return Data]
-    CS --> BG[Response]
-    BG --> M[Handle Response]
-    M --> R[Update State]
+    R --> E[Eval via inspectedWindow helper]
+    E --> API[window.__web_sqlite]
+    API --> E[Return Data]
+    E --> R[Update State]
     R --> UI[Re-render Component]
 ```
 
@@ -106,16 +101,10 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    M[Mount LogTab] --> S[Send SUBSCRIBE_LOGS]
-    S --> BG[Background]
-    BG --> CS[Content Script]
-    CS --> API[db.onLog callback]
-    API --> CS[Buffer Logs]
-    CS -->|Every 100ms or 50 entries| BG[LOG_EVENT]
-    BG --> L[Log Listener]
-    L --> U[Update Logs State]
+    M[Mount LogTab] --> P[Start log polling (TBD)]
+    P --> API[window.__web_sqlite logs]
+    API --> U[Update Logs State]
     U --> UM[Unmount LogTab]
-    UM --> UNS[Send UNSUBSCRIBE_LOGS]
 ```
 
 ## 4) Classes / Functions
@@ -185,22 +174,14 @@ flowchart TD
   - `retry()`: Manual reconnection trigger
   - Returns: `{ state, retry }`
 
-### Message Senders (src/devtools/messaging/index.ts)
+### Inspected Window Helpers (src/devtools/inspectedWindow.ts)
 
-- `sendGetDatabases()`: Request database list
-- `sendGetTableList(dbname)`: Request table list
-- `sendGetTableSchema(dbname, tableName)`: Request table DDL
-- `sendQueryTableData(dbname, sql, limit, offset)`: Request paginated data
-- `sendExecSQL(dbname, sql, params)`: Execute INSERT/UPDATE/DELETE
-- `sendSubscribeLogs(dbname)`: Subscribe to log events
-- `sendUnsubscribeLogs(subscriptionId)`: Unsubscribe from logs
-- `sendDevRelease(dbname, version, migrationSQL, seedSQL)`: Create dev version
-- `sendDevRollback(dbname, toVersion)`: Rollback dev version
-- `sendGetOpfsFiles(path, dbname)`: List OPFS files
-- `sendDownloadOpfsFile(path)`: Download OPFS file
+- `getDatabasesFromInspectedWindow()`: Request database list
+- `getTableListFromInspectedWindow(dbname)`: Request table list
+- Future tasks will add query/exec helpers using inspectedWindow eval
 
 ## 5) Dependencies
 
 - **External**: React, react-router-dom, react-icons, CodeMirror
-- **Internal**: `src/messaging/channels.ts`, `src/messaging/types.ts`
-- **Chrome APIs**: chrome.runtime.sendMessage
+- **Internal**: `src/devtools/inspectedWindow.ts`, `src/devtools/hooks/useInspectedWindowRequest.ts`
+- **Chrome APIs**: chrome.devtools.inspectedWindow.eval

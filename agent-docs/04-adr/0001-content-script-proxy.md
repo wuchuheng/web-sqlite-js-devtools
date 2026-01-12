@@ -14,7 +14,7 @@ NOTES
 
 ## Status
 
-Accepted
+Superseded (2026-01-13) — replaced by DevTools `inspectedWindow.eval`
 
 ## Context
 
@@ -28,13 +28,13 @@ Accepted
 
 ## Decision
 
-We will use the **Content Script Proxy Pattern**: DevTools Panel → Background Service Worker → Content Script → `window.__web_sqlite`.
+We will use **DevTools `chrome.devtools.inspectedWindow.eval`** to access `window.__web_sqlite` directly from the DevTools panel.
 
-The content script acts as a proxy, forwarding requests from the DevTools panel to the web-sqlite-js API and returning responses.
+The content script proxy is removed for database/table access. The content script remains only for icon state updates.
 
 ## Alternatives Considered
 
-### Option 1: Content Script Proxy (CHOSEN)
+### Option 1: Content Script Proxy (NO LONGER USED)
 
 - **Pros**:
   - Leverages existing Chrome Extension security model
@@ -60,6 +60,16 @@ The content script acts as a proxy, forwarding requests from the DevTools panel 
 
 ### Option 3: Dynamic Script Injection
 
+### Option 4: DevTools `inspectedWindow.eval` (CHOSEN)
+
+- **Pros**:
+  - Direct access to `window.__web_sqlite` without proxy hops
+  - No channel routing or Map serialization
+  - Simpler DevTools-side implementation
+- **Cons**:
+  - Only available when DevTools is open
+  - DevTools eval error handling required
+
 - **Pros**:
   - Direct access to page context
   - Fewer message hops
@@ -72,15 +82,12 @@ The content script acts as a proxy, forwarding requests from the DevTools panel 
 ## Consequences
 
 - **Positive**:
-  - Standard, maintainable pattern for Chrome DevTools extensions
-  - Clear separation: Panel handles UI, Content Script handles API access
-  - Background service worker can manage icon state and routing
-  - Performance meets NFRs (<500ms panel open, <200ms query execution)
+  - Simplifies data access (no proxy hops)
+  - Removes channel routing and Map serialization
+  - DevTools panel logic is more direct and debuggable
 - **Negative**:
-  - Map objects from `DatabaseRecord` must be converted to Arrays for message passing
-  - Two-hop message latency (panel → background → content script)
-  - Need to implement heartbeat/reconnect logic for content script lifecycle
+  - DevTools must be open to access data
+  - DevTools eval failures must be handled per request
 - **Risks**:
-  - **R1**: Content script may not be injected when DevTools opens (mitigation: retry with timeout)
-  - **R2**: Page refresh disrupts connection (mitigation: auto-reconnect with exponential backoff - ADR-0006)
-  - **R3**: Message serialization limitations (mitigation: Array conversion for Maps, structured clone compatible types)
+  - **R1**: Eval exceptions on pages with strict CSP or missing globals (mitigation: defensive checks + user-facing errors)
+  - **R2**: Reduced visibility when DevTools is closed (mitigation: limit to DevTools UX scope)

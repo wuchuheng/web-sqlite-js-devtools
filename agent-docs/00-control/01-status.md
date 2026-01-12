@@ -15,8 +15,8 @@ NOTES
 ## 1) Project stage
 
 - **Current stage**: Stage 8 - Implementation (Worker)
-- **Current focus**: TASK-04 completed, TASK-05 ready to start
-- **Last updated**: 2026-01-13 (TASK-04 - Icon State & Auto-Reconnect)
+- **Current focus**: TASK-05 completed, TASK-06 ready to start
+- **Last updated**: 2026-01-13 (TASK-05 - Database List & Table Browser)
 
 ## 2) Active work
 
@@ -28,6 +28,7 @@ NOTES
 
 | Task                                      | Owner     | Evidence                                                                                        |
 | ----------------------------------------- | --------- | ----------------------------------------------------------------------------------------------- |
+| TASK-05: Database List & Table Browser    | S8:worker | `src/devtools/inspectedWindow.ts`, `src/devtools/hooks/useInspectedWindowRequest.ts`, `src/devtools/utils/databaseNames.ts`, `src/devtools/components/Sidebar/DatabaseList.tsx`, `src/devtools/components/TableTab/`, `src/devtools/DevTools.tsx` |
 | TASK-04: Icon State & Auto-Reconnect      | S8:worker | `src/background/iconState/`, `src/devtools/hooks/useConnection.ts`, `public/img/*-inactive.png` |
 | TASK-03: Content Script Proxy & Messaging | S8:worker | `src/contentScript/messaging/`, `src/background/messaging/`                                     |
 | TASK-02: Sidebar UI & Navigation          | S8:worker | `src/devtools/components/Sidebar/`, `EmptyState/`                                               |
@@ -36,8 +37,8 @@ NOTES
 
 ## 4) Upcoming
 
-- **Next task**: TASK-05 - Database List & Table Browser
-- **Next review date**: After TASK-05 completion
+- **Next task**: TASK-06 - Table Data & Schema
+- **Next review date**: After TASK-06 completion
 
 ## 5) Risks / blockers
 

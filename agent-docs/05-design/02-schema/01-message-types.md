@@ -12,6 +12,9 @@ NOTES
 
 # 01 Message Types & Data Structures
 
+> **Note**: Channel-based message types are deprecated. DevTools data access now uses
+> `chrome.devtools.inspectedWindow.eval` directly.
+
 ## 0) Document Map
 
 ```text

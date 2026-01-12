@@ -14,6 +14,9 @@ NOTES
 
 ## 1) Critical Business Flows
 
+**Note**: DevTools now accesses `window.__web_sqlite` via `chrome.devtools.inspectedWindow.eval`.
+Flows that still reference background/content script hops will be updated as the features are implemented.
+
 ### Flow 1: Open DevTools Panel and List Databases
 
 **Goal**: Display list of opened databases when user opens DevTools panel
@@ -23,25 +26,18 @@ NOTES
 sequenceDiagram
     actor Dev as Developer
     participant Panel as DevTools Panel
-    participant BG as Background SW
-    participant CS as Content Script
     participant Page as Web Page
     participant DB as web-sqlite-js
 
     Dev->>Panel: Opens "Sqlite" panel
     Panel->>Panel: HashRouter mounts (/)
-    Panel->>BG: chrome.runtime.sendMessage(GET_DATABASES)
-    BG->>CS: chrome.tabs.sendMessage(GET_DATABASES)
-    CS->>Page: Access window.__web_sqlite
+    Panel->>Page: inspectedWindow.eval(GET_DATABASES)
     alt web-sqlite-js available
-        Page-->>CS: databases Map
-        CS->>CS: Convert Map to Array
-        CS-->>BG: { success: true, data: dbList }
-        BG-->>Panel: { success: true, data: dbList }
+        Page->>DB: Read window.__web_sqlite.databases
+        Page-->>Panel: { success: true, data: dbList }
         Panel->>Panel: Render Sidebar with DB list
     else web-sqlite-js not available
-        CS-->>BG: { success: false, error: "API not found" }
-        BG-->>Panel: { success: false, error: "..." }
+        Page-->>Panel: { success: false, error: "API not found" }
         Panel->>Panel: Render EmptyState with error
     end
 ```
@@ -55,24 +51,16 @@ sequenceDiagram
 sequenceDiagram
     actor Dev as Developer
     participant Panel as DevTools Panel
-    participant BG as Background SW
-    participant CS as Content Script
     participant DB as web-sqlite-js
 
     Dev->>Panel: Clicks table in TableList
     Panel->>Panel: Update hash to /openedDB/dbname/table
-    Panel->>BG: QUERY_SQL({ dbname, sql: "SELECT * FROM table LIMIT 100" })
-    BG->>CS: Forward query request
-    CS->>DB: await db.query(sql)
+    Panel->>DB: inspectedWindow.eval(db.query(sql))
     alt Query successful
-        DB-->>CS: result[] (100 rows)
-        CS-->>BG: { success: true, data: result }
-        BG-->>Panel: { success: true, data: result }
+        DB-->>Panel: { success: true, data: result }
         Panel->>Panel: Render DataTable with pagination
     else Query error
-        DB-->>CS: throws Error
-        CS-->>BG: { success: false, error: "SQLITE_ERROR: ..." }
-        BG-->>Panel: { success: false, error: "..." }
+        DB-->>Panel: { success: false, error: "SQLITE_ERROR: ..." }
         Panel->>Panel: Render inline error below table
     end
 ```
@@ -86,29 +74,19 @@ sequenceDiagram
 sequenceDiagram
     actor Dev as Developer
     participant Panel as QueryTab
-    participant BG as Background SW
-    participant CS as Content Script
     participant DB as web-sqlite-js
 
     Dev->>Panel: Types SQL + clicks Execute (or Ctrl+Enter)
-    Panel->>BG: EXEC_SQL({ dbname, sql, params })
-    BG->>CS: Forward exec request
-    CS->>DB: await db.exec(sql, params)
+    Panel->>DB: inspectedWindow.eval(db.exec(sql, params))
 
     alt Execution successful
-        DB-->>CS: { lastInsertRowid, changes }
-        CS-->>BG: { success: true, data: {...} }
-        BG-->>Panel: { success: true, data: {...} }
+        DB-->>Panel: { success: true, data: {...} }
         Panel->>Panel: Show "X rows affected" toast
     else Constraint error
-        DB-->>CS: throws SQLITE_CONSTRAINT error
-        CS-->>BG: { success: false, error: "UNIQUE constraint failed" }
-        BG-->>Panel: { success: false, error: "..." }
+        DB-->>Panel: { success: false, error: "UNIQUE constraint failed" }
         Panel->>Panel: Render inline error
     else Syntax error
-        DB-->>CS: throws syntax error
-        CS-->>BG: { success: false, error: "near SELECT: syntax error" }
-        BG-->>Panel: { success: false, error: "..." }
+        DB-->>Panel: { success: false, error: "near SELECT: syntax error" }
         Panel->>Panel: Render inline error
     end
 ```
@@ -165,10 +143,10 @@ sequenceDiagram
     Page->>CS: Global event detected
     CS->>CS: Check window.__web_sqlite.databases
     alt Databases exist
-        CS->>BG: ICON_STATE({ hasDatabase: true })
+        CS->>BG: ICON_STATE_MESSAGE({ hasDatabase: true })
         BG->>Icon: Set active icon
     else No databases
-        CS->>BG: ICON_STATE({ hasDatabase: false })
+        CS->>BG: ICON_STATE_MESSAGE({ hasDatabase: false })
         BG->>Icon: Set inactive icon
     end
 ```
@@ -293,7 +271,7 @@ sequenceDiagram
 
 ## 2) Asynchronous Event Flows
 
-**Pattern**: Message-based event streaming via `chrome.runtime` (Pub/Sub)
+**Pattern**: Runtime messaging for icon state; other event flows TBD
 
 ### Event: Database Changed
 
@@ -305,7 +283,7 @@ sequenceDiagram
 flowchart LR
     App[Web Application] -->|1. openDB/closeDB| API[window.__web_sqlite]
     API -->|2. onDatabaseChange| CS[Content Script]
-    CS -->|3. ICON_STATE| BG[Background SW]
+    CS -->|3. ICON_STATE_MESSAGE| BG[Background SW]
     CS -->|4. DATABASES_UPDATED| Panel[DevTools Panel]
     BG -->|5. setActiveIcon| Icon[Popup Icon]
     Panel -->|6. Refresh Sidebar| UI[Sidebar Database List]

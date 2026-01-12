@@ -9,6 +9,9 @@
 - **Status**: In Progress
 - **Last Updated**: 2026-01-13
 
+> **Note**: ICON_STATE is now sent as a simple `ICON_STATE_MESSAGE` runtime message.
+> Channel-based handlers and background routing are deprecated.
+
 ## 2. Requirements Mapping
 
 | FR ID    | Requirement                                                   | Implementation                                 |

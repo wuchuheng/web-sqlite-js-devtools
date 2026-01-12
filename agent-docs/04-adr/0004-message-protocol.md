@@ -14,7 +14,7 @@ NOTES
 
 ## Status
 
-Accepted
+Superseded (2026-01-13) — direct inspected window eval replaces channel protocol
 
 ## Context
 
@@ -29,21 +29,15 @@ Accepted
 
 ## Decision
 
-We will use a **typed message protocol** with:
+We will **avoid channel-based messaging** for DevTools data access and use
+`chrome.devtools.inspectedWindow.eval` directly in the panel.
 
-1. **Named channels** (defined in `src/messaging/channels.ts`):
-   - `GET_DATABASES` - List opened databases
-   - `GET_TABLE_LIST` - Get tables for a database
-   - `QUERY_SQL` - Execute SELECT query
-   - `EXEC_SQL` - Execute INSERT/UPDATE/DELETE
-   - `SUBSCRIBE_LOGS` - Subscribe to log events
-   - `UNSUBSCRIBE_LOGS` - Unsubscribe from logs
-   - `GET_OPFS_FILES` - List OPFS files
-   - `DOWNLOAD_OPFS_FILE` - Download OPFS file
-   - `ICON_STATE` - Update popup icon
-   - `HEARTBEAT` - Connection health check
+Minimal runtime messaging remains only for:
 
-2. **Standardized response format**:
+- Icon state updates (content script → background)
+- Offscreen log storage (internal only)
+
+1. **Standardized response format** (used for eval results):
 
    ```typescript
    type Response<T> = {
@@ -53,13 +47,11 @@ We will use a **typed message protocol** with:
    };
    ```
 
-3. **Map serialization**: Convert `Map<string, string>` to `Array<[key, value]>` before sending
-
-4. **Event streaming**: Log events sent via separate `LOG_EVENT` message type
+2. **Direct evaluation**: DevTools panel queries `window.__web_sqlite` via eval
 
 ## Alternatives Considered
 
-### Option 1: Typed Message Protocol (CHOSEN)
+### Option 1: Typed Message Protocol (NO LONGER USED)
 
 - **Pros**:
   - Type-safe with TypeScript
@@ -92,25 +84,26 @@ We will use a **typed message protocol** with:
   - Chrome messaging is already duplex
   - More complex state management
 
+### Option 4: DevTools `inspectedWindow.eval` (CHOSEN)
+
+- **Pros**:
+  - Removes channel boilerplate for data access
+  - Simple, direct access to `window.__web_sqlite`
+- **Cons**:
+  - DevTools-only availability
+  - Eval errors must be handled per request
+
 ## Consequences
 
 - **Positive**:
-  - Type-safe communication between contexts
-  - Clear debugging (channel names visible in Chrome DevTools)
-  - Consistent error handling across all operations
-  - Easy to add new channels (just add constant and handler)
-  - Log streaming works alongside request/response
+  - Fewer moving parts for DevTools data access
+  - No channel routing or Map serialization
 - **Negative**:
-  - More boilerplate code (channel constants, handlers)
-  - Map objects require manual conversion (Array → Map reconstruction)
-  - Need to maintain sync between channel definitions and handlers
+  - Limited to DevTools panel lifecycle
 - **Risks**:
-  - **R1**: Type definitions may become out of sync with implementation (mitigation: TypeScript, shared types file)
-  - **R2**: Map→Array conversion may miss edge cases (mitigation: Spike S-001 will validate)
-  - **R3**: Message size limits for large query results (mitigation: pagination limits query size to 100 rows)
+  - **R1**: Eval failures on restricted pages (mitigation: defensive checks + user messaging)
 
 ## Implementation Notes
 
-- Channels defined in: `src/messaging/channels.ts`
-- Types defined in: `src/messaging/types.ts`
-- Handlers in: `src/devtools/messaging/`, `src/background/messaging/`, `src/contentScript/messaging/`
+- DevTools helpers in: `src/devtools/inspectedWindow.ts`
+- Shared icon message ID: `src/shared/messages.ts`

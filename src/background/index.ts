@@ -3,12 +3,11 @@
  *
  * @remarks
  * Main entry point for Chrome extension background service worker.
- * Initializes offscreen document, message router, and panel routing.
+ * Initializes offscreen document and icon state handling.
  */
 
-import { initRouter } from "@/messaging/core";
-import { initializeBackgroundRouter } from "./messaging/index";
-import { initializeIconState } from "./iconState";
+import { initializeIconState, setIconState } from "./iconState";
+import { ICON_STATE_MESSAGE } from "@/shared/messages";
 
 console.log("[Background] Service worker starting...");
 
@@ -63,9 +62,7 @@ async function setupOffscreen() {
 
 /**
  * 1. Initialize offscreen document
- * 2. Initialize message router
- * 3. Register background passthrough channels
- * 4. Initialize icon state
+ * 2. Initialize icon state
  */
 const initializeBackground = () => {
   /**
@@ -80,32 +77,7 @@ const initializeBackground = () => {
     setupOffscreen();
   }
 
-  /**
-   * 1. Initialize message router with debug enabled
-   * 2. Enables logging for all message routing
-   * 3. Central router for all extension contexts
-   */
-  initRouter({ debug: true });
-
-  /**
-   * 1. Initialize background passthrough router
-   * 2. Registers 10 channels for panel ↔ content script communication
-   * 3. Returns unsubscribe functions for cleanup
-   */
-  const unsubscribers = initializeBackgroundRouter();
-
-  /**
-   * 1. Initialize icon state to inactive
-   * 2. Will update to active when content script detects web-sqlite-js
-   * 3. Sets grayscale icon on startup
-   */
   initializeIconState();
-
-  console.log(
-    "[Background] Background service worker initialized successfully",
-  );
-
-  return unsubscribers;
 };
 
 // ============================================================================
@@ -114,10 +86,9 @@ const initializeBackground = () => {
 
 /**
  * 1. Initialize background service worker on startup
- * 2. Store unsubscribers for potential cleanup
- * 3. Log successful initialization
+ * 2. Configure offscreen document and icon state
  */
-const backgroundUnsubscribers = initializeBackground();
+initializeBackground();
 
 /**
  * 1. Listen for any request and ensure offscreen is ready
@@ -125,20 +96,13 @@ const backgroundUnsubscribers = initializeBackground();
  * 3. Wakes offscreen when messages come through
  */
 chrome.runtime.onMessage.addListener((message) => {
+  if (message?.type === ICON_STATE_MESSAGE) {
+    setIconState(Boolean(message.hasDatabase));
+  }
+
   if (message?.type === "request") {
     setupOffscreen();
   }
-});
-
-/**
- * 1. Log when service worker is being terminated
- * 2. Chrome may terminate SW for memory management
- * 3. Useful for debugging lifecycle issues
- */
-self.addEventListener("beforeunload", () => {
-  console.log("[Background] Service worker terminating");
-  // Cleanup unsubscribers if needed
-  backgroundUnsubscribers?.forEach((unsub) => unsub());
 });
 
 export {};
