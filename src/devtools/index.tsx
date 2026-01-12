@@ -9,11 +9,7 @@ ReactDOM.createRoot(document.getElementById("app") as HTMLElement).render(
   </React.StrictMode>,
 );
 
-chrome.devtools.panels.create(
-  "ReactCrx",
-  "",
-  "../../devtools.html",
-  function () {
-    console.log("devtools panel create");
-  },
-);
+// Create DevTools panel with "Sqlite" label
+chrome.devtools.panels.create("Sqlite", "", "devtools.html", function () {
+  console.log("Sqlite DevTools panel created");
+});

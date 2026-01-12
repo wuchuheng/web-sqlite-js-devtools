@@ -13,10 +13,12 @@ NOTES
 # 00 Project Spec
 
 ## 1) Project summary
+
 - **One-sentence description**: A Chrome DevTools extension providing comprehensive SQLite database inspection, query execution, and safe migration/seed testing for web-sqlite-js directly within the browser DevTools panel.
 - **Primary users**: Frontend developers, full-stack developers, and QA engineers working on offline-first PWAs and browser-based applications using web-sqlite-js.
 
 ## 2) Goals and success criteria
+
 - **Goals**:
   - Enable real-time inspection and debugging of SQLite databases through `window.__web_sqlite` API
   - Provide safe testing environment for migration and seed SQL before production deployment
@@ -35,12 +37,14 @@ NOTES
 - **Source of truth**: `agent-docs/01-discovery/01-brief.md`, `agent-docs/01-discovery/02-requirements.md`, `agent-docs/01-discovery/03-scope.md`
 
 ## 3) Current stage
+
 - **Current stage (1-8)**: Stage 7 - Task Management (Roadmap & Task Catalog)
 - **Active release**: v1.0.0 (MVP) - Target: 2026-01-27
 - **Status summary**: 6-phase roadmap created, 12 actionable tasks defined with dependencies and DoD
-- **Last updated (YYYY-MM-DD)**: 2026-01-13
+- **Last updated (YYYY-MM-DD)**: 2026-01-13 (TASK-01 completed)
 
 ## 4) Technology stack (chosen in Stage 2)
+
 - **Language/Runtime**: TypeScript
 - **Backend Framework**: N/A (Chrome Extension)
 - **Client/UI**: React 18 + Tailwind CSS 4 + react-router-dom (hash routing)
@@ -56,6 +60,7 @@ NOTES
 - **Observability**: N/A
 
 ## 5) Document index (reading order)
+
 - `agent-docs/00-control/01-status.md`
 - `agent-docs/01-discovery/01-brief.md`
 - `agent-docs/01-discovery/02-requirements.md`
@@ -89,6 +94,7 @@ NOTES
 - `agent-docs/08-task/` (pending)
 
 ## 6) Recent changes
+
 - **2026-01-13**: Stage 1 Discovery completed - brief, requirements, and scope documents created
 - **2026-01-13**: Stage 2 Feasibility Analysis completed - Option A (Content Script Proxy) recommended, 4 spikes defined
 - **2026-01-13**: Stage 3 Architecture completed - HLD, dataflow (8 flows), and deployment strategy documented

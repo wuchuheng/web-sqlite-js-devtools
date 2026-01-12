@@ -15,6 +15,7 @@ NOTES
 # 02 Task Catalog (Release Grouped)
 
 ## Status Legend
+
 - `[ ]` **Pending**: Ready to be picked up.
 - `[-]` **In Progress**: Currently being executed by a Worker.
 - `[x]` **Completed**: Tested, Verified, and Merged.
@@ -23,11 +24,12 @@ NOTES
 
 ## Release v1.0.0 (MVP) - Target: 2026-01-27
 
-- [ ] **TASK-01**: Project Setup & Configuration
+- [x] **TASK-01**: Project Setup & Configuration
   - **Priority**: P0 (Blocker)
   - **Dependencies**: None
   - **Boundary**: `src/manifest.ts`, `src/messaging/`, `devtools.html`, `src/devtools/index.tsx`
   - **Maps to**: FR-001, FR-004, FR-005, FR-039
+  - **Micro-Spec**: [completed](agent-docs/08-task/active/TASK-01.md)
   - **DoD**:
     - Manifest with extension name "web-sqlite devtools", permissions (activeTab, tabs)
     - Message channels TypeScript definitions (10 channels, Response<T> type)
