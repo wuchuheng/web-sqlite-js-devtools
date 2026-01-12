@@ -37,11 +37,12 @@ NOTES
     - DevTools panel opens with "Sqlite" label
     - React Router HashRouter with routes `/`, `/openedDB/:dbname`, `/opfs`
 
-- [ ] **TASK-02**: Sidebar UI & Navigation
+- [x] **TASK-02**: Sidebar UI & Navigation
   - **Priority**: P0 (Blocker)
   - **Dependencies**: TASK-01
   - **Boundary**: `src/devtools/components/Sidebar/`, `src/devtools/components/EmptyState/`
   - **Maps to**: FR-006, FR-007, FR-012, FR-014, FR-042, FR-044
+  - **Micro-Spec**: [completed](agent-docs/08-task/active/TASK-02.md)
   - **DoD**:
     - Sidebar with SiSqlite icon + "Web Sqlite" (20% width)
     - SidebarHeader with collapse toggle (20% ↔ icon-only)

@@ -15,26 +15,27 @@ NOTES
 ## 1) Project stage
 
 - **Current stage**: Stage 8 - Implementation (Worker)
-- **Current focus**: TASK-01 completed, TASK-02 ready to start
-- **Last updated**: 2026-01-13 (TASK-01 bug fix - DevTools panel creation with "Sqlite" label)
+- **Current focus**: TASK-02 completed, TASK-03 ready to start
+- **Last updated**: 2026-01-13 (TASK-02 - Sidebar UI & Navigation)
 
 ## 2) Active work
 
 | Item                                            | Owner     | Status | Evidence |
 | ----------------------------------------------- | --------- | ------ | -------- |
-| (None - awaiting extension reload verification) | S8:worker | -      | -        |
+| (None - awaiting next task selection)           | S8:worker | -      | -        |
 
 ## 3) Done (Recent)
 
 | Task                              | Owner     | Evidence                                             |
 | --------------------------------- | --------- | ---------------------------------------------------- |
+| TASK-02: Sidebar UI & Navigation  | S8:worker | `src/devtools/components/Sidebar/`, `EmptyState/`    |
 | TASK-01: Project Setup (Bug Fix)  | S8:worker | `devtools.html` panel creation script added          |
 | TASK-01: Project Setup (Original) | S8:worker | `src/manifest.ts`, `src/messaging/`, `src/devtools/` |
 
 ## 4) Upcoming
 
-- **Next task**: TASK-02 - Sidebar UI & Navigation
-- **Next review date**: After TASK-02 completion
+- **Next task**: TASK-03 - Content Script Proxy & Background Messaging
+- **Next review date**: After TASK-03 completion
 
 ## 5) Risks / blockers
 
