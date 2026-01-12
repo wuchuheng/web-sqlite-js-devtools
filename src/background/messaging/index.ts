@@ -18,7 +18,9 @@ import {
   GET_OPFS_FILES,
   DOWNLOAD_OPFS_FILE,
   HEARTBEAT,
+  ICON_STATE,
 } from "@/messaging/channels";
+import { setIconState } from "../iconState";
 
 /**
  * Wire message format (matching src/messaging/core.ts)
@@ -33,12 +35,15 @@ interface WireMessage {
 }
 
 /**
+ * Type for panel router module with forwardToContentScript function
+ */
+type PanelRouter = typeof import("./panelRouter");
+
+/**
  * 1. Import panel router function
  * 2. Used for forwarding messages to content script
  * 3. Dynamically imported to avoid circular dependencies
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const { forwardToContentScript } = require("./panelRouter");
 
 /**
  * 1. Create passthrough handler for a channel
@@ -56,11 +61,11 @@ const createPassthroughHandler = (channelName: string) => {
    */
   const handler = async (payload: unknown): Promise<WireMessage> => {
     /**
-     * 1. Get the forwardToContentScript function
+     * 1. Dynamically import panelRouter module (ES module dynamic import)
      * 2. Build wire message from payload and channel name
      * 3. Forward to content script and return response
      */
-    const { forwardToContentScript } = require("./panelRouter");
+    const { forwardToContentScript } = await import("./panelRouter");
 
     /**
      * 1. Create wire message with request type
@@ -116,6 +121,30 @@ export const initializeBackgroundRouter = (): Array<() => void> => {
   console.log(
     "[Background Messaging] All passthrough channels registered (10 channels)",
   );
+
+  /**
+   * 1. Register ICON_STATE channel handler
+   * 2. Handles icon state updates from content script
+   * 3. Updates extension icon based on database availability
+   */
+  const iconStateChannel = defineChannel<
+    { hasDatabase: boolean },
+    { success: boolean; data?: undefined }
+  >(ICON_STATE);
+
+  const iconStateUnsub = iconStateChannel.on(async ({ hasDatabase }) => {
+    /**
+     * 1. Call setIconState with hasDatabase boolean
+     * 2. Updates icon to active (colored) or inactive (grayscale)
+     * 3. Return success response
+     */
+    setIconState(hasDatabase);
+    return { success: true, data: undefined };
+  });
+
+  unsubscribers.push(iconStateUnsub);
+
+  console.log("[Background Messaging] ICON_STATE channel registered");
 
   return unsubscribers;
 };

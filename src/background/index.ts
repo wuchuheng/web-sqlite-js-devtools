@@ -8,6 +8,7 @@
 
 import { initRouter } from "@/messaging/core";
 import { initializeBackgroundRouter } from "./messaging/index";
+import { initializeIconState } from "./iconState";
 
 console.log("[Background] Service worker starting...");
 
@@ -64,6 +65,7 @@ async function setupOffscreen() {
  * 1. Initialize offscreen document
  * 2. Initialize message router
  * 3. Register background passthrough channels
+ * 4. Initialize icon state
  */
 const initializeBackground = () => {
   /**
@@ -91,6 +93,13 @@ const initializeBackground = () => {
    * 3. Returns unsubscribe functions for cleanup
    */
   const unsubscribers = initializeBackgroundRouter();
+
+  /**
+   * 1. Initialize icon state to inactive
+   * 2. Will update to active when content script detects web-sqlite-js
+   * 3. Sets grayscale icon on startup
+   */
+  initializeIconState();
 
   console.log(
     "[Background] Background service worker initialized successfully",

@@ -15,8 +15,8 @@ NOTES
 ## 1) Project stage
 
 - **Current stage**: Stage 8 - Implementation (Worker)
-- **Current focus**: TASK-03 completed, TASK-04 ready to start
-- **Last updated**: 2026-01-13 (TASK-03 - Content Script Proxy & Background Messaging)
+- **Current focus**: TASK-04 completed, TASK-05 ready to start
+- **Last updated**: 2026-01-13 (TASK-04 - Icon State & Auto-Reconnect)
 
 ## 2) Active work
 
@@ -26,17 +26,18 @@ NOTES
 
 ## 3) Done (Recent)
 
-| Task                                       | Owner     | Evidence                                                 |
-| ------------------------------------------ | --------- | -------------------------------------------------------- |
-| TASK-03: Content Script Proxy & Messaging  | S8:worker | `src/contentScript/messaging/`, `src/background/messaging/` |
-| TASK-02: Sidebar UI & Navigation           | S8:worker | `src/devtools/components/Sidebar/`, `EmptyState/`        |
-| TASK-01: Project Setup (Bug Fix)           | S8:worker | `devtools.html` panel creation script added             |
-| TASK-01: Project Setup (Original)          | S8:worker | `src/manifest.ts`, `src/messaging/`, `src/devtools/`      |
+| Task                                      | Owner     | Evidence                                                                                        |
+| ----------------------------------------- | --------- | ----------------------------------------------------------------------------------------------- |
+| TASK-04: Icon State & Auto-Reconnect      | S8:worker | `src/background/iconState/`, `src/devtools/hooks/useConnection.ts`, `public/img/*-inactive.png` |
+| TASK-03: Content Script Proxy & Messaging | S8:worker | `src/contentScript/messaging/`, `src/background/messaging/`                                     |
+| TASK-02: Sidebar UI & Navigation          | S8:worker | `src/devtools/components/Sidebar/`, `EmptyState/`                                               |
+| TASK-01: Project Setup (Bug Fix)          | S8:worker | `devtools.html` panel creation script added                                                     |
+| TASK-01: Project Setup (Original)         | S8:worker | `src/manifest.ts`, `src/messaging/`, `src/devtools/`                                            |
 
 ## 4) Upcoming
 
-- **Next task**: TASK-04 - Icon State & Auto-Reconnect
-- **Next review date**: After TASK-04 completion
+- **Next task**: TASK-05 - Database List & Table Browser
+- **Next review date**: After TASK-05 completion
 
 ## 5) Risks / blockers
 

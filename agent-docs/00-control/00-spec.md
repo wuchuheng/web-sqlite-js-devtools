@@ -40,8 +40,8 @@ NOTES
 
 - **Current stage (1-8)**: Stage 8 - Implementation (Worker)
 - **Active release**: v1.0.0 (MVP) - Target: 2026-01-27
-- **Status summary**: TASK-01, TASK-02, TASK-03 completed, 9 tasks remaining for MVP
-- **Last updated (YYYY-MM-DD)**: 2026-01-13 (TASK-03 - Content Script Proxy & Background Messaging)
+- **Status summary**: TASK-01, TASK-02, TASK-03, TASK-04 completed, 8 tasks remaining for MVP
+- **Last updated (YYYY-MM-DD)**: 2026-01-13 (TASK-04 - Icon State & Auto-Reconnect)
 
 ## 4) Technology stack (chosen in Stage 2)
 

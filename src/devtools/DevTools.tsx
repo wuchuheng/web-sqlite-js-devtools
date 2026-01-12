@@ -2,6 +2,7 @@ import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect } from "react";
 import { Sidebar } from "./components/Sidebar/Sidebar";
 import { EmptyState } from "./components/EmptyState/EmptyState";
+import { useConnection } from "./hooks/useConnection";
 import "./DevTools.css";
 
 /**
@@ -11,6 +12,13 @@ import "./DevTools.css";
  * @returns JSX.Element - DevTools component with sidebar and routed content
  */
 export const DevTools = () => {
+  /**
+   * 1. Use connection hook for heartbeat and auto-reconnect
+   * 2. Manages connection state: connected, connecting, reconnecting, disconnected
+   * 3. Provides retry function for manual reconnection
+   */
+  const { status, error, retry } = useConnection();
+
   useEffect(() => {
     console.log("[Web Sqlite DevTools] Component mounted");
     console.log("[Web Sqlite DevTools] Current hash:", window.location.hash);
@@ -27,24 +35,43 @@ export const DevTools = () => {
   }, []);
 
   /**
-   * 1. Log component mount for debugging
-   * 2. Log current hash route for navigation tracking
-   * 3. Check for web-sqlite-js API availability (for future tasks)
+   * 1. Render connection status indicator
+   * 2. Shows loading spinner for connecting/reconnecting
+   * 3. Shows error message with retry button for disconnected state
    */
-  useEffect(() => {
-    console.log("[Web Sqlite DevTools] Component mounted");
-    console.log("[Web Sqlite DevTools] Current hash:", window.location.hash);
-
-    // Log if web-sqlite-js API is available (for future debugging)
-    if (typeof window !== "undefined") {
-      // @ts-ignore - web-sqlite-js global
-      const hasWebSqlite = typeof window.__web_sqlite !== "undefined";
-      console.log(
-        "[Web Sqlite DevTools] __web_sqlite API available:",
-        hasWebSqlite,
+  const renderConnectionStatus = () => {
+    /**
+     * 1. Connecting state: show loading indicator
+     * 2. Reconnecting state: show loading with "Reconnecting..." text
+     * 3. Disconnected state: show error with retry button
+     */
+    if (status === "connecting" || status === "reconnecting") {
+      return (
+        <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 text-sm">
+          <div className="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full" />
+          <span>
+            {status === "connecting" ? "Connecting..." : "Reconnecting..."}
+          </span>
+        </div>
       );
     }
-  }, []);
+
+    if (status === "disconnected" && error) {
+      return (
+        <div className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 text-sm">
+          <span>{error}</span>
+          <button
+            onClick={retry}
+            className="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      );
+    }
+
+    return null;
+  };
 
   return (
     <HashRouter>
@@ -54,7 +81,10 @@ export const DevTools = () => {
       <div className="devtools-panel flex">
         <Sidebar />
 
-        <main className="flex-1 h-full overflow-auto">
+        <main className="flex-1 h-full overflow-auto flex flex-col">
+          {/* Connection status indicator */}
+          {renderConnectionStatus()}
+
           <Routes>
             {/* 1. Default route - empty state with helpful instructions */}
             {/* 2. Implements FR-014 (empty state notice) */}

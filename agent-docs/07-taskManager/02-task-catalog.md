@@ -61,11 +61,12 @@ NOTES
     - Database proxy with getDatabases, Map→Array serialization
     - All proxy handlers stubbed for 10 channels
 
-- [ ] **TASK-04**: Icon State & Auto-Reconnect
+- [x] **TASK-04**: Icon State & Auto-Reconnect
   - **Priority**: P0 (Blocker)
   - **Dependencies**: TASK-03
-  - **Boundary**: `src/contentScript/index.tsx`, `src/background/iconState/`, `src/devtools/hooks/useConnection.ts`
+  - **Boundary**: `src/contentScript/App.tsx`, `src/background/iconState/`, `src/devtools/hooks/useConnection.ts`
   - **Maps to**: FR-002, FR-003, FR-041, ADR-0006
+  - **Micro-Spec**: [completed](agent-docs/08-task/active/TASK-04.md)
   - **DoD**:
     - Content script detects `window.__web_sqlite` availability
     - ICON_STATE channel with active/inactive states
