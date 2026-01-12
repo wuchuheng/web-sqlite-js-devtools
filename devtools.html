@@ -2,12 +2,13 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Web Sqlite DevTools - Panel Creator</title>
+    <link rel="icon" href="/icons/logo.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chrome Extension + React + TS + Vite</title>
   </head>
 
   <body>
-    <!-- This page runs as devtools_page to create the panel -->
-    <!-- Panel Creation Script (creates the Sqlite panel) -->
-    <script src="/panel-creation.js"></script>
+    <div id="app"></div>
+    <script type="module" src="./src/devtools/index.tsx"></script>
   </body>
 </html>

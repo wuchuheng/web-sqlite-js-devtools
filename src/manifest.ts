@@ -4,8 +4,8 @@ import packageData from "../package.json";
 //@ts-ignore
 const isDev = process.env.NODE_ENV == "development";
 
-const manifestConfig = {
-  name: isDev ? "web-sqlite devtools ➡️ Dev" : "web-sqlite devtools",
+export default defineManifest({
+  name: `${packageData.displayName || packageData.name}${isDev ? ` ➡️ Dev` : ""}`,
   description: packageData.description,
   version: packageData.version,
   manifest_version: 3,
@@ -49,10 +49,5 @@ const manifestConfig = {
       matches: ["<all_urls>"],
     },
   ],
-  permissions: ["sidePanel", "storage", "offscreen", "activeTab", "tabs"],
-  chrome_url_overrides: {
-    newtab: "newtab.html",
-  },
-};
-
-export default defineManifest(manifestConfig);
+  permissions: ["sidePanel", "storage", "offscreen", "scripting", "tabs"],
+});

@@ -12,3 +12,7 @@ ReactDOM.createRoot(document.getElementById("app") as HTMLElement).render(
 
 // Log successful initialization
 console.log("Web Sqlite DevTools panel initialized");
+
+chrome.devtools.panels.create("SQLite", "", "../../devtools.html", function () {
+  console.log("devtools panel create");
+});
