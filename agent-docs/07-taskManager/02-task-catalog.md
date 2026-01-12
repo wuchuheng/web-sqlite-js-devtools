@@ -30,6 +30,7 @@ NOTES
   - **Boundary**: `src/manifest.ts`, `src/messaging/`, `devtools.html`, `src/devtools/index.tsx`
   - **Maps to**: FR-001, FR-004, FR-005, FR-039
   - **Micro-Spec**: [completed](agent-docs/08-task/active/TASK-01.md)
+  - **Bug Fix**: DevTools panel creation script with "Sqlite" label added to devtools.html (2026-01-13)
   - **DoD**:
     - Manifest with extension name "web-sqlite devtools", permissions (activeTab, tabs)
     - Message channels TypeScript definitions (10 channels, Response<T> type)

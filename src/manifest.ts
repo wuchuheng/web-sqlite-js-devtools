@@ -4,7 +4,7 @@ import packageData from "../package.json";
 //@ts-ignore
 const isDev = process.env.NODE_ENV == "development";
 
-export default defineManifest({
+const manifestConfig = {
   name: isDev ? "web-sqlite devtools ➡️ Dev" : "web-sqlite devtools",
   description: packageData.description,
   version: packageData.version,
@@ -53,4 +53,6 @@ export default defineManifest({
   chrome_url_overrides: {
     newtab: "newtab.html",
   },
-});
+};
+
+export default defineManifest(manifestConfig);

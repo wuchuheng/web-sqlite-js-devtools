@@ -4,11 +4,31 @@
     <meta charset="UTF-8" />
     <link rel="icon" href="/icons/logo.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Chrome Extension + React + TS + Vite</title>
+    <title>Web Sqlite DevTools</title>
   </head>
 
   <body>
     <div id="app"></div>
     <script type="module" src="./src/devtools/index.tsx"></script>
+    <script>
+      // Create DevTools panel only in devtools_page context (chrome.devtools.panels is available)
+      // This script runs when DevTools opens, before the panel is shown
+      if (typeof chrome !== 'undefined' && chrome.devtools && chrome.devtools.panels) {
+        chrome.devtools.panels.create(
+          "Sqlite",
+          "",
+          "devtools.html",
+          function (panel) {
+            console.log("[Web Sqlite DevTools] Panel created successfully");
+            panel.onShown.addListener(function (window) {
+              console.log("[Web Sqlite DevTools] Panel shown");
+            });
+            panel.onHidden.addListener(function () {
+              console.log("[Web Sqlite DevTools] Panel hidden");
+            });
+          }
+        );
+      }
+    </script>
   </body>
 </html>

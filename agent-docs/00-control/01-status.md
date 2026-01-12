@@ -16,19 +16,20 @@ NOTES
 
 - **Current stage**: Stage 8 - Implementation (Worker)
 - **Current focus**: TASK-01 completed, TASK-02 ready to start
-- **Last updated**: 2026-01-13
+- **Last updated**: 2026-01-13 (TASK-01 bug fix - DevTools panel creation with "Sqlite" label)
 
 ## 2) Active work
 
-| Item                       | Owner      | Status | Evidence                                  |
-| -------------------------- | ---------- | ------ | ----------------------------------------- |
-| TASK-01: Project Setup     | S8:worker  | Completed | `agent-docs/08-task/active/TASK-01.md` |
+| Item                                            | Owner     | Status | Evidence |
+| ----------------------------------------------- | --------- | ------ | -------- |
+| (None - awaiting extension reload verification) | S8:worker | -      | -        |
 
 ## 3) Done (Recent)
 
-| Task                       | Owner      | Evidence                                  |
-| -------------------------- | ---------- | ----------------------------------------- |
-| TASK-01: Project Setup     | S8:worker  | `src/manifest.ts`, `src/messaging/`, `src/devtools/` |
+| Task                              | Owner     | Evidence                                             |
+| --------------------------------- | --------- | ---------------------------------------------------- |
+| TASK-01: Project Setup (Bug Fix)  | S8:worker | `devtools.html` panel creation script added          |
+| TASK-01: Project Setup (Original) | S8:worker | `src/manifest.ts`, `src/messaging/`, `src/devtools/` |
 
 ## 4) Upcoming
 
@@ -53,3 +54,4 @@ NOTES
 - **C5**: 2026-01-13 - Stage 5 Design completed (10 API channels, 6 event types, 10 error codes, message type definitions, 4 module LLDs)
 - **C6**: 2026-01-13 - Stage 7 Task Management completed (6-phase roadmap, 12 actionable tasks, target: 2026-01-27)
 - **C7**: 2026-01-13 - TASK-01 completed (manifest, message channels, React Router setup)
+- **C8**: 2026-01-13 - TASK-01 bug fix (DevTools panel creation script added to devtools.html with "Sqlite" label)

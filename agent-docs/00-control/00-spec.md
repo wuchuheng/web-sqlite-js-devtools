@@ -41,7 +41,7 @@ NOTES
 - **Current stage (1-8)**: Stage 7 - Task Management (Roadmap & Task Catalog)
 - **Active release**: v1.0.0 (MVP) - Target: 2026-01-27
 - **Status summary**: 6-phase roadmap created, 12 actionable tasks defined with dependencies and DoD
-- **Last updated (YYYY-MM-DD)**: 2026-01-13 (TASK-01 completed)
+- **Last updated (YYYY-MM-DD)**: 2026-01-13 (TASK-01 bug fix - DevTools panel creation)
 
 ## 4) Technology stack (chosen in Stage 2)
 
