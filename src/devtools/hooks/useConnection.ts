@@ -3,12 +3,28 @@
  *
  * @remarks
  * Manages heartbeat and auto-reconnect logic for DevTools panel.
+ * Uses chrome.devtools.inspectedWindow.eval to check content script status.
  * Implements heartbeat-based detection with exponential backoff (ADR-0006).
  */
 
 import { useState, useEffect, useRef } from "react";
-import { HEARTBEAT } from "@/messaging/channels";
-import { defineChannel } from "@/messaging/core";
+
+/**
+ * Exception info type from chrome.devtools.inspectedWindow.eval
+ */
+interface EvaluationExceptionInfo {
+  isException: boolean;
+  value?: unknown;
+}
+
+/**
+ * Result type from chrome.devtools.inspectedWindow.eval
+ */
+interface InspectWindowResult {
+  contentScriptActive: boolean;
+  webSqliteDetected: boolean;
+  success: boolean;
+}
 
 /**
  * Connection state type
@@ -58,36 +74,60 @@ export const useConnection = (): UseConnectionReturn => {
   const isMounted = useRef(true);
 
   /**
-   * 1. Send HEARTBEAT message via chrome.runtime.sendMessage
-   * 2. Reset timeout timer on response
+   * 1. Execute code in inspected page to check content script status
+   * 2. Verify web-sqlite-js API is available
    * 3. Set status to connected on success
    *
    * @remarks
-   * Uses defineChannel to create HEARTBEAT channel.
-   * Sends current timestamp and expects echo back.
+   * Uses chrome.devtools.inspectedWindow.eval to execute code in the
+   * inspected page context. This is the proper way for DevTools panels
+   * to communicate with the inspected page.
    */
-  const sendHeartbeat = async () => {
+  const sendHeartbeat = () => {
     if (!isMounted.current) return;
 
-    try {
-      const channel = defineChannel<
-        { timestamp: number },
-        { success: boolean; data?: { timestamp: number } }
-      >(HEARTBEAT);
-
-      const response = await channel.send({ timestamp: Date.now() });
-
-      if (response.success && isMounted.current) {
-        setStatus("connected");
-        setError(undefined);
-        retryCount.current = 0;
-        scheduleNextHeartbeat();
+    /**
+     * 1. Check if content script shadow host exists
+     * 2. Check if web-sqlite-js API is available
+     * 3. Return true if both conditions met
+     */
+    const checkScript = `(
+      () => {
+        const shadowHost = document.getElementById('extension-content-root');
+        const hasWebSqlite = typeof window.__web_sqlite !== 'undefined';
+        return {
+          contentScriptActive: !!shadowHost && !!shadowHost.shadowRoot,
+          webSqliteDetected: hasWebSqlite,
+          success: true
+        };
       }
-    } catch (err) {
-      if (isMounted.current) {
-        handleConnectionLost();
-      }
-    }
+    )()`;
+
+    /**
+     * 1. Execute script in inspected page
+     * 2. Use chrome.devtools.inspectedWindow.eval (DevTools panel API)
+     * 3. Handle response and errors appropriately
+     */
+    chrome.devtools.inspectedWindow.eval(
+      checkScript,
+      (result: InspectWindowResult, exceptionInfo: EvaluationExceptionInfo) => {
+        if (!isMounted.current) return;
+
+        if (exceptionInfo?.isException || !result || !result.success) {
+          handleConnectionLost();
+          return;
+        }
+
+        if (result.contentScriptActive && result.webSqliteDetected) {
+          setStatus("connected");
+          setError(undefined);
+          retryCount.current = 0;
+          scheduleNextHeartbeat();
+        } else {
+          handleConnectionLost();
+        }
+      },
+    );
   };
 
   /**
