@@ -281,24 +281,26 @@ NOTES
     - LogFilter by level and sql/action/event fields
     - UI styling with Tailwind CSS
 
-- [ ] **TASK-10**: OPFS File Browser (Updated - Now depends on TASK-05.5, TASK-05.8)
+- [x] **TASK-10**: OPFS File Browser (Updated - Now depends on TASK-05.5, TASK-05.8)
   - **Priority**: P1
   - **Dependencies**: TASK-03, TASK-02, TASK-05.5, TASK-05.8
   - **Boundary**: `src/devtools/components/OPFSBrowser/`, `src/devtools/components/Sidebar/OPFSLink.tsx`
   - **Maps to**: FR-010, FR-011, FR-027, FR-028
   - **Note**: TASK-05.5 and TASK-05.8 now handle service layer implementation. This task focuses on UI components.
+  - **Micro-Spec**: [completed](agent-docs/08-task/active/TASK-10.md)
   - **DoD**:
     - FileTree recursive component with expand/collapse
     - DownloadButton with browser download trigger
     - OPFSLink in sidebar (FaFile + "OPFS")
     - UI styling with Tailwind CSS
 
-- [ ] **F-002**: Database Tab Navigation Restructuring (NEW - Replaces TASK-07, TASK-08, TASK-11, TASK-101, TASK-102)
+- [x] **F-002**: Database Tab Navigation Restructuring (NEW - Replaces TASK-07, TASK-08, TASK-11, TASK-101, TASK-102)
   - **Priority**: P0 (Blocker)
   - **Dependencies**: TASK-05.1, TASK-05.2, TASK-05.4, TASK-06
   - **Boundary**: `src/devtools/components/DatabaseTabs/`, `src/devtools/components/TablesTab/`, `src/devtools/components/QueryTab/`, `src/devtools/components/MigrationTab/`, `src/devtools/components/SeedTab/`, `src/devtools/components/AboutTab/`, `src/devtools/DevTools.tsx`
   - **Maps to**: F-002, FR-009, FR-009.1, FR-009.2, FR-015, FR-016, FR-017, FR-019, FR-022, FR-024, FR-025, FR-026, FR-027, FR-031, FR-032, FR-033, FR-034, FR-035
   - **Feature**: [F-002: Database Tab Navigation Restructuring](agent-docs/01-discovery/features/F-002-database-tab-navigation.md)
+  - **Micro-Spec**: [completed](agent-docs/08-task/active/F-002.md)
   - **DoD**:
     - Create DatabaseTabs component with tab header (5 tabs: Tables, Query, Migration, Seed, About)
     - Implement nested routing structure: `/openedDB/:dbname` → `/openedDB/:dbname/tables` (default)
@@ -312,11 +314,12 @@ NOTES
     - Update Sidebar links to navigate to `/openedDB/:dbname/tables`
     - UI styling with Tailwind CSS
 
-- [ ] **TASK-12**: Testing & Release
+- [x] **TASK-12**: Testing & Release
   - **Priority**: P0 (Blocker)
   - **Dependencies**: All previous tasks (including TASK-05.1 through TASK-05.8, F-002)
   - **Boundary**: Full extension, `public/icons/`, `package.json`
   - **Maps to**: All FR-001 to FR-044, NFR-005, F-001, F-002
+  - **Micro-Spec**: [completed](agent-docs/08-task/active/TASK-12.md)
   - **DoD**:
     - Manual testing of all 44 MVP requirements
     - Service layer unit tests (all 10 functions)
@@ -333,12 +336,22 @@ NOTES
 
 ## Release v1.1.0 (Post-MVP) - Future Work
 
-- [ ] **TASK-201**: Query History
+- [x] **TASK-201**: Query History
   - **Priority**: P2
   - **Dependencies**: v1.1.0 release
   - **Boundary**: `src/devtools/hooks/`
   - **Maps to**: FR-106
-  - **DoD**: Queries saved to chrome.storage, quick re-execution
+  - **Micro-Spec**: [completed](agent-docs/08-task/active/TASK-201.md)
+  - **DoD**:
+    - Hook `useQueryHistory.ts` created with TSDoc comments
+    - History sidebar integrated into QueryTab
+    - History persists across DevTools sessions (chrome.storage.local)
+    - Maximum 50 entries per database enforced
+    - Consecutive duplicate detection working
+    - Clear history button functional
+    - Click-to-load query working
+    - Relative time formatting correct
+    - Build passed with no errors
 
 - [ ] **TASK-202**: Keyboard Shortcuts
   - **Priority**: P2

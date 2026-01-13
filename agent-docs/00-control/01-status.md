@@ -14,21 +14,23 @@ NOTES
 
 ## 1) Project stage
 
-- **Current stage**: Stage 8 - Implementation (Worker)
-- **Current focus**: TASK-10 completed, TASK-12 (Testing & Release) ready to start
-- **Last updated**: 2026-01-14 (TASK-10 - OPFS File Browser)
+- **Current stage**: Stage 8 - Implementation (Worker - TASK-201)
+- **Current focus**: Post-MVP v1.1.0 development, Query History feature
+- **Last updated**: 2026-01-14 (TASK-201 - Query History)
 
 ## 2) Active work
 
-| Item                                  | Owner     | Status | Evidence |
-| ------------------------------------- | --------- | ------ | -------- |
-| (None - awaiting next task selection) | S8:worker | -      | -        |
+| Item                           | Owner     | Status | Evidence                        |
+| ------------------------------ | --------- | ------ | ------------------------------- |
+| (Awaiting next task selection) | S8:worker | -      | TASK-201 complete, ready for next |
 
 ## 3) Done (Recent)
 
 | Task                                                                       | Owner     | Evidence                                                                                                                                                                                                                                                                                                 |
 | -------------------------------------------------------------------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| TASK-10: OPFS File Browser                                                 | S8:worker | `src/devtools/components/OPFSBrowser/OPFSGallery.tsx`, `src/devtools/components/OPFSBrowser/FileTree.tsx`, `src/devtools/components/OPFSBrowser/FileNode.tsx`, `src/devtools/DevTools.tsx` (OPFS route)                               |
+| TASK-201: Query History                                                    | S8:worker | `src/devtools/hooks/useQueryHistory.ts`, `src/devtools/components/QueryTab/HistoryItem.tsx`, `src/devtools/components/QueryTab/HistorySidebar.tsx`, `src/devtools/components/QueryTab/QueryTab.tsx` (history integration), chrome.storage.local persistence |
+| TASK-12: Testing & Release                                                 | S8:worker | `package.json` (v1.0.0), `dist/web-sqlite-devtools-1.0.0.zip`, production build (1.2MB)                                                                                                                                                                                                                  |
+| TASK-10: OPFS File Browser                                                 | S8:worker | `src/devtools/components/OPFSBrowser/OPFSGallery.tsx`, `src/devtools/components/OPFSBrowser/FileTree.tsx`, `src/devtools/components/OPFSBrowser/FileNode.tsx`, `src/devtools/DevTools.tsx` (OPFS route)                                                                                                  |
 | F-002: Database Tab Navigation Restructuring                               | S8:worker | `src/devtools/components/DatabaseTabs/`, `src/devtools/components/TablesTab/`, `src/devtools/components/QueryTab/`, `src/devtools/components/MigrationTab/`, `src/devtools/components/SeedTab/`, `src/devtools/components/AboutTab/`, `src/devtools/DevTools.tsx` (nested routes), documentation updates |
 | TASK-09: Log Streaming & Ring Buffer UI                                    | S8:worker | `src/devtools/hooks/useLogSubscription.ts`, `src/devtools/components/LogTab/LogView.tsx`, `src/devtools/components/LogTab/LogList.tsx`, `src/devtools/components/LogTab/LogFilter.tsx`, `src/devtools/DevTools.tsx` (log route)                                                                          |
 | TASK-06: Table Data & Schema UI                                            | S8:worker | `src/devtools/components/TableTab/TableSchemaPanel.tsx`, `src/devtools/components/TableTab/PaginationBar.tsx`, `src/devtools/components/TableTab/TableTabs.tsx`, `src/devtools/components/TableTab/TableContent.tsx`, `src/devtools/components/TableTab/DatabaseView.tsx`                                |
@@ -48,8 +50,9 @@ NOTES
 
 ## 4) Upcoming
 
-- **Next task**: TASK-12 - Testing & Release (final task before MVP)
-- **Target date**: 2026-01-27 MVP release
+- **Next milestone**: Release v1.1.0 (Post-MVP features)
+- **Target date**: TBD (after MVP release and user feedback)
+- **Post-MVP tasks**: TASK-201 (Query History), TASK-202 (Keyboard Shortcuts), TASK-203 (Dark/Light Theme)
 
 ## 5) Risks / blockers
 
@@ -92,3 +95,19 @@ NOTES
   - Implemented lazy-loaded directory expansion
   - Added per-file download with proper blob URL cleanup
   - Updated DevTools.tsx to use OPFSGallery component
+- **C15**: 2026-01-14 - TASK-12 implementation completed (MVP Release)
+  - Version bumped to 1.0.0
+  - Extension renamed to "web-sqlite-devtools"
+  - All extension icons verified (16, 32, 48, 128)
+  - Production build verified (1.2MB, < 2MB limit)
+  - Distributable ZIP created: dist/web-sqlite-devtools-1.0.0.zip (555KB)
+  - Created gulp zip script: src/zip.js
+  - Updated task catalog and status board
+  - MVP complete and ready for distribution
+- **C16**: 2026-01-14 - TASK-201 implementation started (Post-MVP Query History)
+  - Created useQueryHistory hook with chrome.storage.local persistence
+  - Created HistoryItem and HistorySidebar components
+  - Integrated history sidebar into QueryTab with toggle
+  - Added relative time formatting and execution count tracking
+  - Implemented deduplication and 50-entry limit (FIFO)
+  - Build passed with no errors

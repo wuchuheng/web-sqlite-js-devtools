@@ -38,10 +38,10 @@ NOTES
 
 ## 3) Current stage
 
-- **Current stage (1-8)**: Stage 8 - Implementation (Worker - TASK-05.5)
-- **Active release**: v1.0.0 (MVP) - Target: 2026-01-27
-- **Status summary**: TASK-01 through TASK-05.4 completed, TASK-05.5 in progress, 6 tasks remaining for MVP
-- **Last updated (YYYY-MM-DD)**: 2026-01-13 (TASK-05.5: Service Layer - OPFS File Browser Functions)
+- **Current stage (1-8)**: Stage 8 - Implementation (Worker - TASK-201)
+- **Active release**: v1.1.0 (Post-MVP) - Target: TBD
+- **Status summary**: MVP v1.0.0 complete, TASK-201 (Query History) in progress for v1.1.0
+- **Last updated (YYYY-MM-DD)**: 2026-01-14 (TASK-201: Query History)
 
 ## 4) Technology stack (chosen in Stage 2)
 
