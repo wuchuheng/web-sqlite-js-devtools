@@ -38,10 +38,10 @@ NOTES
 
 ## 3) Current stage
 
-- **Current stage (1-8)**: Stage 5 - Design (Service Layer Expansion - Feature F-001)
+- **Current stage (1-8)**: Stage 8 - Implementation (Worker - TASK-05.1)
 - **Active release**: v1.0.0 (MVP) - Target: 2026-01-27
-- **Status summary**: TASK-01, TASK-02, TASK-03, TASK-04, TASK-05 completed, 7 tasks remaining for MVP
-- **Last updated (YYYY-MM-DD)**: 2026-01-13 (Feature F-001: Service Layer Expansion - Design Complete)
+- **Status summary**: TASK-01 through TASK-05 completed, TASK-05.1 in progress, 10 tasks remaining for MVP
+- **Last updated (YYYY-MM-DD)**: 2026-01-13 (TASK-05.1: Service Layer - Table Schema Functions)
 
 ## 4) Technology stack (chosen in Stage 2)
 
@@ -93,7 +93,7 @@ NOTES
 - `agent-docs/06-implementation/02-test-plan.md` (pending)
 - `agent-docs/06-implementation/03-observability.md` (pending)
 - `agent-docs/06-implementation/04-release-and-rollback.md` (pending)
-- `agent-docs/08-task/` (pending)
+- `agent-docs/08-task/active/TASK-05.1.md` (NEW - TASK-05.1 Micro-Spec)
 
 ## 6) Recent changes
 
@@ -116,3 +116,8 @@ NOTES
   - Updated `02-schema/01-message-types.md` with ServiceResponse<T> types
   - Documented 3-layer architecture: Components → Service → Bridge → Page Context
   - Migration path defined for components to adopt service layer
+- **2026-01-13**: TASK-05.1 completed - Service Layer Table Schema Functions
+  - Added `ColumnInfo`, `TableSchema`, `QueryResult` types
+  - Implemented `getTableSchema(dbname, tableName)` with PRAGMA table_info + DDL
+  - Implemented `queryTableData(dbname, sql, limit, offset)` with pagination
+  - Updated `databaseService` exports with new functions

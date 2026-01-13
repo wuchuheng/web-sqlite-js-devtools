@@ -87,12 +87,13 @@ NOTES
 
 ### Feature F-001: Service Layer Expansion Tasks
 
-- [ ] **TASK-05.1**: Service Layer - Table Schema Functions
+- [x] **TASK-05.1**: Service Layer - Table Schema Functions
   - **Priority**: P0 (Blocker)
   - **Dependencies**: TASK-05
   - **Boundary**: `src/devtools/services/databaseService.ts`, `src/devtools/bridge/inspectedWindow.ts`
   - **Maps to**: F-001, FR-018, FR-019, FR-020, FR-021, FR-022, FR-023, FR-043
   - **Feature**: F-001 Service Layer Expansion - Schema Inspection Group
+  - **Micro-Spec**: [completed](agent-docs/08-task/active/TASK-05.1.md)
   - **DoD**:
     - Implement `getTableSchema(dbname, tableName)` service function
       - Query `PRAGMA table_info(tableName)` for column details

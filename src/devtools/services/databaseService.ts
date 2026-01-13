@@ -25,6 +25,35 @@ export type DatabaseSummary = {
   name: string;
 };
 
+/**
+ * Column information from PRAGMA table_info
+ */
+export type ColumnInfo = {
+  cid: number; // Column ID (0-indexed)
+  name: string; // Column name
+  type: string; // Declared type (INTEGER, TEXT, etc.)
+  notnull: number; // 1 if NOT NULL, 0 otherwise
+  dflt_value: any; // Default value (null if none)
+  pk: number; // 1 if PRIMARY KEY, 0 otherwise
+};
+
+/**
+ * Table schema with columns and DDL
+ */
+export type TableSchema = {
+  columns: ColumnInfo[];
+  ddl: string; // Complete CREATE TABLE SQL
+};
+
+/**
+ * Query result with pagination metadata
+ */
+export type QueryResult = {
+  rows: Array<Record<string, any>>; // Row data
+  total: number; // Total row count (for pagination)
+  columns: string[]; // Column names from first row
+};
+
 // ============================================================================
 // TYPES FOR WINDOW.__WEB_SQLITE
 // ============================================================================
@@ -159,9 +188,182 @@ export const getTableList = async (
 };
 
 /**
+ * Get table schema including columns and DDL
+ *
+ * @remarks
+ * 1. Validate database and access window.__web_sqlite
+ * 2. Query PRAGMA table_info for column details and sqlite_master for DDL
+ * 3. Return normalized schema with columns array and DDL string
+ *
+ * @param dbname - Database name to inspect
+ * @param tableName - Table name to get schema for
+ * @returns Table schema with columns and DDL
+ */
+export const getTableSchema = async (
+  dbname: string,
+  tableName: string,
+): Promise<ServiceResponse<TableSchema>> => {
+  return inspectedWindowBridge.execute({
+    func: async (databaseName: string, tblName: string) => {
+      try {
+        const ok = <T>(data: T) => ({ success: true as const, data });
+        const fail = (message: string) => ({
+          success: false as const,
+          error: message,
+        });
+
+        // Phase 1: Validate database exists
+        const api = window.__web_sqlite;
+        const databases = api?.databases;
+
+        if (!databases) {
+          return fail("web-sqlite-js API not available");
+        }
+
+        const dbRecord = databases[databaseName];
+        if (!dbRecord) {
+          return fail(`Database not found: ${databaseName}`);
+        }
+
+        const db = dbRecord.db;
+
+        // Phase 2: Query schema information
+        const queryFunc = (sql: string) => (db as DbQuery).query(sql);
+
+        // Get column details from PRAGMA table_info
+        const pragmaSql = `PRAGMA table_info(${escapeIdentifier(tblName)})`;
+        const columnRows = await queryFunc(pragmaSql);
+
+        // Normalize to ColumnInfo format
+        const columns: ColumnInfo[] = columnRows.map(
+          (row: Record<string, unknown>) => ({
+            cid: Number(row.cid) ?? 0,
+            name: String(row.name ?? ""),
+            type: String(row.type ?? ""),
+            notnull: Number(row.notnull ?? 0),
+            dflt_value: row.dflt_value,
+            pk: Number(row.pk ?? 0),
+          }),
+        );
+
+        // Get DDL from sqlite_master
+        const ddlSql =
+          "SELECT sql FROM sqlite_master WHERE type='table' AND name = ?";
+        // Note: Using parameterized query for table name
+        const ddlRows = await queryFunc(
+          `SELECT sql FROM sqlite_master WHERE type='table' AND name = '${escapeIdentifier(
+            tblName,
+          )}'`,
+        );
+
+        let ddl = "";
+        if (ddlRows.length > 0 && ddlRows[0]?.sql) {
+          ddl = String(ddlRows[0].sql);
+        }
+
+        // Phase 3: Return response
+        return ok({ columns, ddl });
+      } catch (error) {
+        return { success: false as const, error: String(error) };
+      }
+    },
+    args: [dbname, tableName],
+  });
+};
+
+/**
+ * Execute SELECT query with pagination
+ *
+ * @remarks
+ * 1. Validate database and wrap user SQL for pagination
+ * 2. Execute count query and data query with LIMIT/OFFSET
+ * 3. Return rows, total count, and column names from first row
+ *
+ * @param dbname - Database name to query
+ * @param sql - SELECT query to execute (will be wrapped for pagination)
+ * @param limit - Maximum number of rows to return
+ * @param offset - Number of rows to skip
+ * @returns Query result with rows, total count, and column names
+ */
+export const queryTableData = async (
+  dbname: string,
+  sql: string,
+  limit: number,
+  offset: number,
+): Promise<ServiceResponse<QueryResult>> => {
+  return inspectedWindowBridge.execute({
+    func: async (
+      databaseName: string,
+      userSql: string,
+      limitVal: number,
+      offsetVal: number,
+    ) => {
+      try {
+        const ok = <T>(data: T) => ({ success: true as const, data });
+        const fail = (message: string) => ({
+          success: false as const,
+          error: message,
+        });
+
+        // Phase 1: Validate database and wrap SQL
+        const api = window.__web_sqlite;
+        const databases = api?.databases;
+
+        if (!databases) {
+          return fail("web-sqlite-js API not available");
+        }
+
+        const dbRecord = databases[databaseName];
+        if (!dbRecord) {
+          return fail(`Database not found: ${databaseName}`);
+        }
+
+        const db = dbRecord.db;
+        const queryFunc = (sql: string) => (db as DbQuery).query(sql);
+
+        // Phase 2: Execute queries
+        // Get total count
+        const countSql = `SELECT COUNT(*) as total FROM (${userSql})`;
+        const countRows = await queryFunc(countSql);
+        const total = Number(countRows[0]?.total ?? 0);
+
+        // Get paginated data
+        const dataSql = `SELECT * FROM (${userSql}) LIMIT ${limitVal} OFFSET ${offsetVal}`;
+        const rows = await queryFunc(dataSql);
+
+        // Extract column names from first row keys
+        let columns: string[] = [];
+        if (rows.length > 0) {
+          columns = Object.keys(rows[0] ?? {});
+        }
+
+        // Phase 3: Return response
+        return ok({ rows, total, columns });
+      } catch (error) {
+        return { success: false as const, error: String(error) };
+      }
+    },
+    args: [dbname, sql, limit, offset],
+  });
+};
+
+/**
+ * Helper function to escape SQL identifiers
+ *
+ * @param identifier - SQL identifier to escape (table name, column name)
+ * @returns Escaped identifier wrapped in double quotes
+ */
+const escapeIdentifier = (identifier: string): string => {
+  // Escape double quotes by doubling them and wrap in double quotes
+  return `"${identifier.replace(/"/g, '""')}"`;
+};
+
+/**
  * Database service API
  */
 export const databaseService = Object.freeze({
   getDatabases,
   getTableList,
+  getTableSchema,
+  queryTableData,
 });
