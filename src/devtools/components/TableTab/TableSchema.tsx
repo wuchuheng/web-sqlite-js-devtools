@@ -1,5 +1,7 @@
 import type { TableSchema } from "@/devtools/services/databaseService";
 
+// Note: React import not needed with new JSX transform, but keeping for compatibility
+
 /**
  * Table schema display component
  *
