@@ -1,4 +1,10 @@
-import { RefreshIcon, ChevronLeftIcon, ChevronRightIcon } from "../Icon";
+import { RefreshIcon } from "../Icon";
+import {
+  MdFirstPage,
+  MdNavigateBefore,
+  MdNavigateNext,
+  MdLastPage,
+} from "react-icons/md";
 
 /**
  * Pagination bar component
@@ -76,8 +82,7 @@ export const PaginationBar = ({
           className="flex items-center justify-center w-6 h-6 text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           title="First page"
         >
-          <ChevronLeftIcon size={12} className="-mr-1.5" />
-          <ChevronLeftIcon size={12} />
+          <MdFirstPage size={16} />
         </button>
 
         {/* Previous page button */}
@@ -88,7 +93,7 @@ export const PaginationBar = ({
           className="flex items-center justify-center w-6 h-6 text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           title="Previous page"
         >
-          <ChevronLeftIcon size={12} />
+          <MdNavigateBefore size={18} />
         </button>
 
         {/* Page number input */}
@@ -120,7 +125,7 @@ export const PaginationBar = ({
           className="flex items-center justify-center w-6 h-6 text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           title="Next page"
         >
-          <ChevronRightIcon size={12} />
+          <MdNavigateNext size={18} />
         </button>
 
         {/* Last page button */}
@@ -131,8 +136,7 @@ export const PaginationBar = ({
           className="flex items-center justify-center w-6 h-6 text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           title="Last page"
         >
-          <ChevronRightIcon size={12} />
-          <ChevronRightIcon size={12} className="-ml-1.5" />
+          <MdLastPage size={16} />
         </button>
       </div>
     </div>
