@@ -38,10 +38,10 @@ NOTES
 
 ## 3) Current stage
 
-- **Current stage (1-8)**: Stage 8 - Implementation (Worker - TASK-303)
+- **Current stage (1-8)**: Stage 8 - Implementation (Worker - TASK-304)
 - **Active release**: v1.2.0 (Enhancements) - Target: TBD
-- **Status summary**: TASK-301 complete (F-005), TASK-302 complete (F-006), TASK-303 complete (Integration)
-- **Last updated (YYYY-MM-DD)**: 2026-01-14 (TASK-303: Integration Testing & Polish)
+- **Status summary**: TASK-301 complete (F-005), TASK-302 complete (F-006), TASK-303 complete (Integration), TASK-304 complete (F-008)
+- **Last updated (YYYY-MM-DD)**: 2026-01-14 (TASK-304: Opened Database List Route)
 
 ## 4) Technology stack (chosen in Stage 2)
 
@@ -71,6 +71,8 @@ NOTES
 - `agent-docs/01-discovery/features/F-004-ddl-syntax-highlight-copy.md` (COMPLETED - Feature F-004)
 - `agent-docs/01-discovery/features/F-005-opened-table-tabs-management.md` (NEW - Feature F-005)
 - `agent-docs/01-discovery/features/F-006-resizable-vertical-dividers.md` (NEW - Feature F-006)
+- `agent-docs/01-discovery/features/F-007-uniform-theme-configuration.md` (COMPLETED - Feature F-007)
+- `agent-docs/01-discovery/features/F-008-opened-database-list-route.md` (NEW - Feature F-008)
 - `agent-docs/02-feasibility/01-options.md`
 - `agent-docs/02-feasibility/02-risk-assessment.md`
 - `agent-docs/02-feasibility/03-spike-plan.md`

@@ -57,8 +57,8 @@ NOTES
   - **Micro-Spec**: [completed](agent-docs/08-task/active/TASK-03.md)
   - **DoD**:
     - Content script message listener routing by channel
-    - Background service message routing (panel ↔ content script)
-    - Database proxy with getDatabases, Map→Array serialization
+    - Background service message routing (panel <-> content script)
+    - Database proxy with getDatabases, Map->Array serialization
     - All proxy handlers stubbed for 10 channels
 
 - [x] **TASK-04**: Icon State & Auto-Reconnect
@@ -303,7 +303,7 @@ NOTES
   - **Micro-Spec**: [completed](agent-docs/08-task/active/F-002.md)
   - **DoD**:
     - Create DatabaseTabs component with tab header (5 tabs: Tables, Query, Migration, Seed, About)
-    - Implement nested routing structure: `/openedDB/:dbname` → `/openedDB/:dbname/tables` (default)
+    - Implement nested routing structure: `/openedDB/:dbname` -> `/openedDB/:dbname/tables` (default)
     - Create TablesTab (refactor from DatabaseView): 25% table list sidebar + 75% content area
     - Create TableDetail component for `:tableName` route with split view (data + DDL)
     - Create QueryTab with CodeMirror SQL editor + results + export
@@ -564,3 +564,115 @@ NOTES
       - [x] Update feature docs with completion status
     - [x] Build passed with no errors
     - [x] Extension loads and functions correctly
+
+- [x] **TASK-304**: Opened Database List Route Feature (F-008)
+  - **Priority**: P1 (High)
+  - **Dependencies**: F-002 (Database Tab Navigation), F-007 (Uniform Theme Configuration)
+  - **Boundary**: `src/devtools/components/OpenedDBList/`, `src/devtools/DevTools.tsx`, `src/devtools/components/Sidebar/DatabaseList.tsx`
+  - **Maps to**: F-008
+  - **Feature**: [F-008: Opened Database List Route](agent-docs/01-discovery/features/F-008-opened-database-list-route.md)
+  - **Micro-Spec**: [completed](agent-docs/08-task/active/TASK-304.md)
+  - **Estimated**: 12 hours (3-4 days)
+  - **Completed**: 2026-01-14
+  - **DoD**:
+    - [x] **Component: OpenedDBList.tsx** (1.5 hours)
+      - [x] Create `src/devtools/components/OpenedDBList/OpenedDBList.tsx` file
+      - [x] Implement data fetching with `useInspectedWindowRequest(() => databaseService.getDatabases())`
+      - [x] Add state management: `databases`, `isLoading`, `error`, `reload`
+      - [x] Implement conditional rendering: LoadingSkeleton, ErrorState, EmptyDatabaseList, DatabaseList
+      - [x] Export component and types
+    - [x] **Component: DatabaseCard.tsx** (1 hour)
+      - [x] Create `src/devtools/components/OpenedDBList/DatabaseCard.tsx` file
+      - [x] Implement clickable card with FaDatabase icon (react-icons/fa)
+      - [x] Display database name (bold, primary text)
+      - [x] Implement onClick navigation: `/openedDB/:dbname/tables` with encodeURIComponent
+      - [x] Add active state styling: bg-primary-50 border-primary-600 shadow-sm
+      - [x] Add hover state styling: hover:border-primary-300 hover:shadow-sm
+      - [x] Add ARIA label: `aria-label="Open database ${database.name}"`
+      - [x] Export component and types
+    - [x] **Component: EmptyDatabaseList.tsx** (1 hour)
+      - [x] Create `src/devtools/components/OpenedDBList/EmptyDatabaseList.tsx` file
+      - [x] Display SiSqlite icon (text-primary-600, text-6xl) from react-icons/si
+      - [x] Display title: "No Opened Databases" (text-2xl font-semibold text-gray-700)
+      - [x] Display message: "Could not detect any opened databases." (text-gray-600)
+      - [x] Display instructions: "Open a page that uses web-sqlite-js..." (text-gray-500 text-sm)
+      - [x] Add refresh button with IoMdRefresh icon (react-icons/io)
+      - [x] Style button: bg-primary-600 text-white hover:bg-primary-700
+      - [x] Add ARIA label: `aria-label="Refresh database list"`
+      - [x] Export component and types
+    - [x] **Component: LoadingSkeleton.tsx** (0.5 hours)
+      - [x] Create `src/devtools/components/OpenedDBList/LoadingSkeleton.tsx` file
+      - [x] Display 3 skeleton cards with bg-gray-200 animate-pulse
+      - [x] Match DatabaseCard layout (flex, gap, padding)
+      - [x] Export component
+    - [x] **Component: ErrorState.tsx** (0.5 hours)
+      - [x] Create `src/devtools/components/OpenedDBList/ErrorState.tsx` file
+      - [x] Display FaExclamationCircle icon (react-icons/fa) with text-error-600
+      - [x] Display error message (text-gray-600)
+      - [x] Add retry button with IoMdRefresh icon (react-icons/io)
+      - [x] Style button: bg-primary-600 text-white hover:bg-primary-700
+      - [x] Add ARIA label: `aria-label="Retry loading database list"`
+      - [x] Export component and types
+    - [x] **Component: Header.tsx** (0.5 hours)
+      - [x] Create `src/devtools/components/OpenedDBList/Header.tsx` file
+      - [x] Display title: "Opened Databases" (text-2xl font-semibold text-gray-700)
+      - [x] Add database count badge in parentheses (if count provided)
+      - [x] Add refresh button with IoMdRefresh icon (react-icons/io)
+      - [x] Style button: p-2 text-gray-600 hover:text-gray-800 rounded hover:bg-gray-100
+      - [x] Add ARIA label: `aria-label="Refresh database list"`
+      - [x] Export component and types
+    - [x] **Component: DatabaseList.tsx** (0.5 hours)
+      - [x] Create `src/devtools/components/OpenedDBList/DatabaseList.tsx` file
+      - [x] Implement active state detection using `useLocation()` and regex matching
+      - [x] Render DatabaseCard for each database in databases array
+      - [x] Pass isActive prop based on current route
+      - [x] Use semantic HTML: `<nav>` with `aria-label="Database list"`
+      - [x] Export component and types
+    - [x] **Component: index.tsx** (0.5 hours)
+      - [x] Create `src/devtools/components/OpenedDBList/index.tsx` file
+      - [x] Export OpenedDBList component
+      - [x] Re-export all sub-components for testing
+    - [x] **Route Configuration** (2 hours)
+      - [x] Update `src/devtools/DevTools.tsx`
+      - [x] Add `/openedDB` route BEFORE `/openedDB/:dbname` route (critical)
+      - [x] Import OpenedDBList component
+      - [x] Verify route order: Generic route must precede parameterized route
+      - [x] Test direct navigation to `/openedDB`
+      - [x] Update sidebar "Opened DB" link from `to="/"` to `to="/openedDB"`
+      - [x] Test sidebar navigation
+    - [x] **Integration & Testing** (3 hours)
+      - [x] Test loading state on initial load (shows LoadingSkeleton)
+      - [x] Test empty state when no databases (shows EmptyDatabaseList with refresh button)
+      - [x] Test error state with retry button (shows ErrorState)
+      - [x] Test database list display (shows DatabaseCard components)
+      - [x] Test refresh functionality (header button re-fetches data)
+      - [x] Test navigation: Click card -> navigates to `/openedDB/:dbname/tables`
+      - [x] Test active state highlighting (current database highlighted)
+      - [x] Test keyboard navigation (Tab through cards, Enter to activate)
+      - [x] Test URL encoding (database names with special characters)
+      - [x] Test sidebar link navigation (click "Opened DB" -> /openedDB)
+      - [x] Fix any bugs found during testing
+    - [x] **Documentation** (1 hour)
+      - [x] Update feature spec: `agent-docs/01-discovery/features/F-008-opened-database-list-route.md`
+        - Mark all acceptance criteria as complete
+      - [x] Update HLD: `agent-docs/03-architecture/01-hld.md`
+        - Add implementation notes if needed
+      - [x] Update LLD: `agent-docs/05-design/03-modules/opened-db-list.md`
+        - Add implementation notes and completion status
+      - [x] Update module doc implementation status
+      - [x] Verify all DoD items complete
+    - [x] **Build & Verification** (0.5 hours)
+      - [x] Run build: `npm run build`
+      - [x] Verify no errors
+      - [x] Check bundle size
+      - [x] Run TypeScript: `npm run typecheck`
+      - [x] Verify no type errors
+    - [x] **Acceptance Criteria Verification** (0.5 hours)
+      - [x] Route Structure: `/openedDB` route exists, direct navigation works
+      - [x] Sidebar Navigation: "Opened DB" link navigates to `/openedDB`, active state highlights
+      - [x] Database List Display: Fetches databases, displays cards, shows name
+      - [x] Empty State: Shows SiSqlite icon, title, message, instructions, refresh button
+      - [x] Refresh Functionality: Header and empty state buttons work, loading state shows
+      - [x] Edge Cases: Loading, error, empty, single database, multiple databases all work
+    - [x] Build passed with no errors (3.06s)
+    - [x] Feature spec marked complete

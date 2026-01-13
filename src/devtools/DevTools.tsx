@@ -11,6 +11,7 @@ import { AboutTab } from "./components/AboutTab";
 import { LogView } from "./components/LogTab/LogView";
 import { OPFSGallery } from "./components/OPFSBrowser";
 import { KeyboardShortcutsHelp } from "./components/KeyboardShortcutsHelp";
+import { OpenedDBList } from "./components/OpenedDBList";
 import { useConnection } from "./hooks/useConnection";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import "./DevTools.css";
@@ -142,10 +143,14 @@ const DevToolsContent = () => {
         {renderConnectionStatus()}
 
         <Routes>
-          {/* 1. Default route - empty state with helpful instructions */}
-          {/* 2. Implements FR-014 (empty state notice) */}
-          {/* 3. Implements FR-042 (helpful instructions) */}
-          <Route path="/" element={<EmptyState />} />
+          {/* 1. Default route - redirect to opened database list (F-008) */}
+          {/* 2. Shows all opened databases when DevTools opens */}
+          <Route path="/" element={<Navigate to="/openedDB" replace />} />
+
+          {/* 1. Opened database list route (F-008) */}
+          {/* 2. Displays all opened databases as clickable cards */}
+          {/* 3. CRITICAL: Generic route must precede parameterized route */}
+          <Route path="/openedDB" element={<OpenedDBList />} />
 
           {/* 1. Database tabs with nested routing (F-002) */}
           {/* 2. /openedDB/:dbname redirects to /openedDB/:dbname/tables */}

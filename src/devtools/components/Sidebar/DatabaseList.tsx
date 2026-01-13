@@ -46,14 +46,13 @@ export const DatabaseList = ({ isCollapsed }: DatabaseListProps) => {
   );
 
   /**
-   * 1. Determine if currently on root route
+   * 1. Determine if currently on /openedDB route or child routes
    * 2. Used for "Opened DB" header active styling
-   * 3. Keeps header inactive when viewing a specific database
+   * 3. Keeps header active when viewing database list or specific database
    */
   const isActive =
-    location.pathname === "/"
-    || location.pathname === ""
-    || (isCollapsed && location.pathname.startsWith("/openedDB"));
+    location.pathname === "/openedDB"
+    || location.pathname.startsWith("/openedDB/");
   const activeDatabase = useMemo(
     () => getDatabaseNameFromPath(location.pathname),
     [location.pathname],
@@ -69,7 +68,7 @@ export const DatabaseList = ({ isCollapsed }: DatabaseListProps) => {
   return (
     <div className="flex flex-col ">
       <SidebarLink
-        to="/"
+        to="/openedDB"
         label="Opened DB"
         icon={FaDatabase}
         isActive={isActive}

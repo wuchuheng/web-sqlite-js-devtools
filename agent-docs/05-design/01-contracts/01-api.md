@@ -25,7 +25,8 @@ agent-docs/05-design/
     content-script-proxy.md
     background-service.md
     opfs-browser.md
-    database-service.md  (NEW - Feature F-001)
+    database-service.md      (Feature F-001)
+    opened-db-list.md        (Feature F-008 - NEW)
 ```
 
 ### Module Index
@@ -37,6 +38,7 @@ agent-docs/05-design/
 | Content Script Proxy | `agent-docs/05-design/03-modules/content-script-proxy.md` | `### Module: Content Script Proxy` | Proxy handlers      |
 | Background Service   | `agent-docs/05-design/03-modules/background-service.md`   | `### Module: Background Service`   | Icon state, routing |
 | OPFS Browser         | `agent-docs/05-design/03-modules/opfs-browser.md`         | `### Module: OPFS Browser`         | File operations     |
+| Opened DB List       | `agent-docs/05-design/03-modules/opened-db-list.md`       | `### Module: Database Discovery`   | Database navigation |
 
 ## 1) Standards
 
@@ -93,6 +95,7 @@ agent-docs/05-design/
 - **Error Cases**:
   - Returns empty array if `window.__web_sqlite` not available
   - Returns `{ success: false, error: string }` if execution fails
+- **Used By**: OpenedDBList component (Feature F-008), Sidebar DatabaseList
 
 #### Function: `getTableList(dbname)`
 

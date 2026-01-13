@@ -42,7 +42,7 @@ NOTES
 
 #### Phase 2: Core Messaging (Days 3-4)
 
-**Milestone**: Panel ↔ Content Script communication working
+**Milestone**: Panel <-> Content Script communication working
 
 - [x] TASK-03: Content Script Proxy & Background Messaging
 - [x] TASK-04: Icon State & Auto-Reconnect
@@ -109,7 +109,7 @@ NOTES
 
 **Milestone**: F-005 Complete - Opened table tabs with close buttons
 
-- [ ] **TASK-301**: Opened Table Tabs Management Feature (F-005)
+- [x] **TASK-301**: Opened Table Tabs Management Feature (F-005) (Completed 2026-01-14)
   - Create `OpenedTableTabs.tsx` component with close buttons
   - Implement state-managed opened tabs
   - Auto-open first table on database selection
@@ -120,7 +120,7 @@ NOTES
 
 **Milestone**: F-006 Complete - Draggable resize handles
 
-- [ ] **TASK-302**: Resizable Vertical Dividers Feature (F-006)
+- [x] **TASK-302**: Resizable Vertical Dividers Feature (F-006) (Completed 2026-01-14)
   - Create shared `ResizeHandle.tsx` component
   - Implement TablesTab resizable sidebar (200-600px)
   - Implement TableDetail resizable schema panel (250-600px)
@@ -130,10 +130,33 @@ NOTES
 
 **Milestone**: Production-ready features
 
-- [ ] **TASK-303**: Integration Testing & Polish
+- [x] **TASK-303**: Integration Testing & Polish (Completed 2026-01-14)
   - Test both features together
   - Fix any visual glitches or state bugs
   - Update documentation
+
+#### Phase 5: Opened Database List Route (Days 8-10)
+
+**Milestone**: F-008 Complete - Generic /openedDB route with database list
+
+- [ ] **TASK-304**: Opened Database List Route Feature (F-008)
+  - Create OpenedDBList component with 6 sub-components
+  - Add generic /openedDB route to DevTools.tsx
+  - Update sidebar "Opened DB" link from / to /openedDB
+  - Implement loading, error, empty, and success states
+  - Add refresh button with IoMdRefresh icon
+  - Implement database card navigation to /openedDB/:dbname/tables
+  - Testing and documentation
+
+### Release v1.3.0 (Future Enhancements)
+
+**Target Date**: TBD
+**Focus**: Additional UX improvements and features
+
+- [ ] **TASK-401**: Dark/Light Theme Toggle (F-009)
+  - Theme provider implementation
+  - Settings panel
+  - Persist to chrome.storage
 
 ## 3. Milestones (History)
 
@@ -146,6 +169,8 @@ NOTES
 - [ ] **Query & Logs Working**: By end of Day 12 (TASK-05.2, TASK-05.3, TASK-05.7, TASK-05.8, TASK-07, TASK-08, TASK-09)
 - [ ] **OPFS & About Working**: By end of Day 13 (TASK-05.4, TASK-05.5, TASK-10, TASK-11)
 - [ ] **v1.0.0 MVP Released**: 2026-01-27 (TASK-12)
+- [x] **v1.2.0 Phase 1-4 Complete**: 2026-01-14 (F-004, F-005, F-006)
+- [ ] **v1.2.0 Phase 5 Complete**: TBD (F-008)
 
 ## 4. Feature F-001: Service Layer Expansion
 
@@ -220,3 +245,129 @@ Implement all 10 missing database service functions in `databaseService.ts` to e
 - **Days 5-7**: Implement service layer functions (TASK-05.1 through TASK-05.5)
 - **Days 8-9**: Migrate components to use service layer (TASK-05.6 through TASK-05.8)
 - **Day 14**: Final testing and cleanup (TASK-12)
+
+## 5. Feature F-008: Opened Database List Route
+
+### Overview
+
+**Feature ID**: F-008 (Discovery)
+**Status**: Implementation Ready
+**Priority**: High (P1 - Navigation enhancement)
+**Target**: Complete during v1.2.0 Phase 5 (Days 8-10 from 2026-01-14)
+
+### Objective
+
+Add a generic `/openedDB` route to display a list of all opened databases, enabling centralized database navigation. This resolves the issue where the sidebar "Opened DB" link navigates to `/` instead of a proper database list view.
+
+### Tasks Breakdown
+
+#### TASK-304: Opened Database List Route Feature (F-008)
+
+**Estimated**: 12 hours (3-4 days)
+**Priority**: P1 (High)
+**Dependencies**: F-002 (Database Tab Navigation), F-007 (Uniform Theme Configuration)
+
+**Implementation Phases**:
+
+1. **Component Creation** (6 hours)
+   - Create `OpenedDBList.tsx` - Main component with data fetching
+   - Create `DatabaseCard.tsx` - Individual database card with navigation
+   - Create `EmptyDatabaseList.tsx` - Empty state with refresh button
+   - Create `LoadingSkeleton.tsx` - Loading skeleton (3 cards)
+   - Create `ErrorState.tsx` - Error state with retry button
+   - Create `Header.tsx` - Page header with refresh button
+   - Create `DatabaseList.tsx` - List container with active state detection
+
+2. **Route Configuration** (2 hours)
+   - Add `/openedDB` route to `DevTools.tsx` (BEFORE `/openedDB/:dbname`)
+   - Verify route order (generic before parameterized)
+   - Update sidebar "Opened DB" link from `/` to `/openedDB`
+   - Test navigation flow
+
+3. **Integration & Testing** (3 hours)
+   - Test loading state on initial load
+   - Test empty state when no databases
+   - Test error state with retry button
+   - Test database list display
+   - Test refresh functionality (header button)
+   - Test navigation: Click card -> /openedDB/:dbname/tables
+   - Test active state highlighting
+   - Test keyboard navigation
+
+4. **Documentation** (1 hour)
+   - Update feature spec with completion status
+   - Update HLD if needed
+   - Update LLD with implementation notes
+   - Verify all acceptance criteria met
+
+### Dependencies
+
+- **Upstream**: F-002 (Database Tab Navigation), F-007 (Uniform Theme Configuration)
+- **Downstream**: None (can proceed independently)
+
+### Success Criteria
+
+1. Route Structure
+   - [ ] `/openedDB` route exists and renders `OpenedDBList` component
+   - [ ] Direct navigation to `/openedDB` works
+   - [ ] Route is added to `DevTools.tsx` Routes configuration
+
+2. Sidebar Navigation
+   - [ ] "Opened DB" link navigates to `/openedDB` instead of `/`
+   - [ ] Active state highlights correctly on `/openedDB` and child routes
+   - [ ] Clicking "Opened DB" shows database list in main content area
+
+3. Database List Display
+   - [ ] Fetches databases using `databaseService.getDatabases()`
+   - [ ] Displays each database as a clickable card
+   - [ ] Shows database name and table count
+   - [ ] Clicking card navigates to `/openedDB/:dbname/tables`
+
+4. Empty State
+   - [ ] Shows when no databases are opened
+   - [ ] Displays SiSqlite icon
+   - [ ] Shows "No Opened Databases" title
+   - [ ] Shows helpful message about web-sqlite-js
+   - [ ] Includes refresh button with `IoMdRefresh` icon
+
+5. Refresh Functionality
+   - [ ] Header refresh button re-fetches database list
+   - [ ] Empty state refresh button re-fetches database list
+   - [ ] Shows loading state during refresh
+   - [ ] Handles errors with retry option
+
+6. Edge Cases
+   - [ ] Loading state shows on initial load
+   - [ ] Error state shows with retry button
+   - [ ] Empty database list shows custom empty state
+   - [ ] Single database shows correctly
+   - [ ] Multiple databases show as list
+
+### Risk Mitigation
+
+- **Route Conflicts**: Ensure generic `/openedDB` route precedes parameterized `/openedDB/:dbname`
+- **State Management**: Use existing `useInspectedWindowRequest` hook (no new state logic needed)
+- **Service Layer**: Uses existing `getDatabases()` function (no service changes needed)
+- **Theme Consistency**: Follow F-007 semantic color tokens
+
+### Timeline
+
+- **Day 1** (3 hours): Component creation (OpenedDBList, DatabaseCard, EmptyDatabaseList)
+- **Day 2** (3 hours): Component creation (LoadingSkeleton, ErrorState, Header, DatabaseList)
+- **Day 3** (2 hours): Route configuration and sidebar link update
+- **Day 3** (3 hours): Integration testing and bug fixes
+- **Day 4** (1 hour): Documentation and final verification
+
+### Definition of Done
+
+- [ ] All 7 components implemented with TypeScript strict mode
+- [ ] All components use F-007 theme tokens
+- [ ] Route configuration updated with correct order
+- [ ] Sidebar link updated to `/openedDB`
+- [ ] Loading, error, empty states implemented
+- [ ] Keyboard navigation tested
+- [ ] ARIA labels added
+- [ ] Build passes with no errors
+- [ ] Manual testing complete (all 10 scenarios from LLD)
+- [ ] Feature spec marked complete
+- [ ] Documentation updated

@@ -130,6 +130,12 @@ C4Container
         /Shared         # Shared components (F-006)
           ResizeHandle.tsx    # Reusable resize handle
         /Sidebar        # Sidebar navigation
+        /OpenedDBList   # Database list view (F-008 NEW)
+          OpenedDBList.tsx    # Main component
+          DatabaseCard.tsx    # Individual database card
+          EmptyDatabaseList.tsx # Empty state component
+          LoadingSkeleton.tsx  # Loading state
+          ErrorState.tsx       # Error state
         /TablesTab      # Table browser (F-005, F-006)
           TableList.tsx         # Table list sidebar
           OpenedTableTabs.tsx   # Opened tabs with close buttons (F-005 NEW)
@@ -208,11 +214,26 @@ DevTools (Root)
 ├── HashRouter
 │   ├── Sidebar (Navigation)
 │   │   ├── SidebarHeader (App branding)
-│   │   ├── DatabaseList (Opened DB menu)
+│   │   ├── DatabaseList (Opened DB menu) - Links to /openedDB (F-008 UPDATED)
 │   │   ├── OPFSLink (OPFS browser link)
 │   │   └── CollapseToggle (Sidebar collapse)
 │   └── MainContent
-│       ├── EmptyState (No route selected)
+│       ├── EmptyState (No route selected - at root /)
+│       ├── OpenedDBList (F-008 NEW - /openedDB route)
+│       │   ├── Header
+│       │   │   ├── Title: "Opened Databases"
+│       │   │   └── Refresh Button (IoMdRefresh icon)
+│       │   ├── Database List
+│       │   │   └── DatabaseCard (clickable → /openedDB/:dbname/tables)
+│       │   │       ├── FaDatabase icon
+│       │   │       ├── Database name (primary text, bold)
+│       │   │       └── Table count (secondary text, gray)
+│       │   └── EmptyDatabaseList (when no databases)
+│       │       ├── SiSqlite icon
+│       │       ├── Title: "No Opened Databases"
+│       │       ├── Message: "Could not detect any opened databases."
+│       │       ├── Instructions: "Open a page that uses web-sqlite-js..."
+│       │       └── Refresh Button (IoMdRefresh)
 │       ├── DatabaseTabs (/openedDB/:dbname) → redirects to /openedDB/:dbname/tables
 │       │   ├── DatabaseTabHeader (5 tabs: Tables, Query, Migration, Seed, About)
 │       │   └── Outlet (Nested Routes)
@@ -968,3 +989,281 @@ TableDetail (MODIFIED)
   background: #93c5fd; /* blue-300 */
 }
 ```
+
+## 13) Opened Database List Route Architecture (Feature F-008)
+
+**Purpose**: Add a generic `/openedDB` route to display a list of all opened databases, enabling centralized database navigation.
+
+**Problem Solved**:
+
+- **Current Issue**: No generic `/openedDB` route exists; sidebar "Opened DB" link navigates to `/` instead of a database list view
+- **Solution**: New `/openedDB` route with OpenedDBList component showing all databases as clickable cards
+
+**Route Structure** (Updated):
+
+```
+Before:
+/ → EmptyState (welcome screen)
+/openedDB/:dbname → DatabaseTabs (specific database)
+
+After:
+/ → EmptyState (welcome screen)
+/openedDB → OpenedDBList (NEW - list of all opened databases)
+/openedDB/:dbname → DatabaseTabs (specific database)
+```
+
+**Navigation Flow**:
+
+```
+┌──────────────────┐
+│  User clicks     │
+│  "Opened DB"     │
+│  in sidebar      │
+└────────┬─────────┘
+         │
+         ▼
+┌──────────────────┐
+│  Navigate to     │ → Route: /openedDB
+│  /openedDB       │ → Component: OpenedDBList
+└────────┬─────────┘
+         │
+         ▼
+┌──────────────────┐
+│  Fetch databases │ → databaseService.getDatabases()
+│  via service     │ → Show loading skeleton
+└────────┬─────────┘
+         │
+         ▼
+┌──────────────────┐     ┌──────────────────┐     ┌──────────────────┐
+│  Databases       │     │  No databases    │     │  Error loading   │
+│  found           │     │  found           │     │  databases       │
+│  (array)         │     │  (empty)         │     │  (error)         │
+└────────┬─────────┘     └────────┬─────────┘     └────────┬─────────┘
+         │                       │                       │
+         ▼                       ▼                       ▼
+┌──────────────────┐     ┌──────────────────┐     ┌──────────────────┐
+│  Display list    │     │  EmptyDatabase-  │     │  ErrorState with │
+│  of DatabaseCard │     │  List component  │     │  retry button    │
+│  components      │     │  (SiSqlite icon, │     │                  │
+│                  │     │  refresh button)│     │                  │
+└────────┬─────────┘     └──────────────────┘     └──────────────────┘
+         │
+         ▼
+┌──────────────────┐
+│  User clicks     │
+│  database card   │
+└────────┬─────────┘
+         │
+         ▼
+┌──────────────────┐
+│  Navigate to     │ → /openedDB/:dbname/tables
+│  database tables │ → Opens TablesTab
+└──────────────────┘
+```
+
+**Component Architecture**:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  OpenedDBList Component (State Owner)                       │
+│  ├── Data Fetching:                                         │
+│  │   ├── useInspectedWindowRequest(() =>                   │
+│  │   │   databaseService.getDatabases())                   │
+│  │   ├── data: DatabaseSummary[] | null                    │
+│  │   ├── isLoading: boolean                                │
+│  │   ├── error: string | null                              │
+│  │   └── reload: () => void                                │
+│  └── Render States:                                         │
+│      ├── isLoading → <LoadingSkeleton />                   │
+│      ├── error → <ErrorState error={error} retry={reload} />│
+│      ├── data.length === 0 → <EmptyDatabaseList refresh={reload} />│
+│      └── data.length > 0 → <DatabaseList databases={data} reload={reload} />│
+└─────────────────────────────────────────────────────────────┘
+                            ↓
+┌─────────────────────────────────────────────────────────────┐
+│  DatabaseCard Component (Clickable Navigation)              │
+│  ├── Props:                                                 │
+│  │   ├── database: DatabaseSummary                         │
+│  │   └── isActive?: boolean                                │
+│  ├── Visual Elements:                                       │
+│  │   ├── FaDatabase icon (react-icons/fa)                  │
+│  │   ├── Database name (bold, primary text)                │
+│  │   └── Table count (gray-500, secondary text)            │
+│  └── Interaction:                                           │
+│      └── onClick → navigate('/openedDB/:dbname/tables')    │
+└─────────────────────────────────────────────────────────────┘
+                            ↓
+┌─────────────────────────────────────────────────────────────┐
+│  EmptyDatabaseList Component (Empty State)                  │
+│  ├── Props:                                                 │
+│  │   └── refresh: () => void                               │
+│  ├── Visual Elements:                                       │
+│  │   ├── SiSqlite icon (text-primary-600, text-6xl)        │
+│  │   ├── Title: "No Opened Databases"                      │
+│  │   ├── Message: "Could not detect any opened databases." │
+│  │   ├── Instructions: "Open a page that uses web-sqlite-js..."│
+│  │   └── Refresh Button (IoMdRefresh icon)                 │
+│  └── Interaction:                                           │
+│      └── onClick refresh → reload database list            │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Sidebar Link Update**:
+
+```
+Before (F-008):
+<SidebarLink to="/" label="Opened DB" ... />
+
+After (F-008):
+<SidebarLink to="/openedDB" label="Opened DB" ... />
+```
+
+**Active State Behavior**:
+
+- Sidebar "Opened DB" link highlights when on `/openedDB` or `/openedDB/:dbname/*`
+- Uses React Router's `useLocation()` to detect active state
+- Partial matching: `pathname.startsWith('/openedDB')`
+
+**Component Hierarchy** (F-008 Additions):
+
+```
+OpenedDBList (NEW COMPONENT - /openedDB)
+├── Header
+│   ├── Title: "Opened Databases" (h1, text-2xl font-semibold)
+│   └── Refresh Button (IoMdRefresh, right-aligned)
+│       ├── onClick: reload database list
+│       ├── ARIA: "Refresh database list"
+│       └── Style: text-gray-600 hover:text-gray-800
+├── Database List (flex flex-col gap-3)
+│   └── DatabaseCard (repeated for each database)
+│       ├── FaDatabase icon (text-gray-600, 20px)
+│       ├── Database name (font-medium text-gray-700)
+│       ├── Table count (text-xs text-secondary-500)
+│       ├── Hover: bg-primary-50 border-primary-300 shadow-sm
+│       ├── Active: bg-primary-50 border-primary-600 shadow-sm
+│       └── onClick: navigate('/openedDB/:dbname/tables')
+├── EmptyDatabaseList (conditional render)
+│   ├── SiSqlite icon (text-primary-600, text-6xl)
+│   ├── Title: "No Opened Databases" (text-2xl font-semibold text-gray-700)
+│   ├── Message: "Could not detect any opened databases." (text-gray-600)
+│   ├── Instructions: "Open a page that uses web-sqlite-js..." (text-gray-500 text-sm)
+│   └── Refresh Button (IoMdRefresh, bg-primary-600 text-white)
+├── LoadingSkeleton (conditional render)
+│   └── Skeleton placeholders (3-4 cards)
+└── ErrorState (conditional render)
+    ├── Error message (text-red-600)
+    └── Retry button (IoMdRefresh)
+```
+
+**Route Order** (Important):
+
+```tsx
+// In DevTools.tsx
+<Route path="/openedDB" element={<OpenedDBList />} /> {/* MUST BE FIRST */}
+<Route path="/openedDB/:dbname" element={<DatabaseTabs />}>
+  {/* ... nested routes ... */}
+</Route>
+```
+
+**Rationale**: Generic route (`/openedDB`) must precede parameterized route (`/openedDB/:dbname`) to avoid route conflicts. React Router matches routes in order.
+
+**Theme Colors** (from F-007):
+
+- **Primary**: `primary-600` (`#059669` - emerald-600) - Actions, icons
+- **Secondary**: `secondary-500` (`#6b7280` - gray-500) - Metadata
+- **Borders**: `border-gray-200` (default), `border-primary-300` (hover), `border-primary-600` (active)
+- **Backgrounds**: `bg-white` (default), `bg-primary-50` (hover/active state)
+- **Text**: `text-gray-700` (headings), `text-gray-600` (body), `text-gray-500` (muted)
+
+**Icon Integration**:
+
+- **Database**: `FaDatabase` (react-icons/fa) - Database card icon
+- **Refresh**: `IoMdRefresh` (react-icons/io) - Refresh button
+- **Empty State**: `SiSqlite` (react-icons/si) - Empty state icon
+
+**Service Layer Integration**:
+
+Uses existing service layer function (no changes required):
+
+```typescript
+// From databaseService.ts
+getDatabases(): Promise<ServiceResponse<DatabaseSummary[]>>
+
+// Returns:
+interface DatabaseSummary {
+  name: string;
+  tableCount?: number;
+  // Additional metadata optional
+}
+```
+
+**File Structure** (F-008):
+
+```
+src/devtools/components/OpenedDBList/
+├── index.tsx                 # Main component export
+├── OpenedDBList.tsx          # Main component with data fetching
+├── DatabaseCard.tsx          # Individual database card
+├── EmptyDatabaseList.tsx     # Empty state component
+├── LoadingSkeleton.tsx       # Loading skeleton
+└── ErrorState.tsx            # Error state with retry
+```
+
+**Accessibility**:
+
+- **Semantic HTML**: `<nav>` for database list, `<button>` for clickable cards
+- **ARIA Labels**: Refresh button has `aria-label="Refresh database list"`
+- **Keyboard Navigation**: Database cards are buttons (Tab, Enter, Space)
+- **Focus Management**: Visual focus indicators on all interactive elements
+- **Screen Readers**: Database names and table counts announced
+
+**Performance Optimizations**:
+
+- **Optimistic UI**: Preserve database list during refresh (no flicker)
+- **Loading States**: Skeleton instead of spinner (better UX)
+- **Error Recovery**: Retry button without page reload
+- **Route-Based Code Splitting**: OpenedDBList loads only when needed
+
+**Error Handling**:
+
+```typescript
+// ServiceResponse error format
+interface ServiceResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+}
+
+// Error state displays error.message with retry button
+<ErrorState error={error} retry={reload} />
+```
+
+**Edge Cases**:
+
+1. **No databases**: Show EmptyDatabaseList with refresh button
+2. **Single database**: Show one card, clickable to tables
+3. **Multiple databases**: Show vertical list of cards
+4. **Loading error**: Show error state with retry button
+5. **Refresh during load**: Show inline loading indicator, preserve existing list
+6. **Navigation during load**: Cancel in-flight request on unmount
+
+**Navigation Flow Summary**:
+
+```
+Sidebar "Opened DB" → /openedDB → OpenedDBList
+                                          ↓
+                                          ├─→ Empty state (no databases)
+                                          ├─→ Loading skeleton (fetching)
+                                          ├─→ Error state (with retry)
+                                          └─→ Database list (cards)
+                                                ↓
+                                                └─→ Click card → /openedDB/:dbname/tables
+```
+
+**Benefits**:
+
+- **Centralized Navigation**: Single view for all opened databases
+- **Clear Empty State**: Users understand when no databases are available
+- **Manual Refresh**: Users can update database list on-demand
+- **Consistent UX**: Matches sidebar pattern (list items, hover effects)
+- **Accessibility**: Keyboard navigation and screen reader support
