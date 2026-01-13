@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { FaAngleRight, FaAngleLeft } from "react-icons/fa";
 import { SidebarHeader } from "./SidebarHeader";
 import { DatabaseList } from "./DatabaseList";
@@ -6,31 +5,27 @@ import { OPFSLink } from "./OPFSLink";
 import { SidebarIcon } from "./SidebarIcon";
 
 /**
+ * Props for Sidebar component
+ */
+interface SidebarProps {
+  /** Current collapse state */
+  isCollapsed: boolean;
+  /** Toggle callback */
+  onToggle: () => void;
+}
+
+/**
  * Sidebar navigation component for Web Sqlite DevTools
  *
  * @remarks
- * Provides collapsible sidebar with navigation items for databases and OPFS browser.
- * Collapse state defaults to expanded (per FR-044) and manages width state locally.
+ * - Provides collapsible sidebar with navigation items for databases and OPFS browser
+ * - Collapse state is managed by parent DevTools component (for keyboard shortcuts)
+ * - Width toggles between 20% (expanded) and 64px (collapsed)
  *
+ * @param props - SidebarProps
  * @returns JSX.Element - Sidebar component
  */
-export const Sidebar = () => {
-  /**
-   * 1. Manage collapse state (default: expanded per FR-044)
-   * 2. Width toggles between 20% (expanded) and auto (collapsed)
-   * 3. State is local (persistence to chrome.storage.local deferred to future task)
-   */
-  const [isCollapsed, setIsCollapsed] = useState(false);
-
-  /**
-   * 1. Toggle collapse state
-   * 2. Trigger re-render with new width classes
-   * 3. Header, nav items, and toggle button respond to state
-   */
-  const handleToggle = () => {
-    setIsCollapsed((prev) => !prev);
-  };
-
+export const Sidebar = ({ isCollapsed, onToggle }: SidebarProps) => {
   /**
    * 1. Determine toggle icon based on collapse state
    * 2. Uses same logic as previous header implementation for consistency
@@ -52,14 +47,14 @@ export const Sidebar = () => {
         <OPFSLink isCollapsed={isCollapsed} />
       </nav>
 
-      {/* 
+      {/*
         1. Footer section for toggle button
         2. Aligned to bottom of sidebar
         3. Contains only the icon button
       */}
       <div className="py-2 border-t border-gray-200 flex justify-center">
         <button
-          onClick={handleToggle}
+          onClick={onToggle}
           className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 p-2 rounded-lg transition-colors cursor-pointer"
           aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
         >

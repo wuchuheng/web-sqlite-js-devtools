@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-import { useState } from "react";
+import { useState, useImperativeHandle, useRef, useEffect } from "react";
 import { FiSidebar } from "react-icons/fi";
 import { decodeDatabaseName } from "@/devtools/utils/databaseNames";
 import { databaseService } from "@/devtools/services/databaseService";
@@ -7,18 +7,36 @@ import { useQueryHistory } from "@/devtools/hooks/useQueryHistory";
 import { HistorySidebar } from "./HistorySidebar";
 
 /**
+ * Props for QueryTab component
+ */
+interface QueryTabProps {
+  /** Ref for execute function (used by keyboard shortcuts) */
+  onExecuteRef: React.MutableRefObject<(() => void) | null>;
+  /** Ref for clear function (used by keyboard shortcuts) */
+  onClearRef: React.MutableRefObject<(() => void) | null>;
+  /** Ref for toggle history function (used by keyboard shortcuts) */
+  onToggleHistoryRef: React.MutableRefObject<(() => void) | null>;
+}
+
+/**
  * QueryTab component
  *
  * @remarks
  * - SQL editor with CodeMirror (placeholder for now)
- * - Execute button + Ctrl+Enter shortcut
+ * - Execute button + Ctrl+Enter shortcut (global)
  * - Results table below editor
  * - Query history sidebar for quick re-execution
  * - Export buttons (CSV/JSON)
+ * - Exposes functions via refs for global keyboard shortcuts
  *
+ * @param props - QueryTabProps
  * @returns JSX.Element - Query tab layout
  */
-export const QueryTab = () => {
+export const QueryTab = ({
+  onExecuteRef,
+  onClearRef,
+  onToggleHistoryRef,
+}: QueryTabProps) => {
   const params = useParams<{ dbname: string }>();
   const dbname = decodeDatabaseName(params.dbname || "");
 
@@ -79,13 +97,17 @@ export const QueryTab = () => {
   };
 
   /**
-   * Handle Ctrl+Enter keyboard shortcut
+   * Clear SQL editor
    */
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.ctrlKey && e.key === "Enter") {
-      e.preventDefault();
-      handleExecute();
-    }
+  const handleClear = () => {
+    setSql("");
+  };
+
+  /**
+   * Toggle history sidebar
+   */
+  const handleToggleHistory = () => {
+    setIsHistoryOpen((prev) => !prev);
   };
 
   /**
@@ -95,6 +117,31 @@ export const QueryTab = () => {
     setSql(querySql);
     // Auto-execute on load? For now, just load into editor
   };
+
+  /**
+   * Expose functions via refs for global keyboard shortcuts
+   */
+  useImperativeHandle(onExecuteRef, () => handleExecute, [handleExecute]);
+  useImperativeHandle(onClearRef, () => handleClear, []);
+  useImperativeHandle(onToggleHistoryRef, () => handleToggleHistory, [
+    handleToggleHistory,
+  ]);
+
+  /**
+   * Focus textarea on mount (for keyboard shortcuts)
+   */
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  /**
+   * Auto-focus textarea when query tab becomes active
+   */
+  useEffect(() => {
+    // Small delay to ensure DOM is ready
+    const timer = setTimeout(() => {
+      textareaRef.current?.focus();
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   if (!dbname) {
     return (
@@ -125,7 +172,7 @@ export const QueryTab = () => {
           <h3 className="text-sm font-medium text-gray-700">SQL Query</h3>
           <button
             type="button"
-            onClick={() => setIsHistoryOpen(!isHistoryOpen)}
+            onClick={handleToggleHistory}
             className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
             title={isHistoryOpen ? "Hide History" : "Show History"}
           >
@@ -136,13 +183,15 @@ export const QueryTab = () => {
         {/* SQL Editor Area */}
         <div className="flex-1 flex flex-col p-4">
           <p className="text-xs text-gray-500 mb-2">
-            Press Ctrl+Enter to execute
+            Press{" "}
+            <kbd className="font-mono bg-gray-100 px-1 rounded">Ctrl+Enter</kbd>{" "}
+            to execute
           </p>
 
           <textarea
+            ref={textareaRef}
             value={sql}
             onChange={(e) => setSql(e.target.value)}
-            onKeyDown={handleKeyDown}
             className="flex-1 w-full p-3 font-mono text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
             placeholder="Enter SQL query here..."
           />

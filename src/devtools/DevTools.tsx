@@ -1,5 +1,5 @@
 import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { Sidebar } from "./components/Sidebar/Sidebar";
 import { EmptyState } from "./components/EmptyState/EmptyState";
 import { DatabaseTabs } from "./components/DatabaseTabs";
@@ -10,7 +10,9 @@ import { SeedTab } from "./components/SeedTab";
 import { AboutTab } from "./components/AboutTab";
 import { LogView } from "./components/LogTab/LogView";
 import { OPFSGallery } from "./components/OPFSBrowser";
+import { KeyboardShortcutsHelp } from "./components/KeyboardShortcutsHelp";
 import { useConnection } from "./hooks/useConnection";
+import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import "./DevTools.css";
 
 /**
@@ -26,6 +28,50 @@ export const DevTools = () => {
    * 3. Provides retry function for manual reconnection
    */
   const { status, error, retry } = useConnection();
+
+  /**
+   * Sidebar collapse state (lifted for keyboard shortcuts)
+   */
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+
+  /**
+   * Query tab callbacks (for keyboard shortcuts)
+   */
+  const queryExecuteRef = useRef<(() => void) | null>(null);
+  const queryClearRef = useRef<(() => void) | null>(null);
+  const queryToggleHistoryRef = useRef<(() => void) | null>(null);
+
+  /**
+   * Keyboard shortcuts hook
+   */
+  const {
+    isHelpOpen,
+    openHelp,
+    closeHelp,
+    shortcutCategories,
+    setSidebarToggle,
+    setQueryCallbacks,
+  } = useKeyboardShortcuts();
+
+  /**
+   * Register sidebar toggle callback
+   */
+  useEffect(() => {
+    setSidebarToggle(() => {
+      setIsSidebarCollapsed((prev) => !prev);
+    });
+  }, [setSidebarToggle]);
+
+  /**
+   * Register query tab callbacks
+   */
+  useEffect(() => {
+    setQueryCallbacks({
+      onExecute: () => queryExecuteRef.current?.(),
+      onClear: () => queryClearRef.current?.(),
+      onToggleHistory: () => queryToggleHistoryRef.current?.(),
+    });
+  }, [setQueryCallbacks]);
 
   useEffect(() => {
     console.log("[Web Sqlite DevTools] Component mounted");
@@ -87,7 +133,10 @@ export const DevTools = () => {
       {/* 2. Sidebar takes 20% width when expanded */}
       {/* 3. Main content takes remaining width */}
       <div className="devtools-panel flex">
-        <Sidebar />
+        <Sidebar
+          isCollapsed={isSidebarCollapsed}
+          onToggle={() => setIsSidebarCollapsed((prev) => !prev)}
+        />
 
         <main className="flex-1 h-full overflow-auto flex flex-col text-left">
           {/* Connection status indicator */}
@@ -112,7 +161,16 @@ export const DevTools = () => {
               </Route>
 
               {/* Query tab */}
-              <Route path="query" element={<QueryTab />} />
+              <Route
+                path="query"
+                element={
+                  <QueryTab
+                    onExecuteRef={queryExecuteRef}
+                    onClearRef={queryClearRef}
+                    onToggleHistoryRef={queryToggleHistoryRef}
+                  />
+                }
+              />
 
               {/* Migration tab */}
               <Route path="migration" element={<MigrationTab />} />
@@ -139,6 +197,13 @@ export const DevTools = () => {
           </Routes>
         </main>
       </div>
+
+      {/* Keyboard shortcuts help modal */}
+      <KeyboardShortcutsHelp
+        isOpen={isHelpOpen}
+        onClose={closeHelp}
+        categories={shortcutCategories}
+      />
     </HashRouter>
   );
 };

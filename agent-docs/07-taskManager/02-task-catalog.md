@@ -353,12 +353,24 @@ NOTES
     - Relative time formatting correct
     - Build passed with no errors
 
-- [ ] **TASK-202**: Keyboard Shortcuts
+- [x] **TASK-202**: Keyboard Shortcuts
   - **Priority**: P2
   - **Dependencies**: v1.1.0 release
   - **Boundary**: Global keyboard handler
   - **Maps to**: FR-107
-  - **DoD**: Shortcuts for common actions (Ctrl+L clear, Ctrl+/ focus, etc.)
+  - **Micro-Spec**: [completed](agent-docs/08-task/active/TASK-202.md)
+  - **DoD**:
+    - Hook `useKeyboardShortcuts.ts` created with TSDoc comments
+    - Help modal component created with categorized shortcuts
+    - Global shortcuts registered (Ctrl+B, Ctrl+/, Escape)
+    - Navigation shortcuts registered (Ctrl+1-5)
+    - Query tab shortcuts registered (Ctrl+Enter, Ctrl+L, Ctrl+H)
+    - Shortcuts respect route context
+    - Shortcuts don't trigger in editable inputs
+    - Help modal displays all shortcuts grouped by category
+    - Sidebar collapse state lifted to DevTools
+    - QueryTab exposes functions via refs for global handler
+    - Build passed with no errors
 
 - [ ] **TASK-203**: Dark/Light Theme Toggle
   - **Priority**: P2

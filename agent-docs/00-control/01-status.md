@@ -14,21 +14,22 @@ NOTES
 
 ## 1) Project stage
 
-- **Current stage**: Stage 8 - Implementation (Worker - TASK-201)
-- **Current focus**: Post-MVP v1.1.0 development, Query History feature
-- **Last updated**: 2026-01-14 (TASK-201 - Query History)
+- **Current stage**: Stage 8 - Implementation (Worker - TASK-202)
+- **Current focus**: Post-MVP v1.1.0 development, Keyboard shortcuts feature
+- **Last updated**: 2026-01-14 (TASK-202 - Keyboard Shortcuts)
 
 ## 2) Active work
 
-| Item                           | Owner     | Status | Evidence                        |
-| ------------------------------ | --------- | ------ | ------------------------------- |
-| (Awaiting next task selection) | S8:worker | -      | TASK-201 complete, ready for next |
+| Item                           | Owner     | Status | Evidence                            |
+| ------------------------------ | --------- | ------ | ----------------------------------- |
+| (Awaiting next task selection) | S8:worker | -      | TASK-202 complete, ready for next |
 
 ## 3) Done (Recent)
 
 | Task                                                                       | Owner     | Evidence                                                                                                                                                                                                                                                                                                 |
 | -------------------------------------------------------------------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| TASK-201: Query History                                                    | S8:worker | `src/devtools/hooks/useQueryHistory.ts`, `src/devtools/components/QueryTab/HistoryItem.tsx`, `src/devtools/components/QueryTab/HistorySidebar.tsx`, `src/devtools/components/QueryTab/QueryTab.tsx` (history integration), chrome.storage.local persistence |
+| TASK-202: Keyboard Shortcuts                                               | S8:worker | `src/devtools/hooks/useKeyboardShortcuts.ts`, `src/devtools/components/KeyboardShortcutsHelp.tsx`, `src/devtools/DevTools.tsx` (keyboard handler), `src/devtools/components/Sidebar/Sidebar.tsx` (collapse state lifted), `src/devtools/components/QueryTab/QueryTab.tsx` (ref callbacks)                         |
+| TASK-201: Query History                                                    | S8:worker | `src/devtools/hooks/useQueryHistory.ts`, `src/devtools/components/QueryTab/HistoryItem.tsx`, `src/devtools/components/QueryTab/HistorySidebar.tsx`, `src/devtools/components/QueryTab/QueryTab.tsx` (history integration), chrome.storage.local persistence                                              |
 | TASK-12: Testing & Release                                                 | S8:worker | `package.json` (v1.0.0), `dist/web-sqlite-devtools-1.0.0.zip`, production build (1.2MB)                                                                                                                                                                                                                  |
 | TASK-10: OPFS File Browser                                                 | S8:worker | `src/devtools/components/OPFSBrowser/OPFSGallery.tsx`, `src/devtools/components/OPFSBrowser/FileTree.tsx`, `src/devtools/components/OPFSBrowser/FileNode.tsx`, `src/devtools/DevTools.tsx` (OPFS route)                                                                                                  |
 | F-002: Database Tab Navigation Restructuring                               | S8:worker | `src/devtools/components/DatabaseTabs/`, `src/devtools/components/TablesTab/`, `src/devtools/components/QueryTab/`, `src/devtools/components/MigrationTab/`, `src/devtools/components/SeedTab/`, `src/devtools/components/AboutTab/`, `src/devtools/DevTools.tsx` (nested routes), documentation updates |
@@ -110,4 +111,14 @@ NOTES
   - Integrated history sidebar into QueryTab with toggle
   - Added relative time formatting and execution count tracking
   - Implemented deduplication and 50-entry limit (FIFO)
+  - Build passed with no errors
+- **C17**: 2026-01-14 - TASK-202 implementation completed (Post-MVP Keyboard Shortcuts)
+  - Created useKeyboardShortcuts hook with document-level event listener
+  - Created KeyboardShortcutsHelp modal component
+  - Implemented global shortcuts: Ctrl+B (sidebar), Ctrl+/ (help), Escape (close)
+  - Implemented navigation shortcuts: Ctrl+1-5 for each database tab
+  - Implemented query tab shortcuts: Ctrl+Enter (execute), Ctrl+L (clear), Ctrl+H (history)
+  - Context-aware activation (respects route and editable elements)
+  - Sidebar collapse state lifted to DevTools for keyboard control
+  - QueryTab exposes functions via refs for global keyboard handler
   - Build passed with no errors

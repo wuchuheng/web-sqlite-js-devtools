@@ -38,10 +38,10 @@ NOTES
 
 ## 3) Current stage
 
-- **Current stage (1-8)**: Stage 8 - Implementation (Worker - TASK-201)
+- **Current stage (1-8)**: Stage 8 - Implementation (Worker - TASK-202)
 - **Active release**: v1.1.0 (Post-MVP) - Target: TBD
-- **Status summary**: MVP v1.0.0 complete, TASK-201 (Query History) in progress for v1.1.0
-- **Last updated (YYYY-MM-DD)**: 2026-01-14 (TASK-201: Query History)
+- **Status summary**: TASK-201 complete, TASK-202 complete, 1 task remaining for v1.1.0
+- **Last updated (YYYY-MM-DD)**: 2026-01-14 (TASK-202: Keyboard Shortcuts)
 
 ## 4) Technology stack (chosen in Stage 2)
 
