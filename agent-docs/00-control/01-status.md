@@ -15,8 +15,8 @@ NOTES
 ## 1) Project stage
 
 - **Current stage**: Stage 8 - Implementation (Worker)
-- **Current focus**: TASK-05.6 completed, TASK-05.7 ready to start
-- **Last updated**: 2026-01-13 (TASK-05.6 - Component Migration - Table Browser Components)
+- **Current focus**: TASK-06 completed, TASK-08 ready to start
+- **Last updated**: 2026-01-13 (TASK-06 - Table Data & Schema UI)
 
 ## 2) Active work
 
@@ -28,7 +28,9 @@ NOTES
 
 | Task                                                         | Owner     | Evidence                                                                                                                                                                                                                                          |
 | ------------------------------------------------------------ | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| TASK-05.6: Component Migration - Table Browser Components    | S8:worker | `src/devtools/components/Sidebar/DatabaseList.tsx` (databaseService.getDatabases), `src/devtools/components/TableTab/TableList.tsx` (databaseService.getTableList), `src/devtools/hooks/useInspectedWindowRequest.ts` (ServiceResponse)              |
+| TASK-06: Table Data & Schema UI                             | S8:worker | `src/devtools/components/TableTab/TableSchemaPanel.tsx`, `src/devtools/components/TableTab/PaginationBar.tsx`, `src/devtools/components/TableTab/TableTabs.tsx`, `src/devtools/components/TableTab/TableContent.tsx`, `src/devtools/components/TableTab/DatabaseView.tsx` |
+| TASK-05.7/05.8: Component Migration (SKIPPED - components don't exist yet) | S8:worker | QueryTab, LogTab, OPFSBrowser components created in later tasks will use service layer directly from the start                                                                                                                               |
+| TASK-05.6: Component Migration - Table Browser Components   | S8:worker | `src/devtools/components/Sidebar/DatabaseList.tsx` (databaseService.getDatabases), `src/devtools/components/TableTab/TableList.tsx` (databaseService.getTableList), `src/devtools/hooks/useInspectedWindowRequest.ts` (ServiceResponse)           |
 | TASK-05.5: Service Layer - OPFS File Browser Functions      | S8:worker | `src/devtools/services/databaseService.ts` (OpfsFileEntry, OpfsDownloadResult types, formatFileSize, getOpfsFiles, downloadOpfsFile)                                                                                                              |
 | TASK-05.4: Service Layer - Migration & Versioning Functions | S8:worker | `src/devtools/services/databaseService.ts` (ReleaseConfig, DevReleaseResult, RollbackResult, DbVersionResult types, devRelease, devRollback, getDbVersion)                                                                                        |
 | TASK-05.3: Service Layer - Log Streaming Functions          | S8:worker | `src/devtools/services/databaseService.ts` (LogEntry, LogSubscription, SubscribeResult types, subscribeLogs, unsubscribeLogs), `src/contentScript/subscriptions/LogRingBuffer.ts` (new file)                                                      |
@@ -43,8 +45,8 @@ NOTES
 
 ## 4) Upcoming
 
-- **Next task**: TASK-05.7 - Component Migration - Query Editor Components
-- **Next review date**: After TASK-05.7 completion
+- **Next task**: TASK-08 - Query Results & Export
+- **Next review date**: After TASK-08 completion
 
 ## 5) Risks / blockers
 

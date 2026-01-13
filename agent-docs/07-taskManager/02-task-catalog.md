@@ -249,67 +249,13 @@ NOTES
     - Mark old `inspectedWindow` exports as `@deprecated`
     - Update component tests
 
-- [ ] **TASK-05.7**: Component Migration - Query Editor Components
-  - **Priority**: P0 (Blocker)
-  - **Dependencies**: TASK-05.2, TASK-05.6
-  - **Boundary**: `src/devtools/components/QueryTab/`
-  - **Maps to**: F-001, FR-024, FR-025
-  - **Feature**: F-001 Service Layer Expansion - Component Migration
-  - **DoD**:
-    - Update `QueryTab/CodeMirrorEditor.tsx` to use `databaseService.execSQL()`
-      - Remove direct `inspectedWindow` import
-      - Import from `@/devtools/services/databaseService`
-      - Handle `ServiceResponse` envelope
-      - Test SQL execution
-    - Update `QueryTab/QueryResults.tsx` to use `databaseService.queryTableData()`
-      - Remove direct `inspectedWindow` import
-      - Import from `@/devtools/services/databaseService`
-      - Handle `ServiceResponse` envelope
-      - Test query results display
-    - Update `QueryTab/ExportButton.tsx` to work with service layer data
-      - Ensure export works with new data format
-      - Test CSV/JSON export
-    - Mark old `inspectedWindow` exports as `@deprecated`
-    - Update component tests
-
-- [ ] **TASK-05.8**: Component Migration - Log & OPFS Components
-  - **Priority**: P0 (Blocker)
-  - **Dependencies**: TASK-05.3, TASK-05.5, TASK-05.6
-  - **Boundary**: `src/devtools/components/LogTab/`, `src/devtools/components/OPFSBrowser/`
-  - **Maps to**: F-001, FR-029, FR-030, FR-036, FR-037, FR-038
-  - **Feature**: F-001 Service Layer Expansion - Component Migration
-  - **DoD**:
-    - Update `LogTab/LogList.tsx` to use `databaseService.subscribeLogs()`
-      - Remove direct `inspectedWindow` import
-      - Import from `@/devtools/services/databaseService`
-      - Handle `ServiceResponse` envelope
-      - Implement subscription cleanup on unmount
-      - Test log streaming
-    - Update `LogTab/LogFilter.tsx` to work with service layer data
-      - Ensure filtering works with new data format
-      - Test log filtering
-    - Update `OPFSBrowser/FileTree.tsx` to use `databaseService.getOpfsFiles()`
-      - Remove direct `inspectedWindow` import
-      - Import from `@/devtools/services/databaseService`
-      - Handle `ServiceResponse` envelope
-      - Test file tree loading
-    - Update `OPFSBrowser/DownloadButton.tsx` to use `databaseService.downloadOpfsFile()`
-      - Remove direct `inspectedWindow` import
-      - Import from `@/devtools/services/databaseService`
-      - Handle `ServiceResponse` envelope
-      - Implement blob URL cleanup
-      - Test file download
-    - Mark old `inspectedWindow` exports as `@deprecated`
-    - Update component tests
-
-### Original Tasks (Continued)
-
-- [ ] **TASK-06**: Table Data & Schema UI (Updated - Now depends on TASK-05.1, TASK-05.6)
+- [x] **TASK-06**: Table Data & Schema UI
   - **Priority**: P0 (Blocker)
   - **Dependencies**: TASK-05.1, TASK-05.6
   - **Boundary**: `src/devtools/components/TableTab/`
   - **Maps to**: FR-018, FR-019, FR-020, FR-021, FR-022, FR-023, FR-043
   - **Note**: TASK-05.1 and TASK-05.6 now handle service layer implementation. This task focuses on UI components only.
+  - **Micro-Spec**: [completed](agent-docs/08-task/active/TASK-06.md)
   - **DoD**:
     - TableContent with fixed header (field + type)
     - DDL info panel showing complete CREATE TABLE SQL
@@ -317,7 +263,12 @@ NOTES
     - Multi-table tab support, clear on database change
     - UI styling with Tailwind CSS
 
-- [ ] **TASK-07**: Query Editor with CodeMirror (Updated - Now depends on TASK-05.2, TASK-05.7)
+- [x] **TASK-05.7**: Component Migration - Query Editor Components (SKIPPED - components don't exist yet)
+- [x] **TASK-05.8**: Component Migration - Log & OPFS Components (SKIPPED - components don't exist yet)
+
+### Original Tasks (Continued)
+
+- [ ] **TASK-07**: Query Editor with CodeMirror (Updated - Dependencies updated, TASK-05.7 skipped)
   - **Priority**: P0 (Blocker)
   - **Dependencies**: Spike S-003 validation, TASK-05.2, TASK-05.7
   - **Boundary**: `src/devtools/components/QueryTab/`
