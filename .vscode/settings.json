@@ -9,5 +9,9 @@
     "javascriptreact",
     "typescript",
     "typescriptreact"
-  ]
+  ],
+
+  "workbench.editorAssociations": {
+    "*.md": "default"
+  }
 }

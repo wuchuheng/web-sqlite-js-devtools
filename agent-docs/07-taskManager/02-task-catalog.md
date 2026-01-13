@@ -372,13 +372,13 @@ NOTES
     - QueryTab exposes functions via refs for global handler
     - Build passed with no errors
 
-- [ ] **TASK-203**: Dark/Light Theme Toggle
+- [-] **TASK-203**: Dark/Light Theme Toggle
   - **Priority**: P2
   - **Dependencies**: v1.1.0 release
   - **Boundary**: Theme provider, settings panel
   - **Maps to**: FR-108
+  - **Micro-Spec**: [draft](agent-docs/08-task/active/TASK-203.md)
   - **DoD**: Theme toggle, persists to chrome.storage
-  - **Note**: SKIPPED - Not required for current release
 
 ---
 
