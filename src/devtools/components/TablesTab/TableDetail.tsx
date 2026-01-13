@@ -7,6 +7,38 @@ import { databaseService } from "@/devtools/services/databaseService";
 import { useInspectedWindowRequest } from "@/devtools/hooks/useInspectedWindowRequest";
 
 /**
+ * Tab button component for table navigation
+ */
+interface TableTabButtonProps {
+  tableName: string;
+  isActive: boolean;
+  onClick: () => void;
+}
+
+const TableTabButton = ({
+  tableName,
+  isActive,
+  onClick,
+}: TableTabButtonProps) => {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`
+        px-4 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap
+        ${
+          isActive
+            ? "border-blue-600 text-blue-600"
+            : "border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300"
+        }
+      `}
+    >
+      {tableName}
+    </button>
+  );
+};
+
+/**
  * TableDetail component
  *
  * @remarks
@@ -26,6 +58,7 @@ export const TableDetail = () => {
     [params.dbname],
   );
   const tableName = params.tableName || "";
+  const rawDbname = params.dbname || "";
 
   // Pagination state - properly sync with URL search params
   const [page, setPage] = useState(0);
@@ -59,6 +92,23 @@ export const TableDetail = () => {
       navigate({ search: searchParams.toString() }, { replace: true });
     },
     [location.search, navigate],
+  );
+
+  // Fetch all tables for the database (for tab bar)
+  const { data: tables, isLoading: tablesLoading } = useInspectedWindowRequest(
+    () => databaseService.getTableList(dbname),
+    [dbname],
+    [],
+  );
+
+  // Navigate to a specific table
+  const handleTableClick = useCallback(
+    (targetTableName: string) => {
+      navigate(`/openedDB/${rawDbname}/tables/${targetTableName}`, {
+        replace: true,
+      });
+    },
+    [navigate, rawDbname],
   );
 
   // Fetch table schema
@@ -112,9 +162,28 @@ export const TableDetail = () => {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Table tabs header bar - placeholder for future multi-table support */}
-      <div className="border-b border-gray-200 px-4 py-2 flex items-center justify-between">
-        <h3 className="text-sm font-medium text-gray-700">{tableName}</h3>
+      {/* Table tabs header bar - shows all tables as tabs */}
+      <div className="border-b border-gray-200 bg-white overflow-x-auto">
+        <div className="flex items-center">
+          {tablesLoading ? (
+            <div className="px-4 py-2 text-sm text-gray-500">
+              Loading tables...
+            </div>
+          ) : tables.length === 0 ? (
+            <div className="px-4 py-2 text-sm text-gray-500">
+              No tables found
+            </div>
+          ) : (
+            tables.map((tableTableName) => (
+              <TableTabButton
+                key={tableTableName}
+                tableName={tableTableName}
+                isActive={tableTableName === tableName}
+                onClick={() => handleTableClick(tableTableName)}
+              />
+            ))
+          )}
+        </div>
       </div>
 
       {/* Split View: Table Data (Left) + DDL Panel (Right) */}
