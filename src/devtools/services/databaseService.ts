@@ -16,6 +16,18 @@ import type {
 } from "../../types/DB";
 
 /**
+ * Helper function to escape SQL identifiers
+ * MUST be defined at top level (not const) to avoid ReferenceError
+ *
+ * @param identifier - SQL identifier to escape (table name, column name)
+ * @returns Escaped identifier wrapped in double quotes
+ */
+function escapeIdentifier(identifier: string): string {
+  // Escape double quotes by doubling them and wrap in double quotes
+  return `"${identifier.replace(/"/g, '""')}"`;
+}
+
+/**
  * Standard response envelope for service operations
  */
 export type ServiceResponse<T> = {
@@ -1100,17 +1112,6 @@ export const downloadOpfsFile = async (
     },
     args: [path],
   });
-};
-
-/**
- * Helper function to escape SQL identifiers
- *
- * @param identifier - SQL identifier to escape (table name, column name)
- * @returns Escaped identifier wrapped in double quotes
- */
-const escapeIdentifier = (identifier: string): string => {
-  // Escape double quotes by doubling them and wrap in double quotes
-  return `"${identifier.replace(/"/g, '""')}"`;
 };
 
 /**
