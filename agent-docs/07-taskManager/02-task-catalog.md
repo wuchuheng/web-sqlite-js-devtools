@@ -384,23 +384,24 @@ NOTES
 
 ## Release v1.2.0 (Enhancements) - Future Work
 
-- [ ] **F-003**: Schema Panel Enhancement (NEW)
+- [x] **F-003**: Schema Panel Enhancement (NEW)
   - **Priority**: P1 (High)
   - **Dependencies**: F-002 (Database Tab Navigation)
-  - **Boundary**: `src/devtools/components/TableTab/TableDetail.tsx`, `src/devtools/components/TableTab/TableSchema.tsx`
+  - **Boundary**: `src/devtools/components/TablesTab/TableDetail.tsx`, `src/devtools/components/TablesTab/SchemaPanel.tsx`
   - **Maps to**: F-003
   - **Feature**: [F-003: Schema Panel Enhancement](agent-docs/01-discovery/features/F-003-schema-panel-enhancement.md)
+  - **Evidence**: 6 new components created, TableDetail updated with state + handlers + responsive width
   - **DoD**:
-    - Toggle button with BsReverseLayoutSidebarInsetReverse icon to show/hide panel
-    - Panel hidden by default (state: false)
-    - Remove "SCHEMA" title from schema panel
-    - Add header with two tab buttons: Table icon (ImTable2) + DDL text
-    - Active tab shows emerald-50 background, emerald-600 text
-    - Inactive tab shows gray-500 text
-    - Table view displays column info table
-    - DDL view displays SQL CREATE TABLE statement
-    - Table data expands to full width when panel hidden
-    - Smooth CSS transition (150-200ms) for collapse/expand
-    - Small button size (text-xs) matching pagination style
-    - Import icons from react-icons (bs, im)
-    - Build passed with no errors
+    - [x] Toggle button with BsReverseLayoutSidebarInsetReverse icon to show/hide panel
+    - [x] Panel hidden by default (state: false)
+    - [x] Remove "SCHEMA" title from schema panel
+    - [x] Add header with two tab buttons: Table icon (ImTable2) + DDL text
+    - [x] Active tab shows emerald-50 background, emerald-600 text
+    - [x] Inactive tab shows gray-500 text
+    - [x] Table view displays column info table
+    - [x] DDL view displays SQL CREATE TABLE statement
+    - [x] Table data expands to full width when panel hidden
+    - [x] Smooth CSS transition (150-200ms) for collapse/expand
+    - [x] Small button size (text-xs) matching pagination style
+    - [x] Import icons from react-icons (bs, im)
+    - [x] Build passed with no errors

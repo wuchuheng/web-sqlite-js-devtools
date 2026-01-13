@@ -1,6 +1,7 @@
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useMemo, useCallback, useState, useEffect } from "react";
 import { decodeDatabaseName } from "@/devtools/utils/databaseNames";
+import { BsReverseLayoutSidebarInsetReverse } from "react-icons/bs";
 import { SchemaPanel } from "./SchemaPanel";
 import { PaginationBar } from "../TableTab/PaginationBar";
 import { databaseService } from "@/devtools/services/databaseService";
@@ -202,8 +203,19 @@ export const TableDetail = () => {
       <div className="flex-1 flex overflow-hidden">
         {/* Left: Table Data Panel - Responsive width */}
         <div
-          className={`flex flex-col overflow-hidden transition-all duration-200 ease-in-out ${schemaPanelVisible ? "flex-1" : "w-full"}`}
+          className={`flex flex-col overflow-hidden transition-all duration-200 ease-in-out relative ${schemaPanelVisible ? "flex-1" : "w-full"}`}
         >
+          {/* Schema Toggle Button - Always visible on right edge */}
+          <button
+            type="button"
+            onClick={handleToggleSchema}
+            className="absolute top-2 right-2 z-10 p-1.5 bg-white border border-gray-200 rounded shadow-sm text-gray-600 hover:text-gray-800 hover:bg-gray-50 transition-colors"
+            title={
+              schemaPanelVisible ? "Hide schema panel" : "Show schema panel"
+            }
+          >
+            <BsReverseLayoutSidebarInsetReverse size={14} />
+          </button>
           {schemaLoading || dataLoading ? (
             <div className="flex-1 flex items-center justify-center text-gray-500">
               Loading...
@@ -271,7 +283,6 @@ export const TableDetail = () => {
           error={schemaError}
           visible={schemaPanelVisible}
           activeTab={schemaTab}
-          onToggle={handleToggleSchema}
           onTabChange={handleSchemaTabChange}
         />
       </div>

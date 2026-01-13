@@ -11,13 +11,13 @@ import { SchemaErrorMessage } from "./SchemaErrorMessage";
  * @remarks
  * Toggleable panel with tabbed view for table schema and DDL.
  * Panel is hidden by default, shows table view or DDL view based on active tab.
+ * Toggle button is in the parent TableDetail component.
  *
  * @param props.schema - Table schema with columns and DDL
  * @param props.loading - Loading state
  * @param props.error - Error message
  * @param props.visible - Panel visibility state
  * @param props.activeTab - Currently active tab ('table' | 'ddl')
- * @param props.onToggle - Callback when toggle button is clicked
  * @param props.onTabChange - Callback when tab button is clicked
  *
  * @returns JSX.Element - Schema panel
@@ -28,7 +28,6 @@ interface SchemaPanelProps {
   error?: string | null;
   visible: boolean;
   activeTab: "table" | "ddl";
-  onToggle: () => void;
   onTabChange: (tab: "table" | "ddl") => void;
 }
 
@@ -38,7 +37,6 @@ export const SchemaPanel = ({
   error = null,
   visible,
   activeTab,
-  onToggle,
   onTabChange,
 }: SchemaPanelProps) => {
   const panelClasses = `
@@ -49,11 +47,10 @@ export const SchemaPanel = ({
 
   return (
     <div className={panelClasses}>
-      {/* Header with toggle button and tab buttons */}
+      {/* Header with tab buttons */}
       <SchemaPanelHeader
         visible={visible}
         activeTab={activeTab}
-        onToggle={onToggle}
         onTabChange={onTabChange}
       />
 
