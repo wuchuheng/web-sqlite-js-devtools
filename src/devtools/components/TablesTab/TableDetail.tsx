@@ -153,8 +153,7 @@ export const TableDetail = () => {
     reloadData();
   };
 
-  const handlePageChange = (delta: number) => {
-    const newPage = page + delta;
+  const handlePageChange = (newPage: number) => {
     if (newPage >= 0 && newPage * limit < total) {
       setPageWithNavigation(newPage);
     }
