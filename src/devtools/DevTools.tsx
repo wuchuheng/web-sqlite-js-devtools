@@ -9,6 +9,7 @@ import { MigrationTab } from "./components/MigrationTab";
 import { SeedTab } from "./components/SeedTab";
 import { AboutTab } from "./components/AboutTab";
 import { LogView } from "./components/LogTab/LogView";
+import { OPFSGallery } from "./components/OPFSBrowser";
 import { useConnection } from "./hooks/useConnection";
 import "./DevTools.css";
 
@@ -128,21 +129,10 @@ export const DevTools = () => {
             {/* 3. Log streaming implemented in TASK-09 */}
             <Route path="/logs/:dbname" element={<LogView />} />
 
-            {/* 1. OPFS browser route (to be implemented in TASK-10) */}
-            {/* 2. Placeholder for OPFS file tree */}
-            {/* 3. Will show file browser with download functionality */}
-            <Route
-              path="/opfs"
-              element={
-                <div className="p-4">
-                  <h2 className="text-lg font-semibold">OPFS Browser</h2>
-                  <p className="text-sm text-gray-600">
-                    Browse Origin Private File System
-                  </p>
-                  <p className="text-xs text-gray-400 mt-2">Coming soon...</p>
-                </div>
-              }
-            />
+            {/* 1. OPFS browser route */}
+            {/* 2. Shows file tree with lazy-loaded directories */}
+            {/* 3. Implemented in TASK-10 */}
+            <Route path="/opfs" element={<OPFSGallery />} />
 
             {/* Catch-all - redirect to root */}
             <Route path="*" element={<Navigate to="/" replace />} />
