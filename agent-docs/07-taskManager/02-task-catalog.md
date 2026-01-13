@@ -537,28 +537,30 @@ NOTES
       - [x] Resize works when schema panel hidden
     - [x] Build passed with no errors
 
-- [ ] **TASK-303**: Integration Testing & Polish (F-005, F-006)
+- [x] **TASK-303**: Integration Testing & Polish (F-005, F-006)
   - **Priority**: P1 (High)
   - **Dependencies**: TASK-301, TASK-302
   - **Boundary**: Full extension, manual testing
   - **Maps to**: F-005, F-006
+  - **Micro-Spec**: [completed](agent-docs/08-task/active/TASK-303.md)
   - **Estimated**: 6 hours (1 day)
+  - **Completed**: 2026-01-14
   - **DoD**:
-    - [ ] **Cross-feature Testing** (2 hours)
-      - [ ] Resize works with opened tabs
-      - [ ] Schema panel toggle works with custom width
-      - [ ] Tab close works with custom panel widths
-      - [ ] No state conflicts between features
-    - [ ] **Edge Cases** (2 hours)
-      - [ ] Closing tab while resizing
-      - [ ] Switching databases resets opened tabs
-      - [ ] Min/max constraints enforced correctly
-      - [ ] Mouse release outside browser window handled
-    - [ ] **Polish** (2 hours)
-      - [ ] Fix any visual glitches
-      - [ ] Fix any state bugs
-      - [ ] Update HLD if needed
-      - [ ] Update LLD if needed
-      - [ ] Update feature docs with completion status
-    - [ ] Build passed with no errors
-    - [ ] Extension loads and functions correctly
+    - [x] **Cross-feature Testing** (2 hours)
+      - [x] Resize works with opened tabs
+      - [x] Schema panel toggle works with custom width
+      - [x] Tab close works with custom panel widths
+      - [x] No state conflicts between features
+    - [x] **Edge Cases** (2 hours)
+      - [x] Closing tab while resizing
+      - [x] Switching databases resets opened tabs
+      - [x] Min/max constraints enforced correctly
+      - [x] Mouse release outside browser window handled
+    - [x] **Polish** (2 hours)
+      - [x] Fix any visual glitches (fixed: content area flex-1)
+      - [x] Fix any state bugs
+      - [x] Update HLD if needed
+      - [x] Update LLD if needed
+      - [x] Update feature docs with completion status
+    - [x] Build passed with no errors
+    - [x] Extension loads and functions correctly

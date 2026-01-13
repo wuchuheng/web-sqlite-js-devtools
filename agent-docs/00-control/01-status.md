@@ -14,9 +14,9 @@ NOTES
 
 ## 1) Project stage
 
-- **Current stage**: Stage 8 - Implementation (Worker - TASK-302)
-- **Current focus**: Feature F-006 - Resizable Vertical Dividers
-- **Last updated**: 2026-01-14 (TASK-302: Implementation complete)
+- **Current stage**: Stage 8 - Implementation (Worker - TASK-303)
+- **Current focus**: Integration Testing & Polish (F-005, F-006)
+- **Last updated**: 2026-01-14 (TASK-303: Integration complete)
 
 ## 2) Active work
 
@@ -28,7 +28,9 @@ NOTES
 
 | Task                                                                       | Owner     | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | -------------------------------------------------------------------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| TASK-302: Resizable Vertical Dividers (F-006)                              | S8:worker | `src/devtools/components/Shared/ResizeHandle.tsx` (new component with mouse events, drag state, visual feedback, ARIA), `src/devtools/components/TablesTab/TablesTab.tsx` (sidebarWidth state, handleSidebarResize, relative class, inline styles, ResizeHandle at right edge), `src/devtools/components/TablesTab/TableDetail.tsx` (schemaPanelWidth state, handleSchemaResize, wrapper div with inline styles, ResizeHandle at left edge when visible)                                                                                                                               |
+| TASK-303: Integration Testing & Polish (F-005, F-006)                     | S8:worker | `src/devtools/components/TablesTab/TablesTab.tsx` (fixed content area to use flex-1), `agent-docs/01-discovery/features/F-005-opened-table-tabs-management.md` (marked completed), `agent-docs/01-discovery/features/F-006-resizable-vertical-dividers.md` (marked completed)                                                                                                                                                                                                                                                                                           |
+| -------------------------------------------------------------------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| TASK-302: Resizable Vertical Dividers (F-006)                              | S8:worker | `src/devtools/components/Shared/ResizeHandle.tsx` (new component with mouse events, drag state, visual feedback, ARIA), `src/devtools/components/TablesTab/TablesTab.tsx` (sidebarWidth state, handleSidebarResize, relative class, inline styles, ResizeHandle at right edge), `src/devtools/components/TablesTab/TableDetail.tsx` (schemaPanelWidth state, handleSchemaResize, wrapper div with inline styles, ResizeHandle at left edge when visible)                                                              |
 | -------------------------------------------------------------------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | TASK-301: Opened Table Tabs Management (F-005)                             | S8:worker | `src/devtools/components/TablesTab/OpenedTableTabs.tsx` (new component with memoized TabButton, IoMdClose close button, empty state), `src/devtools/components/TablesTab/TablesTab.tsx` (OpenedTabsContext, state management, handlers), `src/devtools/components/TablesTab/TableDetail.tsx` (context consumption, OpenedTableTabs integration, removed TableTabButton)                                                                                                                                               |
 | F-004: DDL Syntax Highlight & Copy Button                                  | S8:worker | `src/devtools/components/TablesTab/SchemaDDLView.tsx` (state, copy button, syntax highlighter), `package.json` (react-syntax-highlighter)                                                                                                                                                                                                                                                                                                                                                                             |
@@ -221,3 +223,9 @@ NOTES
   - ResizeHandle at right edge of sidebar (position="right")
   - ResizeHandle at left edge of schema panel (position="left", only when visible)
   - Build passed with no errors (4.00s)
+- **C30**: 2026-01-14 - TASK-303 completed - Integration Testing & Polish (F-005, F-006)
+  - Fixed content area in TablesTab to use `flex-1` instead of `w-3/4` for proper resize behavior
+  - Cross-feature testing: Resize works with opened tabs, schema toggle preserves width
+  - Edge case testing: Min/max constraints enforced correctly, mouse release handled
+  - Marked F-005 and F-006 as completed in feature docs
+  - Build passed with no errors (3.90s)

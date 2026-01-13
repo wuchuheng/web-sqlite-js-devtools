@@ -329,8 +329,8 @@ export const TablesTab = () => {
           />
         </aside>
 
-        {/* 75% Table Content Area */}
-        <section className="w-3/4 flex flex-col overflow-hidden">
+        {/* Table Content Area - Flexes to fill remaining space (F-006) */}
+        <section className="flex-1 flex flex-col overflow-hidden">
           {/* Show EmptyState when no table is selected, otherwise show Outlet */}
           {hasTableSelection ? <Outlet /> : <EmptyState />}
         </section>
