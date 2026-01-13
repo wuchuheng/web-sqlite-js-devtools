@@ -38,10 +38,10 @@ NOTES
 
 ## 3) Current stage
 
-- **Current stage (1-8)**: Stage 8 - Implementation (Worker - TASK-05.3)
+- **Current stage (1-8)**: Stage 8 - Implementation (Worker - TASK-05.4)
 - **Active release**: v1.0.0 (MVP) - Target: 2026-01-27
-- **Status summary**: TASK-01 through TASK-05.2 completed, TASK-05.3 in progress, 8 tasks remaining for MVP
-- **Last updated (YYYY-MM-DD)**: 2026-01-13 (TASK-05.3: Service Layer - Log Streaming Functions)
+- **Status summary**: TASK-01 through TASK-05.3 completed, TASK-05.4 in progress, 7 tasks remaining for MVP
+- **Last updated (YYYY-MM-DD)**: 2026-01-13 (TASK-05.4: Service Layer - Migration & Versioning Functions)
 
 ## 4) Technology stack (chosen in Stage 2)
 
@@ -134,3 +134,9 @@ NOTES
   - Created `LogRingBuffer` module (500 entry circular buffer with batch sending)
   - Updated `databaseService` exports with subscribeLogs/unsubscribeLogs functions
   - Fixed TypeScript type issues for existing functions using DBInterface
+- **2026-01-13**: TASK-05.4 completed - Service Layer Migration & Versioning Functions
+  - Added `ReleaseConfig`, `DevReleaseResult`, `RollbackResult`, `DbVersionResult` types (re-exported from DB types)
+  - Implemented `devRelease(dbname, version, migrationSQL?, seedSQL?)` using db.devTool.release()
+  - Implemented `devRollback(dbname, toVersion)` using db.devTool.rollback()
+  - Implemented `getDbVersion(dbname)` with PRAGMA user_version and fallback to DatabaseRecord maps
+  - Updated `databaseService` exports with devRelease/devRollback/getDbVersion functions

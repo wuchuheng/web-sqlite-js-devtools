@@ -15,8 +15,8 @@ NOTES
 ## 1) Project stage
 
 - **Current stage**: Stage 8 - Implementation (Worker)
-- **Current focus**: TASK-05.3 completed, TASK-05.4 ready to start
-- **Last updated**: 2026-01-13 (TASK-05.3 - Service Layer Log Streaming Functions)
+- **Current focus**: TASK-05.4 completed, TASK-05.5 ready to start
+- **Last updated**: 2026-01-13 (TASK-05.4 - Service Layer Migration & Versioning Functions)
 
 ## 2) Active work
 
@@ -26,22 +26,23 @@ NOTES
 
 ## 3) Done (Recent)
 
-| Task                                                 | Owner     | Evidence                                                                                                                                                                                                                                          |
-| ---------------------------------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| TASK-05.3: Service Layer - Log Streaming Functions   | S8:worker | `src/devtools/services/databaseService.ts` (LogEntry, LogSubscription, SubscribeResult types, subscribeLogs, unsubscribeLogs), `src/contentScript/subscriptions/LogRingBuffer.ts` (new file) |
-| TASK-05.2: Service Layer - SQL Execution Functions   | S8:worker | `src/devtools/services/databaseService.ts` (SqlValue, SQLParams, ExecResult types, execSQL)                                                                                                                                                       |
-| TASK-05.1: Service Layer - Table Schema Functions    | S8:worker | `src/devtools/services/databaseService.ts` (ColumnInfo, TableSchema, QueryResult types, getTableSchema, queryTableData)                                                                                                                           |
-| TASK-05: Database List & Table Browser               | S8:worker | `src/devtools/inspectedWindow.ts`, `src/devtools/hooks/useInspectedWindowRequest.ts`, `src/devtools/utils/databaseNames.ts`, `src/devtools/components/Sidebar/DatabaseList.tsx`, `src/devtools/components/TableTab/`, `src/devtools/DevTools.tsx` |
-| TASK-04: Icon State & Auto-Reconnect                 | S8:worker | `src/background/iconState/`, `src/devtools/hooks/useConnection.ts`, `public/img/*-inactive.png`                                                                                                                                                   |
-| TASK-03: Content Script Proxy & Messaging            | S8:worker | `src/contentScript/messaging/`, `src/background/messaging/`                                                                                                                                                                                       |
-| TASK-02: Sidebar UI & Navigation                     | S8:worker | `src/devtools/components/Sidebar/`, `EmptyState/`                                                                                                                                                                                                 |
-| TASK-01: Project Setup (Bug Fix)                     | S8:worker | `devtools.html` panel creation script added                                                                                                                                                                                                       |
-| TASK-01: Project Setup (Original)                    | S8:worker | `src/manifest.ts`, `src/messaging/`, `src/devtools/`                                                                                                                                                                                              |
+| Task                                                   | Owner     | Evidence                                                                                                                                                                                                                                          |
+| ------------------------------------------------------ | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| TASK-05.4: Service Layer - Migration & Versioning Functions | S8:worker | `src/devtools/services/databaseService.ts` (ReleaseConfig, DevReleaseResult, RollbackResult, DbVersionResult types, devRelease, devRollback, getDbVersion) |
+| TASK-05.3: Service Layer - Log Streaming Functions     | S8:worker | `src/devtools/services/databaseService.ts` (LogEntry, LogSubscription, SubscribeResult types, subscribeLogs, unsubscribeLogs), `src/contentScript/subscriptions/LogRingBuffer.ts` (new file)                                                      |
+| TASK-05.2: Service Layer - SQL Execution Functions     | S8:worker | `src/devtools/services/databaseService.ts` (SqlValue, SQLParams, ExecResult types, execSQL)                                                                                                                                                       |
+| TASK-05.1: Service Layer - Table Schema Functions      | S8:worker | `src/devtools/services/databaseService.ts` (ColumnInfo, TableSchema, QueryResult types, getTableSchema, queryTableData)                                                                                                                           |
+| TASK-05: Database List & Table Browser                 | S8:worker | `src/devtools/inspectedWindow.ts`, `src/devtools/hooks/useInspectedWindowRequest.ts`, `src/devtools/utils/databaseNames.ts`, `src/devtools/components/Sidebar/DatabaseList.tsx`, `src/devtools/components/TableTab/`, `src/devtools/DevTools.tsx` |
+| TASK-04: Icon State & Auto-Reconnect                   | S8:worker | `src/background/iconState/`, `src/devtools/hooks/useConnection.ts`, `public/img/*-inactive.png`                                                                                                                                                   |
+| TASK-03: Content Script Proxy & Messaging              | S8:worker | `src/contentScript/messaging/`, `src/background/messaging/`                                                                                                                                                                                       |
+| TASK-02: Sidebar UI & Navigation                       | S8:worker | `src/devtools/components/Sidebar/`, `EmptyState/`                                                                                                                                                                                                 |
+| TASK-01: Project Setup (Bug Fix)                       | S8:worker | `devtools.html` panel creation script added                                                                                                                                                                                                       |
+| TASK-01: Project Setup (Original)                      | S8:worker | `src/manifest.ts`, `src/messaging/`, `src/devtools/`                                                                                                                                                                                              |
 
 ## 4) Upcoming
 
-- **Next task**: TASK-05.4 - Service Layer Migration & Versioning Functions
-- **Next review date**: After TASK-05.4 completion
+- **Next task**: TASK-05.5 - Service Layer OPFS File Browser Functions
+- **Next review date**: After TASK-05.5 completion
 
 ## 5) Risks / blockers
 

@@ -12,6 +12,7 @@ import type {
   DBInterface,
   DatabaseRecord as DBRecord,
   LogEntry as DBLogEntry,
+  ReleaseConfig,
 } from "../../types/DB";
 
 /**
@@ -115,6 +116,34 @@ export type LogSubscription = {
  */
 export type SubscribeResult = {
   subscriptionId: string;
+};
+
+// ============================================================================
+// MIGRATION & VERSIONING TYPES
+// ============================================================================
+
+// Re-export ReleaseConfig from DB types for convenience
+export type { ReleaseConfig };
+
+/**
+ * Dev release result with dev version identifier
+ */
+export type DevReleaseResult = {
+  devVersion: string;
+};
+
+/**
+ * Rollback result with current version
+ */
+export type RollbackResult = {
+  currentVersion: string;
+};
+
+/**
+ * Database version result
+ */
+export type DbVersionResult = {
+  version: string;
 };
 
 // ============================================================================
@@ -620,6 +649,223 @@ export const unsubscribeLogs = async (
 };
 
 /**
+ * Create dev release with migration and seed SQL
+ *
+ * @remarks
+ * 1. Validate database exists
+ * 2. Create dev release using db.devTool.release()
+ * 3. Return response with dev version identifier
+ *
+ * @param dbname - Database name to create dev release for
+ * @param version - Semantic version for the dev release (e.g., "1.2.3-dev")
+ * @param migrationSQL - Optional migration SQL to apply
+ * @param seedSQL - Optional seed SQL to apply after migration
+ * @returns Dev release result with dev version identifier
+ */
+export const devRelease = async (
+  dbname: string,
+  version: string,
+  migrationSQL?: string,
+  seedSQL?: string,
+): Promise<ServiceResponse<DevReleaseResult>> => {
+  return inspectedWindowBridge.execute({
+    func: async (
+      databaseName: string,
+      versionStr: string,
+      migrationSql?: string,
+      seedSql?: string,
+    ) => {
+      try {
+        const ok = <T>(data: T) => ({ success: true as const, data });
+        const fail = (message: string) => ({
+          success: false as const,
+          error: message,
+        });
+
+        // Phase 1: Validate database exists
+        const api = window.__web_sqlite;
+        const databases = api?.databases;
+
+        if (!databases) {
+          return fail("web-sqlite-js API not available");
+        }
+
+        const dbRecord = databases[databaseName] as DBRecord | undefined;
+        if (!dbRecord?.db) {
+          return fail(`Database not found: ${databaseName}`);
+        }
+
+        const db = dbRecord.db as DBInterface;
+
+        // Phase 2: Create dev release using db.devTool.release()
+        if (!db.devTool) {
+          return fail("DevTool API not available on this database");
+        }
+
+        // Build ReleaseConfig object
+        const config: ReleaseConfig = {
+          version: versionStr,
+          migrationSQL: migrationSql ?? "",
+          seedSQL: seedSql,
+        };
+
+        await db.devTool.release(config);
+
+        // Generate dev version identifier
+        const devVersion = `${databaseName}-dev-${versionStr}`;
+
+        // Phase 3: Return response
+        return ok({ devVersion });
+      } catch (error) {
+        return { success: false as const, error: String(error) };
+      }
+    },
+    args: [dbname, version, migrationSQL, seedSQL],
+  });
+};
+
+/**
+ * Rollback dev version to specific version
+ *
+ * @remarks
+ * 1. Validate database exists
+ * 2. Rollback using db.devTool.rollback()
+ * 3. Return response with current version
+ *
+ * @param dbname - Database name to rollback
+ * @param toVersion - Target version to rollback to
+ * @returns Rollback result with current version
+ */
+export const devRollback = async (
+  dbname: string,
+  toVersion: string,
+): Promise<ServiceResponse<RollbackResult>> => {
+  return inspectedWindowBridge.execute({
+    func: async (databaseName: string, targetVersion: string) => {
+      try {
+        const ok = <T>(data: T) => ({ success: true as const, data });
+        const fail = (message: string) => ({
+          success: false as const,
+          error: message,
+        });
+
+        // Phase 1: Validate database exists
+        const api = window.__web_sqlite;
+        const databases = api?.databases;
+
+        if (!databases) {
+          return fail("web-sqlite-js API not available");
+        }
+
+        const dbRecord = databases[databaseName] as DBRecord | undefined;
+        if (!dbRecord?.db) {
+          return fail(`Database not found: ${databaseName}`);
+        }
+
+        const db = dbRecord.db as DBInterface;
+
+        // Phase 2: Rollback using db.devTool.rollback()
+        if (!db.devTool) {
+          return fail("DevTool API not available on this database");
+        }
+
+        await db.devTool.rollback(targetVersion);
+
+        // Phase 3: Return response with current version
+        return ok({ currentVersion: targetVersion });
+      } catch (error) {
+        return { success: false as const, error: String(error) };
+      }
+    },
+    args: [dbname, toVersion],
+  });
+};
+
+/**
+ * Get current database version
+ *
+ * @remarks
+ * 1. Validate database exists
+ * 2. Query version (PRAGMA user_version or DatabaseRecord maps)
+ * 3. Return response with version (or "0.0.0" if not set)
+ *
+ * @param dbname - Database name to get version for
+ * @returns Database version result
+ */
+export const getDbVersion = async (
+  dbname: string,
+): Promise<ServiceResponse<DbVersionResult>> => {
+  return inspectedWindowBridge.execute({
+    func: async (databaseName: string) => {
+      try {
+        const ok = <T>(data: T) => ({ success: true as const, data });
+        const fail = (message: string) => ({
+          success: false as const,
+          error: message,
+        });
+
+        // Phase 1: Validate database exists
+        const api = window.__web_sqlite;
+        const databases = api?.databases;
+
+        if (!databases) {
+          return fail("web-sqlite-js API not available");
+        }
+
+        const dbRecord = databases[databaseName] as DBRecord | undefined;
+        if (!dbRecord?.db) {
+          return fail(`Database not found: ${databaseName}`);
+        }
+
+        const db = dbRecord.db as DBInterface;
+
+        // Phase 2: Query version
+        // Try PRAGMA user_version first (SQLite built-in)
+        const queryFunc = (sql: string) =>
+          (db as DBInterface).query(sql) as Promise<
+            Array<Record<string, unknown>>
+          >;
+
+        try {
+          const pragmaRows = await queryFunc("PRAGMA user_version");
+          const firstRow = pragmaRows[0] as Record<string, unknown> | undefined;
+          const userVersion = Number(firstRow?.user_version ?? 0);
+
+          // If user_version is set, convert to semantic version format
+          if (userVersion > 0) {
+            // Convert integer to semantic version (e.g., 100 -> "1.0.0")
+            const major = Math.floor(userVersion / 1000000);
+            const minor = Math.floor((userVersion % 1000000) / 1000);
+            const patch = userVersion % 1000;
+            return ok({ version: `${major}.${minor}.${patch}` });
+          }
+        } catch {
+          // PRAGMA user_version failed, continue to fallback
+        }
+
+        // Fallback: Check DatabaseRecord for version info via migrationSQL Map keys
+        if (dbRecord.migrationSQL && dbRecord.migrationSQL.size > 0) {
+          // Get the highest version from migrationSQL Map
+          const versions = Array.from(dbRecord.migrationSQL.keys());
+          versions.sort((a, b) =>
+            b.localeCompare(a, undefined, { numeric: true }),
+          );
+          if (versions.length > 0) {
+            return ok({ version: versions[0] });
+          }
+        }
+
+        // No version found, return default
+        return ok({ version: "0.0.0" });
+      } catch (error) {
+        return { success: false as const, error: String(error) };
+      }
+    },
+    args: [dbname],
+  });
+};
+
+/**
  * Helper function to escape SQL identifiers
  *
  * @param identifier - SQL identifier to escape (table name, column name)
@@ -641,4 +887,7 @@ export const databaseService = Object.freeze({
   execSQL,
   subscribeLogs,
   unsubscribeLogs,
+  devRelease,
+  devRollback,
+  getDbVersion,
 });

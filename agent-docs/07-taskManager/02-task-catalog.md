@@ -158,12 +158,13 @@ NOTES
     - Integration tests with LogRingBuffer
     - Update `databaseService.ts` with JSDoc comments
 
-- [ ] **TASK-05.4**: Service Layer - Migration & Versioning Functions
+- [x] **TASK-05.4**: Service Layer - Migration & Versioning Functions
   - **Priority**: P1
   - **Dependencies**: TASK-05.2
   - **Boundary**: `src/devtools/services/databaseService.ts`, `src/devtools/bridge/inspectedWindow.ts`
   - **Maps to**: F-001, FR-031, FR-032, FR-033, FR-034
   - **Feature**: F-001 Service Layer Expansion - Migration Group
+  - **Micro-Spec**: [completed](agent-docs/08-task/active/TASK-05.4.md)
   - **DoD**:
     - Implement `devRelease(dbname, version, migrationSQL?, seedSQL?)` service function
       - Create dev database copy: `${dbname}-dev-${version}`
