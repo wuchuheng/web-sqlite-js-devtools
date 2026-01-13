@@ -1,5 +1,5 @@
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { useMemo } from "react";
+import { useMemo, useCallback, useState, useEffect } from "react";
 import { decodeDatabaseName } from "@/devtools/utils/databaseNames";
 import { TableSchemaPanel } from "../TableTab/TableSchema";
 import { PaginationBar } from "../TableTab/PaginationBar";
@@ -27,29 +27,39 @@ export const TableDetail = () => {
   );
   const tableName = params.tableName || "";
 
-  // Pagination state
-  const [page, setPage] = useMemo(() => {
-    const searchParams = new URLSearchParams(location.search);
-    return [
-      parseInt(searchParams.get("page") || "0", 10),
-      (newPage: number) => {
-        searchParams.set("page", newPage.toString());
-        navigate({ search: searchParams.toString() }, { replace: true });
-      },
-    ];
-  }, [location.search, navigate]);
+  // Pagination state - properly sync with URL search params
+  const [page, setPage] = useState(0);
+  const [limit, setLimit] = useState(50);
 
-  const [limit, setLimit] = useMemo(() => {
+  // Update state when URL search params change
+  useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
-    return [
-      parseInt(searchParams.get("limit") || "50", 10),
-      (newLimit: number) => {
-        searchParams.set("limit", newLimit.toString());
-        searchParams.set("page", "0"); // Reset to first page
-        navigate({ search: searchParams.toString() }, { replace: true });
-      },
-    ];
-  }, [location.search, navigate]);
+    const urlPage = parseInt(searchParams.get("page") || "0", 10);
+    const urlLimit = parseInt(searchParams.get("limit") || "50", 10);
+    setPage(urlPage);
+    setLimit(urlLimit);
+  }, [location.search]);
+
+  // Update URL when page changes
+  const setPageWithNavigation = useCallback(
+    (newPage: number) => {
+      const searchParams = new URLSearchParams(location.search);
+      searchParams.set("page", newPage.toString());
+      navigate({ search: searchParams.toString() }, { replace: true });
+    },
+    [location.search, navigate],
+  );
+
+  // Update URL when limit changes (resets to page 0)
+  const setLimitWithNavigation = useCallback(
+    (newLimit: number) => {
+      const searchParams = new URLSearchParams(location.search);
+      searchParams.set("limit", newLimit.toString());
+      searchParams.set("page", "0");
+      navigate({ search: searchParams.toString() }, { replace: true });
+    },
+    [location.search, navigate],
+  );
 
   // Fetch table schema
   const {
@@ -71,7 +81,13 @@ export const TableDetail = () => {
     reload: reloadData,
   } = useInspectedWindowRequest(
     () => {
-      const sql = `SELECT * FROM "${tableName}"`;
+      // SQL injection prevention: validate table name only contains safe characters
+      // and use proper SQLite identifier quoting
+      const safeTableName = tableName.replace(/[^a-zA-Z0-9_]/g, "");
+      if (safeTableName !== tableName) {
+        throw new Error("Invalid table name");
+      }
+      const sql = `SELECT * FROM "${safeTableName}"`;
       return databaseService.queryTableData(dbname, sql, limit, page * limit);
     },
     [dbname, tableName, limit, page],
@@ -90,7 +106,7 @@ export const TableDetail = () => {
   const handlePageChange = (delta: number) => {
     const newPage = page + delta;
     if (newPage >= 0 && newPage * limit < total) {
-      setPage(newPage);
+      setPageWithNavigation(newPage);
     }
   };
 
@@ -158,7 +174,7 @@ export const TableDetail = () => {
                 limit={limit}
                 loading={dataLoading}
                 onPageChange={handlePageChange}
-                onLimitChange={setLimit}
+                onLimitChange={setLimitWithNavigation}
                 onRefresh={handleRefresh}
               />
             </>

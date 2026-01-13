@@ -43,7 +43,10 @@ export const TablesTab = () => {
   );
 
   // Check if we're currently on a specific table route
-  const hasTableSelection = location.pathname.endsWith("/tables") === false;
+  // TablesTab is rendered for /openedDB/:dbname/tables and its nested routes
+  // If there's an additional path segment after /tables, we have a table selection
+  const hasTableSelection =
+    location.pathname.match(/\/tables\/[^/]+$/) !== null;
 
   // Build table link
   const getTableLink = (tableName: string) => {
