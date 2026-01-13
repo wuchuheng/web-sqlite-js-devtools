@@ -1,5 +1,10 @@
-import { Outlet, useParams, NavLink } from "react-router-dom";
-import { useNavigate, useLocation } from "react-router-dom";
+import {
+  Outlet,
+  useParams,
+  NavLink,
+  useNavigate,
+  useLocation,
+} from "react-router-dom";
 import { useMemo } from "react";
 import { databaseService } from "@/devtools/services/databaseService";
 import { useInspectedWindowRequest } from "@/devtools/hooks/useInspectedWindowRequest";
