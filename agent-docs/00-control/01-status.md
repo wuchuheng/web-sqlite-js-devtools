@@ -16,7 +16,7 @@ NOTES
 
 - **Current stage**: Stage 7 - Task Management (Roadmap & Catalog)
 - **Current focus**: Feature F-003 - Schema Panel Enhancement
-- **Last updated**: 2026-01-14 (S5: LLD updated for F-003)
+- **Last updated**: 2026-01-14 (F-003: DDL generation fix)
 
 ## 2) Active work
 
@@ -28,7 +28,7 @@ NOTES
 
 | Task                                                                       | Owner     | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | -------------------------------------------------------------------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| F-003: Schema Panel Enhancement                                            | S8:worker | `src/devtools/components/TablesTab/SchemaPanel.tsx`, `src/devtools/components/TablesTab/SchemaPanelHeader.tsx`, `src/devtools/components/TablesTab/SchemaTableView.tsx`, `src/devtools/components/TablesTab/SchemaDDLView.tsx`, `src/devtools/components/TablesTab/SchemaLoadingSkeleton.tsx`, `src/devtools/components/TablesTab/SchemaErrorMessage.tsx`, `src/devtools/components/TablesTab/TableDetail.tsx` (state + handlers + responsive width) |
+| F-003: Schema Panel Enhancement                                            | S8:worker | `src/devtools/components/TablesTab/SchemaPanel.tsx`, `src/devtools/components/TablesTab/SchemaPanelHeader.tsx`, `src/devtools/components/TablesTab/SchemaTableView.tsx`, `src/devtools/components/TablesTab/SchemaDDLView.tsx`, `src/devtools/components/TablesTab/SchemaLoadingSkeleton.tsx`, `src/devtools/components/TablesTab/SchemaErrorMessage.tsx`, `src/devtools/components/TablesTab/TableDetail.tsx` (state + handlers + responsive width), `src/devtools/services/databaseService.ts` (DDL generation fix) |
 | TASK-202: Keyboard Shortcuts                                               | S8:worker | `src/devtools/hooks/useKeyboardShortcuts.ts`, `src/devtools/components/KeyboardShortcutsHelp.tsx`, `src/devtools/DevTools.tsx` (keyboard handler), `src/devtools/components/Sidebar/Sidebar.tsx` (collapse state lifted), `src/devtools/components/QueryTab/QueryTab.tsx` (ref callbacks)                                                                                                                                                            |
 | TASK-201: Query History                                                    | S8:worker | `src/devtools/hooks/useQueryHistory.ts`, `src/devtools/components/QueryTab/HistoryItem.tsx`, `src/devtools/components/QueryTab/HistorySidebar.tsx`, `src/devtools/components/QueryTab/QueryTab.tsx` (history integration), chrome.storage.local persistence                                                                                                                                                                                          |
 | TASK-12: Testing & Release                                                 | S8:worker | `package.json` (v1.0.0), `dist/web-sqlite-devtools-1.0.0.zip`, production build (1.2MB)                                                                                                                                                                                                                                                                                                                                                              |
@@ -147,3 +147,7 @@ NOTES
   - Responsive width: 320px when visible, 0px when hidden with 200ms transitions
   - Removed "SCHEMA" and "DDL" headings to save vertical space
   - Build passed with no errors
+- **C22**: 2026-01-14 - F-003 bug fix: DDL generation
+  - Fixed sqlite_master query (removed escapeIdentifier from table name)
+  - Added fallback to generate DDL from column schema when sqlite_master is empty
+  - Generated DDL includes: column names, types, PRIMARY KEY, NOT NULL, DEFAULT
