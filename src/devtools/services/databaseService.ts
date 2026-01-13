@@ -16,44 +16,6 @@ import type {
 } from "../../types/DB";
 
 /**
- * Helper function to escape SQL identifiers
- * MUST be defined at top level (not const) to avoid ReferenceError
- *
- * @param identifier - SQL identifier to escape (table name, column name)
- * @returns Escaped identifier wrapped in double quotes
- */
-function escapeIdentifier(identifier: string): string {
-  // Escape double quotes by doubling them and wrap in double quotes
-  return `"${identifier.replace(/"/g, '""')}"`;
-}
-
-/**
- * Helper function to format file sizes in human-readable format
- * MUST be defined at top level (not const) to avoid ReferenceError
- *
- * @remarks
- * - If bytes < 1024: return "X B"
- * - If bytes < 1024 * 1024: return "X.X KB"
- * - If bytes < 1024 * 1024 * 1024: return "X.X MB"
- * - Otherwise: return "X.X GB"
- *
- * @param bytes - File size in bytes
- * @returns Formatted file size string
- */
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) {
-    return `${bytes} B`;
-  }
-  if (bytes < 1024 * 1024) {
-    return `${(bytes / 1024).toFixed(1)} KB`;
-  }
-  if (bytes < 1024 * 1024 * 1024) {
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  }
-  return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
-}
-
-/**
  * Standard response envelope for service operations
  */
 export type ServiceResponse<T> = {
@@ -356,6 +318,11 @@ export const getTableSchema = async (
           success: false as const,
           error: message,
         });
+
+        // Helper function to escape SQL identifiers (defined inside callback)
+        const escapeIdentifier = (identifier: string): string => {
+          return `"${identifier.replace(/"/g, '""')}"`;
+        };
 
         // Phase 1: Validate database exists
         const api = window.__web_sqlite;
@@ -959,6 +926,20 @@ export const getOpfsFiles = async (
           success: false as const,
           error: message,
         });
+
+        // Helper function to format file sizes
+        const formatFileSize = (bytes: number): string => {
+          if (bytes < 1024) {
+            return `${bytes} B`;
+          }
+          if (bytes < 1024 * 1024) {
+            return `${(bytes / 1024).toFixed(1)} KB`;
+          }
+          if (bytes < 1024 * 1024 * 1024) {
+            return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+          }
+          return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
+        };
 
         // Phase 1: Access OPFS root and navigate to path
         if (typeof navigator === "undefined" || !navigator.storage) {
