@@ -1,0 +1,1 @@
+export { SeedTab } from "./SeedTab";

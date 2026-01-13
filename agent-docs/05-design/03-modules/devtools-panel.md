@@ -80,10 +80,10 @@ src/devtools/
 
 ## 2) Responsibilities
 
-- **Presentation Layer**: Render UI for all 6 tabs (Table, Query, Log, Migration, Seed, About)
+- **Presentation Layer**: Render UI for all 5 database tabs (Tables, Query, Migration, Seed, About) + separate Log route
 - **Service Layer Integration**: Import and call `databaseService` functions for all data access
 - **State Management**: Manage React component state (no direct Chrome API calls)
-- **Routing**: Navigate via react-router HashRouter
+- **Routing**: Navigate via react-router HashRouter with nested routes
 - **Error Handling**: Display service layer errors in UI
 - **Real-Time Updates**: Subscribe to log events and update in real-time
 - **Export**: Download query results as CSV/JSON
@@ -141,7 +141,7 @@ flowchart TD
 
 - **Sidebar**
   - `render()`: Navigation with database list + OPFS link
-  - `handleDatabaseClick(dbname)`: Navigate to `/openedDB/${dbname}`
+  - `handleDatabaseClick(dbname)`: Navigate to `/openedDB/${dbname}/tables`
   - **Data Access**: `databaseService.getDatabases()` via `useDatabase` hook
 
 - **TableList**
@@ -415,31 +415,36 @@ src/devtools/components/
 │   ├── DatabaseList.tsx             # Opened DB menu (uses databaseService.getDatabases)
 │   ├── OPFSLink.tsx                 # OPFS browser link
 │   └── CollapseToggle.tsx           # Sidebar collapse (20% ↔ icon-only)
-├── TableTab/
-│   ├── index.tsx                    # Table browser tab
-│   ├── TableList.tsx                # Left column table list (uses databaseService.getTableList)
-│   ├── MultiTableHeader.tsx         # Tab bar for open tables
-│   ├── TableContent.tsx             # Data + DDL display (uses databaseService.getTableSchema, queryTableData)
-│   └── PaginationBar.tsx            # Page controls (custom limit, refresh, close)
+├── DatabaseTabs/                    # NEW: Database-level tab navigation (F-002)
+│   ├── index.tsx                    # DatabaseTabs component (tab header + outlet)
+│   └── DatabaseTabHeader.tsx        # 5 tabs: Tables, Query, Migration, Seed, About
+├── TablesTab/                       # Tables tab (refactored from DatabaseView)
+│   ├── index.tsx                    # TablesTab component
+│   ├── TableListSidebar.tsx         # Left column (25% width)
+│   ├── OpenedTableTabs.tsx          # Tab bar for opened tables
+│   ├── TableDetail.tsx              # Table detail for :tableName route
+│   │   ├── TableDataPanel.tsx       # Left: data + pagination
+│   │   └── DDLPanel.tsx             # Right: schema
+│   └── EmptyState.tsx               # No table selected
 ├── QueryTab/
-│   ├── index.tsx                    # SQL editor tab
+│   ├── index.tsx                    # Query tab component
 │   ├── CodeMirrorEditor.tsx         # CodeMirror 6 SQL editor (uses databaseService.execSQL)
 │   ├── QueryResults.tsx             # Result table with sortable columns
 │   └── ExportButton.tsx             # CSV/JSON export
-├── LogTab/
-│   ├── index.tsx                    # Log viewer tab
+├── LogTab/                          # Separate route (not under database tabs)
+│   ├── index.tsx                    # Log view component
 │   ├── LogFilter.tsx                # Level/field filters
 │   └── LogList.tsx                  # Log entries (uses databaseService.subscribeLogs, unsubscribeLogs)
 ├── MigrationTab/
-│   ├── index.tsx                    # Migration playground
+│   ├── index.tsx                    # Migration tab component
 │   ├── HelperNotice.tsx             # Helper notice
 │   └── TestControls.tsx             # Release/Rollback controls (uses databaseService.devRelease, devRollback)
 ├── SeedTab/
-│   ├── index.tsx                    # Seed playground
+│   ├── index.tsx                    # Seed tab component
 │   ├── HelperNotice.tsx             # Helper notice
 │   └── TestControls.tsx             # Release/Rollback controls (uses databaseService.devRelease, devRollback)
 ├── AboutTab/
-│   ├── index.tsx                    # Database info tab
+│   ├── index.tsx                    # About tab component
 │   └── DatabaseMetadata.tsx         # DB metadata (uses databaseService.getDbVersion)
 ├── OPFSBrowser/
 │   ├── index.tsx                    # OPFS file browser

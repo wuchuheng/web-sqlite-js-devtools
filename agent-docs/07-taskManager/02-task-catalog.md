@@ -268,31 +268,6 @@ NOTES
 
 ### Original Tasks (Continued)
 
-- [ ] **TASK-07**: Query Editor with CodeMirror (Updated - Dependencies updated, TASK-05.7 skipped)
-  - **Priority**: P0 (Blocker)
-  - **Dependencies**: Spike S-003 validation, TASK-05.2, TASK-05.7
-  - **Boundary**: `src/devtools/components/QueryTab/`
-  - **Maps to**: FR-024, FR-025, ADR-0003, ADR-0004
-  - **Note**: TASK-05.2 and TASK-05.7 now handle service layer implementation. This task focuses on UI components only.
-  - **DoD**:
-    - CodeMirror 6 installed with SQL syntax highlighting
-    - Auto-theme matching Chrome DevTools (light/dark)
-    - Execute button + Ctrl+Enter shortcut
-    - Inline error display
-    - UI styling with Tailwind CSS
-
-- [ ] **TASK-08**: Query Results & Export (Updated - Now depends on TASK-05.7)
-  - **Priority**: P1
-  - **Dependencies**: TASK-07, TASK-05.7
-  - **Boundary**: `src/devtools/components/QueryTab/QueryResults.tsx`, `ExportButton.tsx`
-  - **Maps to**: FR-025, FR-026, FR-027
-  - **Note**: TASK-05.7 now handles service layer integration. This task focuses on UI and export functionality.
-  - **DoD**:
-    - QueryResults table with sortable columns
-    - CSV/JSON export button
-    - Download with proper file naming
-    - UI styling with Tailwind CSS
-
 - [x] **TASK-09**: Log Streaming & Ring Buffer (Updated - Now depends on TASK-05.3, TASK-05.8)
   - **Priority**: P0 (Blocker)
   - **Dependencies**: TASK-03, TASK-05.3, TASK-05.8
@@ -318,22 +293,30 @@ NOTES
     - OPFSLink in sidebar (FaFile + "OPFS")
     - UI styling with Tailwind CSS
 
-- [ ] **TASK-11**: About Tab & Tab Navigation (Updated - Now depends on TASK-05.4)
-  - **Priority**: P1
-  - **Dependencies**: TASK-03, TASK-05.4
-  - **Boundary**: `src/devtools/components/AboutTab/`, `src/devtools/components/TabNavigation.tsx`
-  - **Maps to**: FR-015, FR-035
-  - **Note**: TASK-05.4 now handles `getDbVersion` service implementation. This task focuses on UI components.
+- [ ] **F-002**: Database Tab Navigation Restructuring (NEW - Replaces TASK-07, TASK-08, TASK-11, TASK-101, TASK-102)
+  - **Priority**: P0 (Blocker)
+  - **Dependencies**: TASK-05.1, TASK-05.2, TASK-05.4, TASK-06
+  - **Boundary**: `src/devtools/components/DatabaseTabs/`, `src/devtools/components/TablesTab/`, `src/devtools/components/QueryTab/`, `src/devtools/components/MigrationTab/`, `src/devtools/components/SeedTab/`, `src/devtools/components/AboutTab/`, `src/devtools/DevTools.tsx`
+  - **Maps to**: F-002, FR-009, FR-009.1, FR-009.2, FR-015, FR-016, FR-017, FR-019, FR-022, FR-024, FR-025, FR-026, FR-027, FR-031, FR-032, FR-033, FR-034, FR-035
+  - **Feature**: [F-002: Database Tab Navigation Restructuring](agent-docs/01-discovery/features/F-002-database-tab-navigation.md)
   - **DoD**:
-    - AboutTab with DB metadata (name, version, table count, row counts, OPFS info, web-sqlite-js version)
-    - TabNavigation with 6 tabs (Table, Query, Log, Migration, Seed, About) with icons
+    - Create DatabaseTabs component with tab header (5 tabs: Tables, Query, Migration, Seed, About)
+    - Implement nested routing structure: `/openedDB/:dbname` → `/openedDB/:dbname/tables` (default)
+    - Create TablesTab (refactor from DatabaseView): 25% table list sidebar + 75% content area
+    - Create TableDetail component for `:tableName` route with split view (data + DDL)
+    - Create QueryTab with CodeMirror SQL editor + results + export
+    - Create MigrationTab with test controls (release/rollback)
+    - Create SeedTab with test controls (release/rollback)
+    - Create AboutTab with database metadata
+    - Update DevTools.tsx routing to use nested routes
+    - Update Sidebar links to navigate to `/openedDB/:dbname/tables`
     - UI styling with Tailwind CSS
 
 - [ ] **TASK-12**: Testing & Release
   - **Priority**: P0 (Blocker)
-  - **Dependencies**: All previous tasks (including TASK-05.1 through TASK-05.8)
+  - **Dependencies**: All previous tasks (including TASK-05.1 through TASK-05.8, F-002)
   - **Boundary**: Full extension, `public/icons/`, `package.json`
-  - **Maps to**: All FR-001 to FR-044, NFR-005, F-001
+  - **Maps to**: All FR-001 to FR-044, NFR-005, F-001, F-002
   - **DoD**:
     - Manual testing of all 44 MVP requirements
     - Service layer unit tests (all 10 functions)
@@ -349,26 +332,6 @@ NOTES
 ---
 
 ## Release v1.1.0 (Post-MVP) - Future Work
-
-- [ ] **TASK-101**: Migration Playground
-  - **Priority**: P1
-  - **Dependencies**: v1.0.0 release, TASK-05.4
-  - **Boundary**: `src/devtools/components/MigrationTab/`
-  - **Maps to**: FR-031, FR-032, FR-033
-  - **Note**: Service layer functions (`devRelease`, `devRollback`) implemented in TASK-05.4
-  - **DoD**: MigrationTab with CodeMirror, test controls, UI styling
-
-- [ ] **TASK-102**: Seed Playground
-  - **Priority**: P1
-  - **Dependencies**: TASK-101, TASK-05.4
-  - **Boundary**: `src/devtools/components/SeedTab/`
-  - **Maps to**: FR-033, FR-034
-  - **Note**: Service layer functions implemented in TASK-05.4
-  - **DoD**: SeedTab with same editor, seed SQL testing, auto-rollback, UI styling
-
----
-
-## Release v1.2.0 (Future) - Nice-to-Have
 
 - [ ] **TASK-201**: Query History
   - **Priority**: P2

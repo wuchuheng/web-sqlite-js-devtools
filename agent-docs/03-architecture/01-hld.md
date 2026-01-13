@@ -203,31 +203,34 @@ DevTools (Root)
 │   │   └── CollapseToggle (Sidebar collapse)
 │   └── MainContent
 │       ├── EmptyState (No route selected)
-│       ├── DatabaseView (/openedDB/:dbname)
-│       │   ├── TabNavigation (6 tabs)
-│       │   └── TabContent
-│       │       ├── TableTab
-│       │       │   ├── TableList (Left column)
-│       │       │   ├── MultiTableHeader (Tab bar)
-│       │       │   ├── TableContent (Data + DDL)
-│       │       │   └── PaginationBar
-│       │       ├── QueryTab
+│       ├── DatabaseTabs (/openedDB/:dbname) → redirects to /openedDB/:dbname/tables
+│       │   ├── DatabaseTabHeader (5 tabs: Tables, Query, Migration, Seed, About)
+│       │   └── Outlet (Nested Routes)
+│       │       ├── TablesTab (/openedDB/:dbname/tables)
+│       │       │   ├── TableListSidebar (25% width)
+│       │       │   ├── OpenedTableTabs (Tab bar for opened tables)
+│       │       │   └── TableContentArea (75% width)
+│       │       │       ├── TableDetail (/openedDB/:dbname/tables/:tableName)
+│       │       │       │   ├── TableDataPanel (Left: data + pagination)
+│       │       │       │   └── DDLPanel (Right: schema)
+│       │       │       └── EmptyState (No table selected)
+│       │       ├── QueryTab (/openedDB/:dbname/query)
 │       │       │   ├── CodeMirrorEditor
 │       │       │   ├── QueryResults
 │       │       │   └── ExportButton
-│       │       ├── LogTab
-│       │       │   ├── LogFilter
-│       │       │   └── LogList (500 entry ring buffer)
-│       │       ├── MigrationTab
+│       │       ├── MigrationTab (/openedDB/:dbname/migration)
 │       │       │   ├── HelperNotice
 │       │       │   ├── CodeMirrorEditor
 │       │       │   └── TestControls (Release/Rollback)
-│       │       ├── SeedTab
+│       │       ├── SeedTab (/openedDB/:dbname/seed)
 │       │       │   ├── HelperNotice
 │       │       │   ├── CodeMirrorEditor
 │       │       │   └── TestControls (Release/Rollback)
-│       │       └── AboutTab
+│       │       └── AboutTab (/openedDB/:dbname/about)
 │       │           └── DatabaseMetadata
+│       ├── LogView (/logs/:dbname) - Separate route (not under database tabs)
+│       │   ├── LogFilter
+│       │   └── LogList (500 entry ring buffer)
 │       └── OPFSView (/opfs)
 │           └── FileTree
 │               ├── FileNode (Lazy-loaded)

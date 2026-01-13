@@ -54,7 +54,7 @@ sequenceDiagram
     participant DB as web-sqlite-js
 
     Dev->>Panel: Clicks table in TableList
-    Panel->>Panel: Update hash to /openedDB/dbname/table
+    Panel->>Panel: Update hash to /openedDB/dbname/tables/tableName
     Panel->>DB: inspectedWindow.eval(db.query(sql))
     alt Query successful
         DB-->>Panel: { success: true, data: result }

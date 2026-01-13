@@ -14,7 +14,7 @@ import { SidebarLink } from "./SidebarLink";
  *
  * @remarks
  * Fetches databases via inspected window eval and renders them under "Opened DB".
- * Clicking a database navigates to /openedDB/:dbname.
+ * Clicking a database navigates to /openedDB/:dbname/tables (F-002).
  *
  * @param props.isCollapsed - Current collapse state of sidebar
  *
@@ -111,7 +111,7 @@ export const DatabaseList = ({ isCollapsed }: DatabaseListProps) => {
               return (
                 <SidebarLink
                   key={database.name}
-                  to={`/openedDB/${encodeURIComponent(database.name)}`}
+                  to={`/openedDB/${encodeURIComponent(database.name)}/tables`}
                   label={database.name}
                   isActive={isDbActive}
                   className="px-8 py-2 text-xs"

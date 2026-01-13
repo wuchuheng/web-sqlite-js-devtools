@@ -2,7 +2,12 @@ import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect } from "react";
 import { Sidebar } from "./components/Sidebar/Sidebar";
 import { EmptyState } from "./components/EmptyState/EmptyState";
-import { DatabaseView } from "./components/TableTab/DatabaseView";
+import { DatabaseTabs } from "./components/DatabaseTabs";
+import { TablesTab, TableDetail } from "./components/TablesTab";
+import { QueryTab } from "./components/QueryTab";
+import { MigrationTab } from "./components/MigrationTab";
+import { SeedTab } from "./components/SeedTab";
+import { AboutTab } from "./components/AboutTab";
 import { LogView } from "./components/LogTab/LogView";
 import { useConnection } from "./hooks/useConnection";
 import "./DevTools.css";
@@ -93,12 +98,32 @@ export const DevTools = () => {
             {/* 3. Implements FR-042 (helpful instructions) */}
             <Route path="/" element={<EmptyState />} />
 
-            {/* 1. Database view route */}
-            {/* 2. Shows table list and placeholder content */}
-            {/* 3. Table data view implemented in TASK-06 */}
-            <Route path="/openedDB/:dbname" element={<DatabaseView />} />
+            {/* 1. Database tabs with nested routing (F-002) */}
+            {/* 2. /openedDB/:dbname redirects to /openedDB/:dbname/tables */}
+            {/* 3. Each tab has its own route under the database path */}
+            <Route path="/openedDB/:dbname" element={<DatabaseTabs />}>
+              {/* Default redirect to tables tab */}
+              <Route index element={<Navigate to="tables" replace />} />
 
-            {/* 1. Log view route */}
+              {/* Tables tab with nested :tableName route */}
+              <Route path="tables" element={<TablesTab />}>
+                <Route path=":tableName" element={<TableDetail />} />
+              </Route>
+
+              {/* Query tab */}
+              <Route path="query" element={<QueryTab />} />
+
+              {/* Migration tab */}
+              <Route path="migration" element={<MigrationTab />} />
+
+              {/* Seed tab */}
+              <Route path="seed" element={<SeedTab />} />
+
+              {/* About tab */}
+              <Route path="about" element={<AboutTab />} />
+            </Route>
+
+            {/* 1. Log view route (separate from database tabs) */}
             {/* 2. Shows real-time log entries for a database */}
             {/* 3. Log streaming implemented in TASK-09 */}
             <Route path="/logs/:dbname" element={<LogView />} />
