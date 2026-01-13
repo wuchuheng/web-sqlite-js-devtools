@@ -112,12 +112,13 @@ NOTES
     - Unit tests with mocked bridge layer
     - Update `databaseService.ts` with JSDoc comments
 
-- [ ] **TASK-05.2**: Service Layer - SQL Execution Functions
+- [x] **TASK-05.2**: Service Layer - SQL Execution Functions
   - **Priority**: P0 (Blocker)
   - **Dependencies**: TASK-05.1
   - **Boundary**: `src/devtools/services/databaseService.ts`, `src/devtools/bridge/inspectedWindow.ts`
   - **Maps to**: F-001, FR-024, FR-025, FR-026, FR-027
   - **Feature**: F-001 Service Layer Expansion - Query Execution Group
+  - **Micro-Spec**: [completed](agent-docs/08-task/active/TASK-05.2.md)
   - **DoD**:
     - Implement `execSQL(dbname, sql, params?)` service function
       - Execute SQL with parameters using `db.exec(sql, params)`

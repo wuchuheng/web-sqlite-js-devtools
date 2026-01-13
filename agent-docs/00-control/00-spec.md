@@ -38,10 +38,10 @@ NOTES
 
 ## 3) Current stage
 
-- **Current stage (1-8)**: Stage 8 - Implementation (Worker - TASK-05.1)
+- **Current stage (1-8)**: Stage 8 - Implementation (Worker - TASK-05.2)
 - **Active release**: v1.0.0 (MVP) - Target: 2026-01-27
-- **Status summary**: TASK-01 through TASK-05 completed, TASK-05.1 in progress, 10 tasks remaining for MVP
-- **Last updated (YYYY-MM-DD)**: 2026-01-13 (TASK-05.1: Service Layer - Table Schema Functions)
+- **Status summary**: TASK-01 through TASK-05.1 completed, TASK-05.2 in progress, 9 tasks remaining for MVP
+- **Last updated (YYYY-MM-DD)**: 2026-01-13 (TASK-05.2: Service Layer - SQL Execution Functions)
 
 ## 4) Technology stack (chosen in Stage 2)
 
@@ -94,6 +94,7 @@ NOTES
 - `agent-docs/06-implementation/03-observability.md` (pending)
 - `agent-docs/06-implementation/04-release-and-rollback.md` (pending)
 - `agent-docs/08-task/active/TASK-05.1.md` (NEW - TASK-05.1 Micro-Spec)
+- `agent-docs/08-task/active/TASK-05.2.md` (NEW - TASK-05.2 Micro-Spec)
 
 ## 6) Recent changes
 
@@ -121,3 +122,8 @@ NOTES
   - Implemented `getTableSchema(dbname, tableName)` with PRAGMA table_info + DDL
   - Implemented `queryTableData(dbname, sql, limit, offset)` with pagination
   - Updated `databaseService` exports with new functions
+- **2026-01-13**: TASK-05.2 completed - Service Layer SQL Execution Functions
+  - Added `SqlValue`, `SQLParams`, `ExecResult` types
+  - Implemented `execSQL(dbname, sql, params?)` with parameter support
+  - Updated `DbQuery` type to include exec method
+  - Updated `databaseService` exports with execSQL function

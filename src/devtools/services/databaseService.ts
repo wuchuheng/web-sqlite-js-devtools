@@ -54,6 +54,31 @@ export type QueryResult = {
   columns: string[]; // Column names from first row
 };
 
+/**
+ * SQL value types compatible with SQLite
+ */
+export type SqlValue =
+  | null
+  | number
+  | string
+  | boolean
+  | bigint
+  | Uint8Array
+  | ArrayBuffer;
+
+/**
+ * SQL parameters - positional array or named object
+ */
+export type SQLParams = SqlValue[] | Record<string, SqlValue>;
+
+/**
+ * Execution result from write operations
+ */
+export type ExecResult = {
+  lastInsertRowid: number | bigint;
+  changes: number | bigint;
+};
+
 // ============================================================================
 // TYPES FOR WINDOW.__WEB_SQLITE
 // ============================================================================
@@ -69,6 +94,13 @@ type DatabaseRecord = {
 
 type DbQuery = {
   query: (sql: string) => Promise<Array<Record<string, unknown>>>;
+  exec: (
+    sql: string,
+    params?: SqlValue[] | Record<string, SqlValue>,
+  ) => Promise<{
+    lastInsertRowid: number | bigint;
+    changes: number | bigint;
+  }>;
 };
 
 // ============================================================================
@@ -348,6 +380,73 @@ export const queryTableData = async (
 };
 
 /**
+ * Execute INSERT/UPDATE/DELETE/DDL with optional parameters
+ *
+ * @remarks
+ * 1. Validate database and access window.__web_sqlite
+ * 2. Execute SQL with parameters using db.exec(sql, params)
+ * 3. Return result with lastInsertRowid and changes count
+ *
+ * @param dbname - Database name to execute SQL on
+ * @param sql - SQL statement to execute (INSERT/UPDATE/DELETE/DDL)
+ * @param params - Optional parameters (positional array or named object)
+ * @returns Execution result with lastInsertRowid and changes
+ */
+export const execSQL = async (
+  dbname: string,
+  sql: string,
+  params?: SQLParams,
+): Promise<ServiceResponse<ExecResult>> => {
+  return inspectedWindowBridge.execute({
+    func: async (
+      databaseName: string,
+      sqlStr: string,
+      paramsVal?: SQLParams,
+    ) => {
+      try {
+        const ok = <T>(data: T) => ({ success: true as const, data });
+        const fail = (message: string) => ({
+          success: false as const,
+          error: message,
+        });
+
+        // Phase 1: Validate database exists
+        const api = window.__web_sqlite;
+        const databases = api?.databases;
+
+        if (!databases) {
+          return fail("web-sqlite-js API not available");
+        }
+
+        const dbRecord = databases[databaseName];
+        if (!dbRecord) {
+          return fail(`Database not found: ${databaseName}`);
+        }
+
+        const db = dbRecord.db;
+
+        // Phase 2: Execute SQL with parameters
+        const execFunc = (
+          sql: string,
+          params?: SqlValue[] | Record<string, SqlValue>,
+        ) => (db as DbQuery).exec(sql, params);
+
+        const result = await execFunc(sqlStr, paramsVal);
+
+        // Phase 3: Return response
+        return ok({
+          lastInsertRowid: result.lastInsertRowid,
+          changes: result.changes,
+        });
+      } catch (error) {
+        return { success: false as const, error: String(error) };
+      }
+    },
+    args: [dbname, sql, params],
+  });
+};
+
+/**
  * Helper function to escape SQL identifiers
  *
  * @param identifier - SQL identifier to escape (table name, column name)
@@ -366,4 +465,5 @@ export const databaseService = Object.freeze({
   getTableList,
   getTableSchema,
   queryTableData,
+  execSQL,
 });
