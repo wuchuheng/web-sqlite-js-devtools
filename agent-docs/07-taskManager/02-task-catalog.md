@@ -293,12 +293,13 @@ NOTES
     - Download with proper file naming
     - UI styling with Tailwind CSS
 
-- [ ] **TASK-09**: Log Streaming & Ring Buffer (Updated - Now depends on TASK-05.3, TASK-05.8)
+- [x] **TASK-09**: Log Streaming & Ring Buffer (Updated - Now depends on TASK-05.3, TASK-05.8)
   - **Priority**: P0 (Blocker)
   - **Dependencies**: TASK-03, TASK-05.3, TASK-05.8
   - **Boundary**: `src/contentScript/proxy/logProxy.ts`, `src/contentScript/subscriptions/LogRingBuffer.ts`, `src/devtools/components/LogTab/`
   - **Maps to**: FR-026, FR-029, FR-030, ADR-0004, ADR-0005
   - **Note**: TASK-05.3 and TASK-05.8 now handle service layer implementation. This task focuses on ring buffer and UI.
+  - **Micro-Spec**: [completed](agent-docs/08-task/active/TASK-09.md)
   - **DoD**:
     - LogRingBuffer (500 entry circular buffer, batch every 100ms or 50 entries)
     - LogList with color-coded levels (info/debug/error)

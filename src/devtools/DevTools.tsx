@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { Sidebar } from "./components/Sidebar/Sidebar";
 import { EmptyState } from "./components/EmptyState/EmptyState";
 import { DatabaseView } from "./components/TableTab/DatabaseView";
+import { LogView } from "./components/LogTab/LogView";
 import { useConnection } from "./hooks/useConnection";
 import "./DevTools.css";
 
@@ -96,6 +97,11 @@ export const DevTools = () => {
             {/* 2. Shows table list and placeholder content */}
             {/* 3. Table data view implemented in TASK-06 */}
             <Route path="/openedDB/:dbname" element={<DatabaseView />} />
+
+            {/* 1. Log view route */}
+            {/* 2. Shows real-time log entries for a database */}
+            {/* 3. Log streaming implemented in TASK-09 */}
+            <Route path="/logs/:dbname" element={<LogView />} />
 
             {/* 1. OPFS browser route (to be implemented in TASK-10) */}
             {/* 2. Placeholder for OPFS file tree */}
