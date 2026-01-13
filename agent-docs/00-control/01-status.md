@@ -15,14 +15,14 @@ NOTES
 ## 1) Project stage
 
 - **Current stage**: Stage 7 - Task Management (Roadmap & Catalog)
-- **Current focus**: Feature F-003 - Schema Panel Enhancement
-- **Last updated**: 2026-01-14 (F-003: DDL generation fix)
+- **Current focus**: Feature F-004 - DDL Syntax Highlight & Copy Button
+- **Last updated**: 2026-01-14 (S1: F-004 spec created)
 
 ## 2) Active work
 
 | Item         | Owner     | Status | Evidence                      |
 | ------------ | --------- | ------ | ----------------------------- |
-| All Complete | S8:worker | Done   | F-003 implementation complete |
+| F-004 Spec   | S1:projectManager | In Progress | Awaiting S3/S5/S7 stages |
 
 ## 3) Done (Recent)
 
@@ -151,3 +151,11 @@ NOTES
   - Fixed sqlite_master query (removed escapeIdentifier from table name)
   - Added fallback to generate DDL from column schema when sqlite_master is empty
   - Generated DDL includes: column names, types, PRIMARY KEY, NOT NULL, DEFAULT
+- **C23**: 2026-01-14 - F-004 feature spec created (DDL Syntax Highlight & Copy Button)
+  - Added SQL syntax highlighting with react-syntax-highlighter (Prism.js)
+  - Added copy button (MdOutlineContentCopy) in DDL header
+  - Added success feedback (FaCheck green checkmark) on successful copy
+  - Checkmark persists until next click, then resets to copy icon
+  - Added inline error message if clipboard API fails
+  - Light theme requested for syntax highlighting
+  - Dependencies: react-syntax-highlighter, react-icons/md, react-icons/fa
