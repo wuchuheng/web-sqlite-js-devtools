@@ -22,7 +22,7 @@ export const SidebarLink = ({
   style,
 }: SidebarLinkProps) => {
   const activeClass = isActive
-    ? "bg-primary-light text-primary border-r-2 border-primary"
+    ? "bg-primary-50 text-primary-600 border-r-2 border-primary-600"
     : "text-secondary-600";
 
   return (

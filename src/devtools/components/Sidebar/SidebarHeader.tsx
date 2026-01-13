@@ -31,7 +31,10 @@ export const SidebarHeader = ({ isCollapsed }: SidebarHeaderProps) => {
           isCollapsed ? "gap-0" : "gap-2"
         }`}
       >
-        <SidebarIcon icon={SiSqlite} className="text-primary flex-shrink-0" />
+        <SidebarIcon
+          icon={SiSqlite}
+          className="text-primary-600 flex-shrink-0"
+        />
         <span
           className={`font-semibold text-gray-700 text-sm whitespace-nowrap transition-all duration-300 ${
             isCollapsed ? "w-0 opacity-0" : "w-auto opacity-100"

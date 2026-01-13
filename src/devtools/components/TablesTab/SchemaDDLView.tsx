@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { prism } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { Highlight, themes } from "prism-react-renderer";
 import { MdOutlineContentCopy } from "react-icons/md";
 import { FaCheck } from "react-icons/fa";
 
@@ -9,7 +8,7 @@ import { FaCheck } from "react-icons/fa";
  *
  * @remarks
  * Displays SQL CREATE TABLE statement with syntax highlighting and copy button.
- * No "DDL" sub-heading as it's redundant with the tab button.
+ * Uses prism-react-renderer for lightweight syntax highlighting.
  *
  * @param props.ddl - SQL CREATE TABLE statement
  *
@@ -100,19 +99,34 @@ export const SchemaDDLView = ({ ddl }: SchemaDDLViewProps) => {
         <div className="text-red-600 text-xs mb-2 text-right">{error}</div>
       )}
 
-      {/* Syntax highlighted DDL (light theme) */}
-      <SyntaxHighlighter
+      {/* Syntax highlighted DDL using prism-react-renderer */}
+      <Highlight
+        theme={themes.github}
+        code={ddl || "-- No DDL available --"}
         language="sql"
-        style={prism}
-        customStyle={{
-          background: "#f9fafb",
-          padding: "12px",
-          borderRadius: "6px",
-          fontSize: "12px",
-        }}
       >
-        {ddl || "-- No DDL available --"}
-      </SyntaxHighlighter>
+        {({ className, style, tokens, getLineProps, getTokenProps }) => (
+          <pre
+            className={className}
+            style={{
+              ...style,
+              background: "#f9fafb",
+              padding: "12px",
+              borderRadius: "6px",
+              fontSize: "12px",
+              overflow: "auto",
+            }}
+          >
+            {tokens.map((line, i) => (
+              <div key={i} {...getLineProps({ line })}>
+                {line.map((token, key) => (
+                  <span key={key} {...getTokenProps({ token })} />
+                ))}
+              </div>
+            ))}
+          </pre>
+        )}
+      </Highlight>
     </div>
   );
 };

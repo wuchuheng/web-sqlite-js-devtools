@@ -31,11 +31,11 @@
     "@tailwindcss/vite": "^4.1.8",
     "@types/react-syntax-highlighter": "^15.5.13",
     "clsx": "^2.1.1",
+    "prism-react-renderer": "^2.4.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-icons": "^5.5.0",
     "react-router-dom": "^6.30.3",
-    "react-syntax-highlighter": "^16.1.0",
     "tailwindcss": "^4.1.8",
     "web-sqlite-js": "^1.0.11"
   },
