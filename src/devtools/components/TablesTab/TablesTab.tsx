@@ -251,11 +251,15 @@ export const TablesTab = () => {
   }, [location.pathname]);
 
   const getTableClass = (isActive: boolean): string =>
-    isActive ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-100";
+    isActive
+      ? "bg-primary-50 text-primary-600"
+      : "text-secondary-700 hover:bg-secondary-100";
 
   if (!dbname) {
     return (
-      <div className="p-4 text-sm text-gray-500">No database selected.</div>
+      <div className="p-4 text-sm text-secondary-500">
+        No database selected.
+      </div>
     );
   }
 
@@ -264,27 +268,27 @@ export const TablesTab = () => {
       <div className="flex h-full">
         {/* Table List Sidebar - Resizable (F-006) */}
         <aside
-          className="relative border-r border-gray-200 bg-white flex flex-col"
+          className="relative border-r border-secondary-200 bg-white flex flex-col"
           style={{ width: `${sidebarWidth}px`, minWidth: `${sidebarWidth}px` }}
         >
-          <div className="px-4 py-3 border-b border-gray-200">
-            <h2 className="text-xs font-semibold uppercase text-gray-500">
+          <div className="px-4 py-3 border-b border-secondary-200">
+            <h2 className="text-xs font-semibold uppercase text-secondary-500">
               Tables
             </h2>
           </div>
           <div className="flex-1 overflow-auto">
             {isLoading && (
-              <div className="px-4 py-2 text-xs text-gray-500">
+              <div className="px-4 py-2 text-xs text-secondary-500">
                 Loading tables...
               </div>
             )}
 
             {!isLoading && error && (
-              <div className="px-4 py-2 text-xs text-red-600">
+              <div className="px-4 py-2 text-xs text-error-600">
                 <span>{error}</span>
                 <button
                   onClick={reload}
-                  className="ml-2 text-blue-600 hover:text-blue-700"
+                  className="ml-2 text-primary-600 hover:text-primary-700"
                   type="button"
                 >
                   Retry
@@ -293,7 +297,7 @@ export const TablesTab = () => {
             )}
 
             {!isLoading && !error && tables.length === 0 && (
-              <div className="px-4 py-2 text-xs text-gray-500">
+              <div className="px-4 py-2 text-xs text-secondary-500">
                 No tables found
               </div>
             )}

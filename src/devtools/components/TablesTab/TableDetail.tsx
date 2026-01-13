@@ -168,7 +168,7 @@ export const TableDetail = () => {
   return (
     <div className="flex flex-col h-full">
       {/* Table tabs header bar - shows only opened tables (F-005) */}
-      <div className="flex items-center justify-between border-b border-gray-200 bg-white">
+      <div className="flex items-center justify-between border-b border-secondary-200 bg-white">
         {/* Left: Opened table tabs */}
         <OpenedTableTabs
           dbname={dbname}
@@ -183,7 +183,7 @@ export const TableDetail = () => {
         <button
           type="button"
           onClick={handleToggleSchema}
-          className="p-1.5 text-gray-600 hover:text-gray-700 border-l border-gray-200 transition-colors"
+          className="p-1.5 text-secondary-600 hover:text-secondary-700 border-l border-secondary-200 transition-colors"
           title={schemaPanelVisible ? "Hide schema panel" : "Show schema panel"}
         >
           <BsReverseLayoutSidebarInsetReverse size={14} />
@@ -197,41 +197,41 @@ export const TableDetail = () => {
           className={`flex flex-col overflow-hidden transition-all duration-200 ease-in-out ${schemaPanelVisible ? "flex-1" : "w-full"}`}
         >
           {schemaLoading || dataLoading ? (
-            <div className="flex-1 flex items-center justify-center text-gray-500">
+            <div className="flex-1 flex items-center justify-center text-secondary-500">
               Loading...
             </div>
           ) : schemaError || dataError ? (
-            <div className="flex-1 flex items-center justify-center text-red-600">
+            <div className="flex-1 flex items-center justify-center text-error-600">
               {schemaError || dataError}
             </div>
           ) : !schema ? (
-            <div className="flex-1 flex items-center justify-center text-gray-500">
+            <div className="flex-1 flex items-center justify-center text-secondary-500">
               No table data available
             </div>
           ) : (
             <>
               {/* Table Data */}
               <div className="flex-1 overflow-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50 sticky top-0">
+                <table className="min-w-full divide-y divide-secondary-200">
+                  <thead className="bg-secondary-50 sticky top-0">
                     <tr>
                       {columns.map((column) => (
                         <th
                           key={column}
-                          className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                          className="px-4 py-2 text-left text-xs font-medium text-secondary-500 uppercase tracking-wider"
                         >
                           {column}
                         </th>
                       ))}
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-white divide-y divide-secondary-200">
                     {rows.map((row, idx) => (
-                      <tr key={idx} className="hover:bg-gray-50">
+                      <tr key={idx} className="hover:bg-secondary-50">
                         {columns.map((column) => (
                           <td
                             key={column}
-                            className="px-4 py-2 whitespace-nowrap text-sm text-gray-900"
+                            className="px-4 py-2 whitespace-nowrap text-sm text-secondary-900"
                           >
                             {String(row[column] ?? "")}
                           </td>

@@ -42,7 +42,7 @@ export const SchemaPanel = ({
   const panelClasses = `
     transition-all duration-200 ease-in-out
     ${visible ? "w-80 opacity-100" : "w-0 opacity-0 overflow-hidden"}
-    bg-gray-50 border-l border-gray-200
+    bg-secondary-50 border-l border-secondary-200
   `;
 
   return (

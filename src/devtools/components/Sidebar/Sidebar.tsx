@@ -36,7 +36,7 @@ export const Sidebar = ({ isCollapsed, onToggle }: SidebarProps) => {
 
   return (
     <aside
-      className={`flex flex-col h-full border-r border-gray-200 bg-white transition-all duration-300 ${
+      className={`flex flex-col h-full border-r border-secondary-200 bg-white transition-all duration-300 ${
         isCollapsed ? "w-16" : "w-1/5 min-w-[200px]"
       }`}
     >
@@ -52,10 +52,10 @@ export const Sidebar = ({ isCollapsed, onToggle }: SidebarProps) => {
         2. Aligned to bottom of sidebar
         3. Contains only the icon button
       */}
-      <div className="py-2 border-t border-gray-200 flex justify-center">
+      <div className="py-2 border-t border-secondary-200 flex justify-center">
         <button
           onClick={onToggle}
-          className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 p-2 rounded-lg transition-colors cursor-pointer"
+          className="text-secondary-500 hover:text-secondary-700 hover:bg-secondary-100 p-2 rounded-lg transition-colors cursor-pointer"
           aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           <SidebarIcon icon={ToggleIcon} />

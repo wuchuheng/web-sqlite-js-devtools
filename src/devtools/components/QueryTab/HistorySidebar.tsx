@@ -25,9 +25,11 @@ interface HistorySidebarProps {
  */
 const HistoryEmptyState = () => (
   <div className="flex flex-col items-center justify-center h-full text-center p-4">
-    <FaHistory className="text-gray-300 mb-2" size={32} />
-    <p className="text-sm text-gray-500 font-medium">No query history yet</p>
-    <p className="text-xs text-gray-400 mt-1">
+    <FaHistory className="text-secondary-300 mb-2" size={32} />
+    <p className="text-sm text-secondary-500 font-medium">
+      No query history yet
+    </p>
+    <p className="text-xs text-secondary-400 mt-1">
       Execute queries to see them appear here for quick access.
     </p>
   </div>
@@ -38,7 +40,7 @@ const HistoryEmptyState = () => (
  */
 const HistoryLoadingState = () => (
   <div className="flex items-center justify-center h-full">
-    <div className="animate-spin h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full" />
+    <div className="animate-spin h-6 w-6 border-2 border-primary-600 border-t-transparent rounded-full" />
   </div>
 );
 
@@ -78,13 +80,13 @@ export const HistorySidebar = ({
   }
 
   return (
-    <div className="flex flex-col h-full bg-gray-50">
+    <div className="flex flex-col h-full bg-secondary-50">
       {/* Header */}
-      <div className="px-3 py-2 border-b border-gray-200 bg-white">
+      <div className="px-3 py-2 border-b border-secondary-200 bg-white">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <FaHistory className="text-blue-600" size={14} />
-            <span className="text-sm font-medium text-gray-700">
+            <FaHistory className="text-primary-600" size={14} />
+            <span className="text-sm font-medium text-secondary-700">
               History ({history.length})
             </span>
           </div>
@@ -106,11 +108,11 @@ export const HistorySidebar = ({
 
       {/* Clear all button */}
       {history.length > 0 && (
-        <div className="p-2 border-t border-gray-200 bg-white">
+        <div className="p-2 border-t border-secondary-200 bg-white">
           <button
             type="button"
             onClick={onClearHistory}
-            className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm text-secondary-600 hover:text-error-600 hover:bg-error-50 rounded transition-colors"
           >
             <FaRegTrashAlt size={14} />
             <span>Clear History</span>

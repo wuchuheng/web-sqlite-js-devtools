@@ -25,7 +25,7 @@ export const SchemaPanelHeader = ({
   onTabChange,
 }: SchemaPanelHeaderProps) => {
   return (
-    <div className="flex items-center justify-end px-2 py-1.5 bg-gray-50 border-b border-gray-200">
+    <div className="flex items-center justify-end px-2 py-1.5 bg-secondary-50 border-b border-secondary-200">
       {/* Tab buttons */}
       <div className="flex items-center gap-1">
         {/* Table icon button */}
@@ -34,8 +34,8 @@ export const SchemaPanelHeader = ({
           onClick={() => onTabChange("table")}
           className={`px-2 py-1 text-xs font-medium rounded transition-colors ${
             activeTab === "table"
-              ? "bg-emerald-50 text-emerald-600 border border-emerald-200"
-              : "text-gray-500 hover:text-gray-700 border border-gray-200 hover:bg-gray-50"
+              ? "bg-primary-50 text-primary-600 border border-primary-200"
+              : "text-secondary-500 hover:text-secondary-700 border border-secondary-200 hover:bg-secondary-50"
           }`}
           title="Table view"
         >
@@ -48,8 +48,8 @@ export const SchemaPanelHeader = ({
           onClick={() => onTabChange("ddl")}
           className={`px-2 py-1 text-xs font-medium rounded transition-colors ${
             activeTab === "ddl"
-              ? "bg-emerald-50 text-emerald-600 border border-emerald-200"
-              : "text-gray-500 hover:text-gray-700 border border-gray-200 hover:bg-gray-50"
+              ? "bg-primary-50 text-primary-600 border border-primary-200"
+              : "text-secondary-500 hover:text-secondary-700 border border-secondary-200 hover:bg-secondary-50"
           }`}
           title="DDL view"
         >

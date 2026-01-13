@@ -44,19 +44,19 @@ export const HistoryItem = ({
     <div
       className={`p-2 rounded border-b cursor-pointer transition-colors ${
         isActive
-          ? "bg-blue-50 border-l-4 border-l-blue-500"
-          : "hover:bg-gray-50 border-l-4 border-l-transparent"
+          ? "bg-primary-50 border-l-4 border-l-primary-500"
+          : "hover:bg-secondary-50 border-l-4 border-l-transparent"
       }`}
       onClick={onClick}
     >
       {/* SQL preview */}
-      <div className="text-sm font-mono truncate text-gray-800">
+      <div className="text-sm font-mono truncate text-secondary-800">
         {sqlPreview}
       </div>
 
       {/* Metadata row */}
       <div className="flex items-center justify-between mt-1">
-        <div className="flex items-center gap-1 text-xs text-gray-500">
+        <div className="flex items-center gap-1 text-xs text-secondary-500">
           <FaRegClock size={10} />
           <span>{formatRelativeTime(entry.timestamp)}</span>
           {entry.executionCount > 1 && (
@@ -71,7 +71,7 @@ export const HistoryItem = ({
               e.stopPropagation();
               onDelete();
             }}
-            className="text-xs text-gray-400 hover:text-red-600 px-1 py-0.5 rounded hover:bg-red-50"
+            className="text-xs text-secondary-400 hover:text-error-600 px-1 py-0.5 rounded hover:bg-error-50"
             title="Remove from history"
           >
             ✕

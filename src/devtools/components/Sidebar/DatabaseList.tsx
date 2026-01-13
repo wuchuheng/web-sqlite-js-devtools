@@ -80,17 +80,17 @@ export const DatabaseList = ({ isCollapsed }: DatabaseListProps) => {
       {!isCollapsed && (
         <div className="pb-2">
           {isLoading && (
-            <div className="px-8 text-xs text-gray-500">
+            <div className="px-8 text-xs text-secondary-500">
               Loading databases...
             </div>
           )}
 
           {!isLoading && error && (
-            <div className="px-8 py-2 text-xs text-red-600">
+            <div className="px-8 py-2 text-xs text-error-600">
               <span>{error}</span>
               <button
                 onClick={reload}
-                className="ml-2 text-blue-600 hover:text-blue-700"
+                className="ml-2 text-primary-600 hover:text-primary-700"
               >
                 Retry
               </button>
@@ -98,7 +98,7 @@ export const DatabaseList = ({ isCollapsed }: DatabaseListProps) => {
           )}
 
           {!isLoading && !error && databases.length === 0 && (
-            <div className="px-8  text-xs text-gray-500">
+            <div className="px-8  text-xs text-secondary-500">
               No databases opened
             </div>
           )}

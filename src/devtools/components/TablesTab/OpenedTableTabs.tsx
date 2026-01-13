@@ -69,11 +69,11 @@ const TabButton = memo(
         type="button"
         onClick={onSelect}
         className={`
-          group flex items-center gap-2 px-4 py-2 text-sm border-r border-gray-200
+          group flex items-center gap-2 px-4 py-2 text-sm border-r border-secondary-200
           ${
             isActive
-              ? "bg-blue-600 text-white"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              ? "bg-primary-600 text-white"
+              : "bg-secondary-100 text-secondary-700 hover:bg-secondary-200"
           }
         `}
       >
@@ -92,7 +92,7 @@ const TabButton = memo(
           }}
           className={`
             rounded-full p-0.5 transition-opacity
-            ${isActive ? "hover:bg-blue-700" : "hover:bg-gray-300"}
+            ${isActive ? "hover:bg-primary-700" : "hover:bg-secondary-300"}
             opacity-0 group-hover:opacity-100
           `}
           title="Close tab"
@@ -129,7 +129,7 @@ export const OpenedTableTabs = ({
   // 1. Show empty state when no tabs are open
   if (tabs.length === 0) {
     return (
-      <div className="flex items-center justify-center flex-1 px-4 py-2 text-sm text-gray-500">
+      <div className="flex items-center justify-center flex-1 px-4 py-2 text-sm text-secondary-500">
         No tables open. Select a table from the sidebar.
       </div>
     );

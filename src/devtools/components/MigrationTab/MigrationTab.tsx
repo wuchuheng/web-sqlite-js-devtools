@@ -90,18 +90,20 @@ export const MigrationTab = () => {
 
   if (!dbname) {
     return (
-      <div className="p-4 text-sm text-gray-500">No database selected.</div>
+      <div className="p-4 text-sm text-secondary-500">
+        No database selected.
+      </div>
     );
   }
 
   return (
     <div className="flex flex-col h-full">
       {/* Helper Notice */}
-      <div className="p-4 bg-blue-50 border-b border-blue-200">
-        <h3 className="text-sm font-medium text-blue-800 mb-1">
+      <div className="p-4 bg-primary-50 border-b border-primary-200">
+        <h3 className="text-sm font-medium text-primary-800 mb-1">
           Migration Testing Playground
         </h3>
-        <p className="text-xs text-blue-600">
+        <p className="text-xs text-primary-600">
           Test your migration SQL safely. A dev version will be created and you
           can rollback when done.
         </p>
@@ -110,18 +112,18 @@ export const MigrationTab = () => {
       <div className="flex-1 flex flex-col p-4 overflow-auto">
         {/* Current Version Info */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-secondary-700 mb-1">
             Current Version
           </label>
           <div className="flex items-center gap-2">
-            <span className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded">
+            <span className="px-3 py-1 bg-secondary-100 text-secondary-700 text-sm rounded">
               {versionLoading
                 ? "Loading..."
                 : (versionInfo?.version ?? "0.0.0")}
             </span>
             <button
               onClick={reloadVersion}
-              className="text-blue-600 hover:text-blue-700 text-xs"
+              className="text-primary-600 hover:text-primary-700 text-xs"
               type="button"
             >
               Refresh
@@ -131,7 +133,7 @@ export const MigrationTab = () => {
 
         {/* Version Input */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-secondary-700 mb-1">
             New Version
           </label>
           <input
@@ -139,19 +141,19 @@ export const MigrationTab = () => {
             value={version}
             onChange={(e) => setVersion(e.target.value)}
             placeholder="1.0.0"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+            className="w-full px-3 py-2 border border-secondary-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
           />
         </div>
 
         {/* Migration SQL Editor */}
         <div className="mb-4 flex-1 flex flex-col">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-secondary-700 mb-1">
             Migration SQL
           </label>
           <textarea
             value={migrationSQL}
             onChange={(e) => setMigrationSQL(e.target.value)}
-            className="flex-1 w-full p-3 font-mono text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+            className="flex-1 w-full p-3 font-mono text-sm border border-secondary-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
             placeholder="-- Enter migration SQL here..."
           />
         </div>
@@ -161,7 +163,7 @@ export const MigrationTab = () => {
           <button
             onClick={handleTestRelease}
             disabled={isTesting}
-            className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+            className="px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-md hover:bg-primary-700 disabled:bg-secondary-400 disabled:cursor-not-allowed"
             type="button"
           >
             {isTesting ? "Testing..." : "Test Release"}
@@ -170,7 +172,7 @@ export const MigrationTab = () => {
           <button
             onClick={handleRollback}
             disabled={isTesting}
-            className="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+            className="px-4 py-2 bg-error-600 text-white text-sm font-medium rounded-md hover:bg-error-700 disabled:bg-secondary-400 disabled:cursor-not-allowed"
             type="button"
           >
             Rollback
@@ -179,14 +181,14 @@ export const MigrationTab = () => {
 
         {/* Result/Error Messages */}
         {result && (
-          <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-md">
-            <p className="text-sm text-green-600">{result}</p>
+          <div className="mt-4 p-3 bg-success-50 border border-success-200 rounded-md">
+            <p className="text-sm text-success-600">{result}</p>
           </div>
         )}
 
         {error && (
-          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
-            <p className="text-sm text-red-600">{error}</p>
+          <div className="mt-4 p-3 bg-error-50 border border-error-200 rounded-md">
+            <p className="text-sm text-error-600">{error}</p>
           </div>
         )}
       </div>
