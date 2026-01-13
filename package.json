@@ -1,16 +1,20 @@
 {
-  "name": "my-crx-app",
-  "displayName": "my-crx-app",
-  "version": "0.0.0",
-  "author": "**",
-  "description": "",
+  "name": "web-sqlite-devtools",
+  "displayName": "Web Sqlite DevTools",
+  "version": "1.0.0",
+  "author": "",
+  "description": "Chrome DevTools extension for debugging web-sqlite-js databases",
   "type": "module",
   "license": "MIT",
   "keywords": [
     "chrome-extension",
     "react",
     "vite",
-    "create-chrome-ext"
+    "create-chrome-ext",
+    "web-sqlite",
+    "sqlite",
+    "devtools",
+    "database"
   ],
   "engines": {
     "node": ">=14.18.0"

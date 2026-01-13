@@ -378,3 +378,4 @@ NOTES
   - **Boundary**: Theme provider, settings panel
   - **Maps to**: FR-108
   - **DoD**: Theme toggle, persists to chrome.storage
+  - **Note**: SKIPPED - Not required for current release

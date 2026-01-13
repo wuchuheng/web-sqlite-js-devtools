@@ -20,15 +20,15 @@ NOTES
 
 ## 2) Active work
 
-| Item                           | Owner     | Status | Evidence                            |
-| ------------------------------ | --------- | ------ | ----------------------------------- |
-| (Awaiting next task selection) | S8:worker | -      | TASK-202 complete, ready for next |
+| Item         | Owner     | Status | Evidence                                 |
+| ------------ | --------- | ------ | ---------------------------------------- |
+| All Complete | S8:worker | Done   | v1.1.0 tasks complete (TASK-203 skipped) |
 
 ## 3) Done (Recent)
 
 | Task                                                                       | Owner     | Evidence                                                                                                                                                                                                                                                                                                 |
 | -------------------------------------------------------------------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| TASK-202: Keyboard Shortcuts                                               | S8:worker | `src/devtools/hooks/useKeyboardShortcuts.ts`, `src/devtools/components/KeyboardShortcutsHelp.tsx`, `src/devtools/DevTools.tsx` (keyboard handler), `src/devtools/components/Sidebar/Sidebar.tsx` (collapse state lifted), `src/devtools/components/QueryTab/QueryTab.tsx` (ref callbacks)                         |
+| TASK-202: Keyboard Shortcuts                                               | S8:worker | `src/devtools/hooks/useKeyboardShortcuts.ts`, `src/devtools/components/KeyboardShortcutsHelp.tsx`, `src/devtools/DevTools.tsx` (keyboard handler), `src/devtools/components/Sidebar/Sidebar.tsx` (collapse state lifted), `src/devtools/components/QueryTab/QueryTab.tsx` (ref callbacks)                |
 | TASK-201: Query History                                                    | S8:worker | `src/devtools/hooks/useQueryHistory.ts`, `src/devtools/components/QueryTab/HistoryItem.tsx`, `src/devtools/components/QueryTab/HistorySidebar.tsx`, `src/devtools/components/QueryTab/QueryTab.tsx` (history integration), chrome.storage.local persistence                                              |
 | TASK-12: Testing & Release                                                 | S8:worker | `package.json` (v1.0.0), `dist/web-sqlite-devtools-1.0.0.zip`, production build (1.2MB)                                                                                                                                                                                                                  |
 | TASK-10: OPFS File Browser                                                 | S8:worker | `src/devtools/components/OPFSBrowser/OPFSGallery.tsx`, `src/devtools/components/OPFSBrowser/FileTree.tsx`, `src/devtools/components/OPFSBrowser/FileNode.tsx`, `src/devtools/DevTools.tsx` (OPFS route)                                                                                                  |
@@ -122,3 +122,7 @@ NOTES
   - Sidebar collapse state lifted to DevTools for keyboard control
   - QueryTab exposes functions via refs for global keyboard handler
   - Build passed with no errors
+- **C18**: 2026-01-14 - TASK-203 skipped (Dark/Light Theme Toggle)
+  - Feature not required for current release
+  - Task catalog updated with skip note
+  - Micro-spec deleted
