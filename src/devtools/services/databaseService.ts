@@ -361,14 +361,9 @@ export const getTableSchema = async (
           }),
         );
 
-        // Get DDL from sqlite_master
-        const ddlSql =
-          "SELECT sql FROM sqlite_master WHERE type='table' AND name = ?";
-        // Note: Using parameterized query for table name
+        // Get DDL from sqlite_master (table names are stored without quotes)
         const ddlRows = await queryFunc(
-          `SELECT sql FROM sqlite_master WHERE type='table' AND name = '${escapeIdentifier(
-            tblName,
-          )}'`,
+          `SELECT sql FROM sqlite_master WHERE type='table' AND name = '${tblName}'`,
         );
 
         let ddl = "";
@@ -377,6 +372,24 @@ export const getTableSchema = async (
           if (firstRow?.sql) {
             ddl = String(firstRow.sql);
           }
+        }
+
+        // If DDL is empty, generate it from column schema
+        if (!ddl) {
+          const columnDefs = columns.map((col) => {
+            let def = `    ${escapeIdentifier(col.name)} ${col.type || "TEXT"}`;
+            if (col.pk > 0) {
+              def += " PRIMARY KEY";
+            }
+            if (col.notnull > 0) {
+              def += " NOT NULL";
+            }
+            if (col.dflt_value !== null) {
+              def += ` DEFAULT ${String(col.dflt_value)}`;
+            }
+            return def;
+          });
+          ddl = `CREATE TABLE ${escapeIdentifier(tblName)} (\n${columnDefs.join(",\n")}\n);`;
         }
 
         // Phase 3: Return response
