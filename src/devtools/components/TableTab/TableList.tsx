@@ -1,4 +1,4 @@
-import { getTableListFromInspectedWindow } from "@/devtools/inspectedWindow";
+import { databaseService } from "@/devtools/services/databaseService";
 import { useInspectedWindowRequest } from "@/devtools/hooks/useInspectedWindowRequest";
 
 /**
@@ -35,7 +35,7 @@ export const TableList = ({
     error,
     reload,
   } = useInspectedWindowRequest<string[]>(
-    () => getTableListFromInspectedWindow(dbname),
+    () => databaseService.getTableList(dbname),
     [dbname],
     [],
   );

@@ -223,12 +223,13 @@ NOTES
 
 ### Component Migration Tasks
 
-- [ ] **TASK-05.6**: Component Migration - Table Browser Components
+- [x] **TASK-05.6**: Component Migration - Table Browser Components
   - **Priority**: P0 (Blocker)
   - **Dependencies**: TASK-05.1
   - **Boundary**: `src/devtools/components/TableTab/`, `src/devtools/components/Sidebar/DatabaseList.tsx`
   - **Maps to**: F-001, FR-007
   - **Feature**: F-001 Service Layer Expansion - Component Migration
+  - **Micro-Spec**: [completed](agent-docs/08-task/active/TASK-05.6.md)
   - **DoD**:
     - Update `Sidebar/DatabaseList.tsx` to use `databaseService.getDatabases()`
       - Remove direct `inspectedWindow` import

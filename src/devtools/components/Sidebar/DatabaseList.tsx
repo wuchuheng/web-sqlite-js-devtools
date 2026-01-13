@@ -2,9 +2,9 @@ import { useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import { FaDatabase } from "react-icons/fa";
 import {
-  getDatabasesFromInspectedWindow,
+  databaseService,
   type DatabaseSummary,
-} from "@/devtools/inspectedWindow";
+} from "@/devtools/services/databaseService";
 import { useInspectedWindowRequest } from "@/devtools/hooks/useInspectedWindowRequest";
 import { getDatabaseNameFromPath } from "@/devtools/utils/databaseNames";
 import { SidebarLink } from "./SidebarLink";
@@ -40,7 +40,7 @@ export const DatabaseList = ({ isCollapsed }: DatabaseListProps) => {
     error,
     reload,
   } = useInspectedWindowRequest<DatabaseSummary[]>(
-    () => getDatabasesFromInspectedWindow(),
+    () => databaseService.getDatabases(),
     [],
     [],
   );

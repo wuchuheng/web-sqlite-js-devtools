@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import type { InspectedWindowResponse } from "@/devtools/inspectedWindow";
+import type { ServiceResponse } from "@/devtools/services/databaseService";
 
 type DependencyList = ReadonlyArray<unknown>;
 
@@ -21,7 +21,7 @@ interface UseInspectedWindowRequestResult<T> {
  * @returns Request state and reload handler
  */
 export const useInspectedWindowRequest = <T>(
-  request: () => Promise<InspectedWindowResponse<T>>,
+  request: () => Promise<ServiceResponse<T>>,
   deps: DependencyList,
   initialData: T,
 ): UseInspectedWindowRequestResult<T> => {
