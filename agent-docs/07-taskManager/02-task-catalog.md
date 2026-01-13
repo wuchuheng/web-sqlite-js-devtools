@@ -131,12 +131,13 @@ NOTES
     - Unit tests with mocked bridge layer
     - Update `databaseService.ts` with JSDoc comments
 
-- [ ] **TASK-05.3**: Service Layer - Log Streaming Functions
+- [x] **TASK-05.3**: Service Layer - Log Streaming Functions
   - **Priority**: P0 (Blocker)
   - **Dependencies**: TASK-05.2
   - **Boundary**: `src/devtools/services/databaseService.ts`, `src/devtools/bridge/inspectedWindow.ts`, `src/contentScript/subscriptions/LogRingBuffer.ts`
   - **Maps to**: F-001, FR-026, FR-029, FR-030, ADR-0004, ADR-0005
   - **Feature**: F-001 Service Layer Expansion - Log Streaming Group
+  - **Micro-Spec**: [completed](agent-docs/08-task/active/TASK-05.3.md)
   - **DoD**:
     - Implement `subscribeLogs(dbname)` service function
       - Generate unique subscription ID (e.g., `sub_${Date.now()}_${Math.random()}`)

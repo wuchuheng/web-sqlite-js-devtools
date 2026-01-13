@@ -5,6 +5,9 @@ interface SidebarIconProps {
   className?: string;
 }
 
-export const SidebarIcon = ({ icon: Icon, className = "" }: SidebarIconProps) => {
+export const SidebarIcon = ({
+  icon: Icon,
+  className = "",
+}: SidebarIconProps) => {
   return <Icon className={className} style={{ fontSize: "1.3rem" }} />;
 };

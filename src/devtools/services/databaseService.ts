@@ -8,6 +8,11 @@
  */
 
 import { inspectedWindowBridge } from "../bridge/inspectedWindow";
+import type {
+  DBInterface,
+  DatabaseRecord as DBRecord,
+  LogEntry as DBLogEntry,
+} from "../../types/DB";
 
 /**
  * Standard response envelope for service operations
@@ -88,24 +93,39 @@ type DatabaseStore = {
   get?: (name: string) => unknown;
 } & Record<string, unknown>;
 
-type DatabaseRecord = {
-  db?: unknown;
-} & Record<string, unknown>;
+// ============================================================================
+// LOG STREAMING TYPES
+// ============================================================================
 
-type DbQuery = {
-  query: (sql: string) => Promise<Array<Record<string, unknown>>>;
-  exec: (
-    sql: string,
-    params?: SqlValue[] | Record<string, SqlValue>,
-  ) => Promise<{
-    lastInsertRowid: number | bigint;
-    changes: number | bigint;
-  }>;
+// Re-export LogEntry from DB types for convenience
+export type { DBLogEntry as LogEntry };
+
+/**
+ * Log subscription with callback and cleanup
+ */
+export type LogSubscription = {
+  subscriptionId: string;
+  dbname: string;
+  callback: (entry: DBLogEntry) => void;
+  unsubscribe: () => void; // Unsubscribe function returned by db.onLog()
+};
+
+/**
+ * Subscribe result with subscription ID
+ */
+export type SubscribeResult = {
+  subscriptionId: string;
 };
 
 // ============================================================================
 // SERVICE FUNCTIONS
 // ============================================================================
+
+/**
+ * Internal subscription map for cleanup
+ * Maps subscriptionId to LogSubscription object
+ */
+const subscriptions = new Map<string, LogSubscription>();
 
 /**
  * 1. Read window.__web_sqlite.databases
@@ -198,16 +218,18 @@ export const getTableList = async (
           return Array.from(unique).sort((a, b) => a.localeCompare(b));
         };
 
-        const runQuery = (sql: string) => (db as DbQuery).query(sql);
+        const runQuery = (sql: string) => (db as DBInterface).query(sql);
         const pragmaSql = "PRAGMA table_list";
         const fallbackSql =
           "SELECT name, type FROM sqlite_master WHERE type='table'";
 
         let rows: Array<Record<string, unknown>>;
         try {
-          rows = await runQuery(pragmaSql);
+          rows = (await runQuery(pragmaSql)) as Array<Record<string, unknown>>;
         } catch {
-          rows = await runQuery(fallbackSql);
+          rows = (await runQuery(fallbackSql)) as Array<
+            Record<string, unknown>
+          >;
         }
 
         return ok(normalize(rows));
@@ -260,7 +282,10 @@ export const getTableSchema = async (
         const db = dbRecord.db;
 
         // Phase 2: Query schema information
-        const queryFunc = (sql: string) => (db as DbQuery).query(sql);
+        const queryFunc = (sql: string) =>
+          (db as DBInterface).query(sql) as Promise<
+            Array<Record<string, unknown>>
+          >;
 
         // Get column details from PRAGMA table_info
         const pragmaSql = `PRAGMA table_info(${escapeIdentifier(tblName)})`;
@@ -289,8 +314,11 @@ export const getTableSchema = async (
         );
 
         let ddl = "";
-        if (ddlRows.length > 0 && ddlRows[0]?.sql) {
-          ddl = String(ddlRows[0].sql);
+        if (ddlRows.length > 0) {
+          const firstRow = ddlRows[0] as Record<string, unknown> | undefined;
+          if (firstRow?.sql) {
+            ddl = String(firstRow.sql);
+          }
         }
 
         // Phase 3: Return response
@@ -351,13 +379,19 @@ export const queryTableData = async (
         }
 
         const db = dbRecord.db;
-        const queryFunc = (sql: string) => (db as DbQuery).query(sql);
+        const queryFunc = (sql: string) =>
+          (db as DBInterface).query(sql) as Promise<
+            Array<Record<string, unknown>>
+          >;
 
         // Phase 2: Execute queries
         // Get total count
         const countSql = `SELECT COUNT(*) as total FROM (${userSql})`;
         const countRows = await queryFunc(countSql);
-        const total = Number(countRows[0]?.total ?? 0);
+        const firstCountRow = countRows[0] as
+          | Record<string, unknown>
+          | undefined;
+        const total = Number(firstCountRow?.total ?? 0);
 
         // Get paginated data
         const dataSql = `SELECT * FROM (${userSql}) LIMIT ${limitVal} OFFSET ${offsetVal}`;
@@ -366,7 +400,8 @@ export const queryTableData = async (
         // Extract column names from first row keys
         let columns: string[] = [];
         if (rows.length > 0) {
-          columns = Object.keys(rows[0] ?? {});
+          const firstRow = rows[0] as Record<string, unknown> | undefined;
+          columns = Object.keys(firstRow ?? {});
         }
 
         // Phase 3: Return response
@@ -429,14 +464,15 @@ export const execSQL = async (
         const execFunc = (
           sql: string,
           params?: SqlValue[] | Record<string, SqlValue>,
-        ) => (db as DbQuery).exec(sql, params);
+        ) => (db as DBInterface).exec(sql, params);
 
         const result = await execFunc(sqlStr, paramsVal);
 
-        // Phase 3: Return response
+        // Phase 3: Return response with proper type coercion
+        // The DBInterface returns optional properties, but ExecResult requires them
         return ok({
-          lastInsertRowid: result.lastInsertRowid,
-          changes: result.changes,
+          lastInsertRowid: result.lastInsertRowid ?? 0,
+          changes: result.changes ?? 0,
         });
       } catch (error) {
         return { success: false as const, error: String(error) };
@@ -444,6 +480,143 @@ export const execSQL = async (
     },
     args: [dbname, sql, params],
   });
+};
+
+/**
+ * Subscribe to log events for a database
+ *
+ * @remarks
+ * 1. Validate database and generate unique subscription ID
+ * 2. Create subscription and register callback with db.onLog()
+ * 3. Store subscription (with unsubscribe function) in internal Map
+ *
+ * @param dbname - Database name to subscribe to logs for
+ * @param callback - Callback function to receive log entries
+ * @returns Subscribe result with subscription ID
+ */
+export const subscribeLogs = async (
+  dbname: string,
+  callback: (entry: DBLogEntry) => void,
+): Promise<ServiceResponse<SubscribeResult>> => {
+  // Generate subscription ID upfront
+  const subscriptionId = `sub_${Date.now()}_${Math.random()}`;
+
+  return inspectedWindowBridge
+    .execute({
+      func: (databaseName: string, subId: string) => {
+        try {
+          const ok = <T>(data: T) => ({ success: true as const, data });
+          const fail = (message: string) => ({
+            success: false as const,
+            error: message,
+          });
+
+          // Phase 1: Validate database exists
+          const api = window.__web_sqlite;
+          const databases = api?.databases;
+
+          if (!databases) {
+            return fail("web-sqlite-js API not available");
+          }
+
+          const dbRecord = databases[databaseName] as DBRecord | undefined;
+          if (!dbRecord?.db) {
+            return fail(`Database not found: ${databaseName}`);
+          }
+
+          const db = dbRecord.db as DBInterface;
+
+          // Phase 2: Register log callback and get unsubscribe function
+          // db.onLog returns an unsubscribe function
+          const unsubscribe = db.onLog((entry: DBLogEntry) => {
+            // Send log entry via chrome.runtime.sendMessage to DevTools panel
+            // Include subscriptionId for routing
+            chrome.runtime.sendMessage({
+              type: "LOG_ENTRY",
+              subscriptionId: subId,
+              entry,
+            });
+          });
+
+          // Store unsubscribe function in window for later cleanup
+          // This is a workaround since we can't return functions from executeScript
+          (window as unknown as Record<string, unknown>)[`__unsub_${subId}`] =
+            unsubscribe;
+
+          // Phase 3: Return response
+          return ok({ subscriptionId: subId });
+        } catch (error) {
+          return { success: false as const, error: String(error) };
+        }
+      },
+      args: [dbname, subscriptionId],
+    })
+    .then((response) => {
+      // If subscription was successful, store it in the Map
+      if (response.success && response.data) {
+        // Note: We can't retrieve the unsubscribe function from the inspected page
+        // So we'll store a placeholder that will call back to the inspected page
+        const subscription: LogSubscription = {
+          subscriptionId: response.data.subscriptionId,
+          dbname,
+          callback,
+          unsubscribe: () => {
+            // This will be replaced in unsubscribeLogs with actual cleanup
+            void inspectedWindowBridge.execute({
+              func: (subId: string) => {
+                const unsub = (window as unknown as Record<string, unknown>)[
+                  `__unsub_${subId}`
+                ] as (() => void) | undefined;
+                if (typeof unsub === "function") {
+                  unsub();
+                  delete (window as unknown as Record<string, unknown>)[
+                    `__unsub_${subId}`
+                  ];
+                }
+              },
+              args: [response.data.subscriptionId],
+            });
+          },
+        };
+        subscriptions.set(response.data.subscriptionId, subscription);
+      }
+      return response;
+    });
+};
+
+/**
+ * Unsubscribe from log events
+ *
+ * @remarks
+ * 1. Look up subscription from internal Map
+ * 2. Call stored unsubscribe function (which calls back to inspected page)
+ * 3. Remove subscription from internal Map
+ *
+ * @param subscriptionId - Subscription ID to unsubscribe
+ * @returns Service response (void on success)
+ */
+export const unsubscribeLogs = async (
+  subscriptionId: string,
+): Promise<ServiceResponse<void>> => {
+  // Phase 1: Look up subscription
+  const subscription = subscriptions.get(subscriptionId);
+  if (!subscription) {
+    return {
+      success: false,
+      error: `Subscription not found: ${subscriptionId}`,
+    };
+  }
+
+  try {
+    // Phase 2: Call unsubscribe function
+    subscription.unsubscribe();
+
+    // Phase 3: Remove from Map and return success
+    subscriptions.delete(subscriptionId);
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: String(error) };
+  }
 };
 
 /**
@@ -466,4 +639,6 @@ export const databaseService = Object.freeze({
   getTableSchema,
   queryTableData,
   execSQL,
+  subscribeLogs,
+  unsubscribeLogs,
 });

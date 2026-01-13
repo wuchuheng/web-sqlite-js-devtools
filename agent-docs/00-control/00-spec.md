@@ -38,10 +38,10 @@ NOTES
 
 ## 3) Current stage
 
-- **Current stage (1-8)**: Stage 8 - Implementation (Worker - TASK-05.2)
+- **Current stage (1-8)**: Stage 8 - Implementation (Worker - TASK-05.3)
 - **Active release**: v1.0.0 (MVP) - Target: 2026-01-27
-- **Status summary**: TASK-01 through TASK-05.1 completed, TASK-05.2 in progress, 9 tasks remaining for MVP
-- **Last updated (YYYY-MM-DD)**: 2026-01-13 (TASK-05.2: Service Layer - SQL Execution Functions)
+- **Status summary**: TASK-01 through TASK-05.2 completed, TASK-05.3 in progress, 8 tasks remaining for MVP
+- **Last updated (YYYY-MM-DD)**: 2026-01-13 (TASK-05.3: Service Layer - Log Streaming Functions)
 
 ## 4) Technology stack (chosen in Stage 2)
 
@@ -127,3 +127,10 @@ NOTES
   - Implemented `execSQL(dbname, sql, params?)` with parameter support
   - Updated `DbQuery` type to include exec method
   - Updated `databaseService` exports with execSQL function
+- **2026-01-13**: TASK-05.3 completed - Service Layer Log Streaming Functions
+  - Added `LogEntry`, `LogSubscription`, `SubscribeResult` types (re-exported from DB types)
+  - Implemented `subscribeLogs(dbname, callback)` with unique subscription ID generation
+  - Implemented `unsubscribeLogs(subscriptionId)` with proper cleanup
+  - Created `LogRingBuffer` module (500 entry circular buffer with batch sending)
+  - Updated `databaseService` exports with subscribeLogs/unsubscribeLogs functions
+  - Fixed TypeScript type issues for existing functions using DBInterface
