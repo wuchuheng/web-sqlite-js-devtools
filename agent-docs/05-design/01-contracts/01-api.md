@@ -10,10 +10,7 @@ NOTES
 - Group Endpoints by MODULE to allow parallel ownership.
 -->
 
-# 01 API Contract (Chrome Extension Messaging)
-
-> **Note**: Channel-based API contracts are deprecated. DevTools data access now uses
-> `chrome.devtools.inspectedWindow.eval` directly.
+# 01 API Contract (Service Layer & Chrome Extension Messaging)
 
 ## 0) Document Map
 
@@ -28,231 +25,400 @@ agent-docs/05-design/
     content-script-proxy.md
     background-service.md
     opfs-browser.md
+    database-service.md  (NEW - Feature F-001)
 ```
 
 ### Module Index
 
 | Module               | LLD file                                                  | API section                        | Message Types       |
 | -------------------- | --------------------------------------------------------- | ---------------------------------- | ------------------- |
-| DevTools Panel       | `agent-docs/05-design/03-modules/devtools-panel.md`       | `### Module: DevTools Panel`       | Requests, Responses |
+| DevTools Panel       | `agent-docs/05-design/03-modules/devtools-panel.md`       | `### Module: DevTools Panel`       | UI Components       |
+| Database Service     | `agent-docs/05-design/03-modules/database-service.md`     | `## 1) Service Layer API`          | Service Functions   |
 | Content Script Proxy | `agent-docs/05-design/03-modules/content-script-proxy.md` | `### Module: Content Script Proxy` | Proxy handlers      |
 | Background Service   | `agent-docs/05-design/03-modules/background-service.md`   | `### Module: Background Service`   | Icon state, routing |
 | OPFS Browser         | `agent-docs/05-design/03-modules/opfs-browser.md`         | `### Module: OPFS Browser`         | File operations     |
 
 ## 1) Standards
 
-- **Protocol**: Chrome Extension Messaging (`chrome.runtime.sendMessage`, `chrome.tabs.sendMessage`)
-- **Message Direction**:
-  - Panel → Background → Content Script (requests)
-  - Content Script → Background → Panel (responses)
-  - Content Script → Background → Panel (streaming events)
-- **Content-Type**: Structured clone (JSON-compatible)
+### Service Layer API (Primary - Feature F-001)
+
+- **Protocol**: TypeScript service functions using `inspectedWindowBridge.execute()`
+- **Execution Context**: Chrome DevTools → inspected page (MAIN world via `chrome.scripting.executeScript`)
 - **Response Format**:
   ```typescript
-  type Response<T> = {
+  type ServiceResponse<T> = {
     success: boolean;
     data?: T;
     error?: string;
   };
   ```
+- **Import Pattern**: `import { databaseService } from '@/devtools/services/databaseService'`
+- **Error Handling**: All errors caught and returned in `ServiceResponse.error` field
 
-## 2) Channels (by Module)
+### Runtime Messaging (Secondary - Icon State Only)
 
-### Module: Database Inspection
+- **Protocol**: Chrome Extension Messaging (`chrome.runtime.sendMessage`, `chrome.tabs.sendMessage`)
+- **Message Direction**:
+  - Content Script → Background → Panel (icon state updates)
+  - Panel → Background → Content Script (rare, only for non-data operations)
+- **Content-Type**: Structured clone (JSON-compatible)
+- **Use Case**: Icon state updates only (all data access via service layer)
 
-#### Channel: `GET_DATABASES`
+## 2) Service Layer API (Feature F-001)
+
+> **Implementation Location**: `src/devtools/services/databaseService.ts`
+>
+> **Usage**: Components import `databaseService` and call functions directly.
+> All functions use `inspectedWindowBridge.execute()` for page access.
+
+### Module: Database Discovery
+
+#### Function: `getDatabases()`
 
 - **Summary**: List all opened databases from `window.__web_sqlite.databases`
-- **Request**: `{}`
+- **Signature**:
+  ```typescript
+  getDatabases(): Promise<ServiceResponse<DatabaseSummary[]>>
+  ```
+- **Response (200)**:
+  ```typescript
+  {
+    success: true,
+    data: [
+      { name: "main" },
+      { name: "cache" }
+    ]
+  }
+  ```
+- **Error Cases**:
+  - Returns empty array if `window.__web_sqlite` not available
+  - Returns `{ success: false, error: string }` if execution fails
+
+#### Function: `getTableList(dbname)`
+
+- **Summary**: Get all tables for a specific database
+- **Signature**:
+  ```typescript
+  getTableList(dbname: string): Promise<ServiceResponse<string[]>>
+  ```
+- **Response (200)**:
+  ```typescript
+  {
+    success: true,
+    data: ["users", "posts", "comments"]  // Alphabetically sorted
+  }
+  ```
+- **Business Logic**:
+  - Queries `PRAGMA table_list` with fallback to `sqlite_master`
+  - Filters out `sqlite_*` system tables
+  - Returns only tables (not views, indexes, etc.)
+  - Sorts alphabetically for consistent UI
+
+### Module: Schema & Data Inspection
+
+#### Function: `getTableSchema(dbname, tableName)`
+
+- **Summary**: Get table schema (columns, types, constraints, DDL)
+- **Signature**:
+  ```typescript
+  getTableSchema(
+    dbname: string,
+    tableName: string
+  ): Promise<ServiceResponse<TableSchema>>
+  ```
 - **Response (200)**:
   ```typescript
   {
     success: true,
     data: {
-      databases: Array<{
-        name: string;
-        tableCount: number;
-      }>
+      columns: [
+        {
+          cid: 0,
+          name: "id",
+          type: "INTEGER",
+          notnull: 1,
+          dflt_value: null,
+          pk: 1
+        },
+        // ... more columns
+      ],
+      ddl: "CREATE TABLE users (\n  id INTEGER PRIMARY KEY,\n  name TEXT\n)"
     }
   }
   ```
+- **Business Logic**:
+  - Queries `PRAGMA table_info(tableName)` for column details
+  - Queries `sqlite_master` for complete CREATE TABLE DDL
+  - Returns normalized column information with types and constraints
+- **Error Cases**:
+  - Database not found
+  - Table not found
+  - Permission denied
 
-#### Channel: `GET_TABLE_LIST`
-
-- **Summary**: Get all tables for a specific database
-- **Request**: `{ dbname: string }`
-- **Response**:
-  ```typescript
-  {
-    success: true,
-    data: {
-      tables: string[]  // Alphabetically sorted
-    }
-  }
-  ```
-
-#### Channel: `GET_TABLE_SCHEMA`
-
-- **Summary**: Get table schema (columns, types, constraints)
-- **Request**: `{ dbname: string, tableName: string }`
-- **Response**:
-  ```typescript
-  {
-    success: true,
-    data: {
-      columns: Array<{
-        cid: number;
-        name: string;
-        type: string;
-        notnull: number;
-        dflt_value: any;
-        pk: number;
-      }>,
-      ddl: string  // Complete CREATE TABLE SQL
-    }
-  }
-  ```
-
-#### Channel: `QUERY_TABLE_DATA`
+#### Function: `queryTableData(dbname, sql, limit, offset)`
 
 - **Summary**: Execute SELECT query with pagination
-- **Request**: `{ dbname: string, sql: string, limit: number, offset: number }`
-- **Response**:
+- **Signature**:
+  ```typescript
+  queryTableData(
+    dbname: string,
+    sql: string,
+    limit: number,
+    offset: number
+  ): Promise<ServiceResponse<QueryResult>>
+  ```
+- **Response (200)**:
   ```typescript
   {
     success: true,
     data: {
-      rows: Array<Record<string, any>>,
-      total: number,  // Total count for pagination
-      columns: string[]  // Column names
+      rows: [
+        { id: 1, name: "Alice", email: "alice@example.com" },
+        { id: 2, name: "Bob", email: "bob@example.com" }
+      ],
+      total: 150,  // Total row count (for pagination)
+      columns: ["id", "name", "email"]
     }
   }
   ```
+- **Business Logic**:
+  - Wraps user SQL with pagination: `SELECT * FROM (${sql}) LIMIT ? OFFSET ?`
+  - Executes count query: `SELECT COUNT(*) FROM (${sql})`
+  - Extracts column names from first row
+  - Returns empty result set if no rows
 
-### Module: Query Execution
+#### Function: `execSQL(dbname, sql, params?)`
 
-#### Channel: `EXEC_SQL`
-
-- **Summary**: Execute INSERT/UPDATE/DELETE/DDL
-- **Request**: `{ dbname: string, sql: string, params?: SqlValue[] | Record<string, SqlValue> }`
-- **Response**:
+- **Summary**: Execute INSERT/UPDATE/DELETE/DDL with optional parameters
+- **Signature**:
+  ```typescript
+  execSQL(
+    dbname: string,
+    sql: string,
+    params?: SqlValue[] | Record<string, SqlValue>
+  ): Promise<ServiceResponse<ExecResult>>
+  ```
+- **Response (200)**:
   ```typescript
   {
     success: true,
     data: {
-      lastInsertRowid: number | bigint,
-      changes: number | bigint
+      lastInsertRowid: 123,
+      changes: 1
     }
   }
   ```
+- **Business Logic**:
+  - Executes write operation using `db.exec(sql, params)`
+  - Returns last insert rowid and number of rows affected
+  - Supports both positional (`[]`) and named (`{}`) parameters
+- **Error Cases**:
+  - SQL syntax errors
+  - Constraint violations
+  - Parameter count mismatch
 
 ### Module: Log Streaming
 
-#### Channel: `SUBSCRIBE_LOGS`
+#### Function: `subscribeLogs(dbname)`
 
 - **Summary**: Subscribe to log events for a database
-- **Request**: `{ dbname: string }`
-- **Response**:
+- **Signature**:
+  ```typescript
+  subscribeLogs(dbname: string): Promise<ServiceResponse<{ subscriptionId: string }>>
+  ```
+- **Response (200)**:
   ```typescript
   {
     success: true,
     data: {
-      subscriptionId: string
+      subscriptionId: "sub_1234567890"
     }
   }
   ```
+- **Business Logic**:
+  - Calls `window.__web_sqlite.subscribeLogs(dbname)` in inspected page
+  - Generates unique subscription ID
+  - Stores subscription for later cleanup
+  - Logs streamed via offscreen messaging channel (TBD)
 
-#### Channel: `UNSUBSCRIBE_LOGS`
+#### Function: `unsubscribeLogs(subscriptionId)`
 
 - **Summary**: Unsubscribe from log events
-- **Request**: `{ subscriptionId: string }`
-- **Response**: `{ success: true }`
+- **Signature**:
+  ```typescript
+  unsubscribeLogs(subscriptionId: string): Promise<ServiceResponse<void>>
+  ```
+- **Response (200)**:
+  ```typescript
+  { success: true }
+  ```
+- **Business Logic**:
+  - Calls `window.__web_sqlite.unsubscribeLogs(subscriptionId)` in inspected page
+  - Cleans up log listeners
+  - Clears subscription tracking
 
-#### Channel: `LOG_EVENT` (streaming)
+### Module: Migration & Versioning
 
-- **Summary**: Stream log entries from content script to panel
-- **Payload**:
+#### Function: `devRelease(dbname, version, migrationSQL?, seedSQL?)`
+
+- **Summary**: Create dev version with migration/seed SQL for testing
+- **Signature**:
+  ```typescript
+  devRelease(
+    dbname: string,
+    version: string,
+    migrationSQL?: string,
+    seedSQL?: string
+  ): Promise<ServiceResponse<{ devVersion: string }>>
+  ```
+- **Response (200)**:
   ```typescript
   {
-    dbname: string,
-    logs: Array<{
-      level: "info" | "debug" | "error",
-      data: unknown,
-      timestamp: number
-    }>
+    success: true,
+    data: {
+      devVersion: "1.2.3-dev.20250113"
+    }
   }
   ```
+- **Business Logic**:
+  - Creates dev database copy from production
+  - Applies migration SQL if provided
+  - Applies seed SQL if provided
+  - Returns unique dev version identifier
+  - Enables automatic rollback on unmount
 
-### Module: Migration & Seed Testing
+#### Function: `devRollback(dbname, toVersion)`
 
-#### Channel: `DEV_RELEASE`
+- **Summary**: Rollback dev version to original or specific version
+- **Signature**:
+  ```typescript
+  devRollback(
+    dbname: string,
+    toVersion: string
+  ): Promise<ServiceResponse<{ currentVersion: string }>>
+  ```
+- **Response (200)**:
+  ```typescript
+  {
+    success: true,
+    data: {
+      currentVersion: "1.2.2"
+    }
+  }
+  ```
+- **Business Logic**:
+  - Drops dev database
+  - Restores from backup or specific version
+  - Updates version tracking
+  - Returns current active version
 
-- **Summary**: Create dev version with migration/seed SQL
-- **Request**: `{ dbname: string, version: string, migrationSQL?: string, seedSQL?: string }`
-- **Response**: `{ success: true, data: { devVersion: string } }`
-
-#### Channel: `DEV_ROLLBACK`
-
-- **Summary**: Rollback dev version to original
-- **Request**: `{ dbname: string, toVersion: string }`
-- **Response**: `{ success: true, data: { currentVersion: string } }`
-
-#### Channel: `GET_DB_VERSION`
+#### Function: `getDbVersion(dbname)`
 
 - **Summary**: Get current database version
-- **Request**: `{ dbname: string }`
-- **Response**: `{ success: true, data: { version: string } }`
+- **Signature**:
+  ```typescript
+  getDbVersion(dbname: string): Promise<ServiceResponse<{ version: string }>>
+  ```
+- **Response (200)**:
+  ```typescript
+  {
+    success: true,
+    data: {
+      version: "1.2.3"
+    }
+  }
+  ```
+- **Business Logic**:
+  - Queries `PRAGMA user_version` or web-sqlite-js version tracking
+  - Returns semantic version string
+  - Returns "0.0.0" if no version set
 
 ### Module: OPFS File Browser
 
-#### Channel: `GET_OPFS_FILES`
+#### Function: `getOpfsFiles(path?, dbname?)`
 
 - **Summary**: List OPFS files with lazy loading
-- **Request**: `{ path?: string, dbname?: string }`
-- **Response**:
+- **Signature**:
+  ```typescript
+  getOpfsFiles(
+    path?: string,
+    dbname?: string
+  ): Promise<ServiceResponse<OpfsFileEntry[]>>
+  ```
+- **Response (200)**:
   ```typescript
   {
     success: true,
     data: {
-      entries: Array<{
-        name: string,
-        kind: "file" | "directory",
-        size?: string,  // Human-readable
-      }>
+      entries: [
+        {
+          name: "databases",
+          kind: "directory",
+          size: undefined
+        },
+        {
+          name: "cache.sqlite",
+          kind: "file",
+          size: "1.2 MB"
+        }
+      ]
     }
   }
   ```
+- **Business Logic**:
+  - Calls `navigator.storage.getDirectory()` in inspected page
+  - Lists directory contents at `path` (defaults to root)
+  - Filters by `dbname` if provided (for database-specific files)
+  - Converts file sizes to human-readable format
+  - Returns flat list for lazy loading in UI
 
-#### Channel: `DOWNLOAD_OPFS_FILE`
+#### Function: `downloadOpfsFile(path)`
 
 - **Summary**: Download OPFS file to user's machine
-- **Request**: `{ path: string }`
-- **Response**:
+- **Signature**:
+  ```typescript
+  downloadOpfsFile(path: string): Promise<ServiceResponse<{ blobUrl: string; filename: string }>>
+  ```
+- **Response (200)**:
   ```typescript
   {
     success: true,
     data: {
-      blobUrl: string,  // chrome.runtime.URL.createObjectURL
-      filename: string
+      blobUrl: "blob:chrome-extension://...",
+      filename: "cache.sqlite"
     }
   }
   ```
+- **Business Logic**:
+  - Retrieves file handle from OPFS at `path`
+  - Creates blob from file contents
+  - Creates object URL for download
+  - Returns URL and filename for browser download trigger
+  - Caller responsible for URL cleanup (`URL.revokeObjectURL`)
+
+## 3) Runtime Messaging (Icon State Only)
+
+> **Note**: Channel-based messaging is deprecated for data access. Use service layer functions above.
+> Remaining channels are for icon state updates only.
 
 ### Module: Connection & Health
 
 #### Channel: `HEARTBEAT`
 
-- **Summary**: Connection health check
+- **Summary**: Connection health check (via `chrome.devtools.inspectedWindow.eval`)
 - **Request**: `{ timestamp: number }`
 - **Response**: `{ success: true, timestamp: number }`
+- **Usage**: Direct `inspectedWindow.eval`, not messaging
 
 #### Channel: `ICON_STATE`
 
 - **Summary**: Update popup icon based on database availability
+- **Direction**: Content Script → Background
 - **Request**: `{ hasDatabase: boolean }`
 - **Response**: `{ success: true }`
+- **Usage**: Runtime messaging only (content script detects `window.__web_sqlite`)
 
-## 3) Error Codes
+## 4) Error Codes
 
 | Code                     | Message                       | Meaning                                |
 | ------------------------ | ----------------------------- | -------------------------------------- |
@@ -263,3 +429,65 @@ agent-docs/05-design/
 | `ERR_INVALID_REQUEST`    | Invalid message format        | Request doesn't match schema           |
 | `ERR_OPFS_ACCESS`        | OPFS access denied            | Browser doesn't support OPFS           |
 | `ERR_VERSION_LOCKED`     | Cannot rollback below release | Dev version at or below latest release |
+
+## 5) Type Definitions
+
+```typescript
+// Service Response Envelope
+type ServiceResponse<T> = {
+  success: boolean;
+  data?: T;
+  error?: string;
+};
+
+// Database Summary
+type DatabaseSummary = {
+  name: string;
+};
+
+// Table Schema
+type TableSchema = {
+  columns: Array<{
+    cid: number;
+    name: string;
+    type: string;
+    notnull: number;
+    dflt_value: any;
+    pk: number;
+  }>;
+  ddl: string;
+};
+
+// Query Result
+type QueryResult = {
+  rows: Array<Record<string, any>>;
+  total: number;
+  columns: string[];
+};
+
+// Execution Result
+type ExecResult = {
+  lastInsertRowid: number | bigint;
+  changes: number | bigint;
+};
+
+// OPFS File Entry
+type OpfsFileEntry = {
+  name: string;
+  kind: "file" | "directory";
+  size?: string;
+};
+
+// SQL Value Types
+type SqlValue =
+  | null
+  | number
+  | string
+  | boolean
+  | bigint
+  | Uint8Array
+  | ArrayBuffer;
+
+// SQL Parameters
+type SQLParams = SqlValue[] | Record<string, SqlValue>;
+```

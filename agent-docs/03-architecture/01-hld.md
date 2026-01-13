@@ -14,11 +14,12 @@ NOTES
 
 ## 1) Architecture Style & Principles
 
-- **Pattern**: **DevTools Inspected Window Access**
-  - DevTools Panel → `chrome.devtools.inspectedWindow.eval` → Page Context (`window.__web_sqlite`)
+- **Pattern**: **DevTools Inspected Window Access with Service Layer**
+  - DevTools Panel → Service Layer (Business Logic) → Bridge Layer (Chrome API) → Page Context (`window.__web_sqlite`)
   - Content script retained only for icon state updates
 - **Key Principles**:
-  - **Context Isolation**: DevTools accesses the page via inspected window eval
+  - **Separation of Concerns**: Three-layer architecture (Presentation → Service → Bridge)
+  - **Context Isolation**: DevTools accesses the page via inspected window eval (chrome.scripting.executeScript)
   - **Minimal Messaging**: Runtime messaging only for icon state updates
   - **Hash-Based Routing**: Single-page application navigation via URL hash (react-router-dom)
   - **Real-Time Updates**: Polling/requests via eval (streaming TBD)
@@ -66,14 +67,14 @@ C4Container
   System_Ext(page, "Web Page", "web-sqlite-js", "SQLite Databases")
   System_Ext(opfs, "OPFS", "Browser API", "File System Access")
 
-  Rel(panel, page, "chrome.devtools.inspectedWindow.eval")
+  Rel(panel, page, "chrome.scripting.executeScript (MAIN world)")
   Rel(cs, page, "Detects window.__web_sqlite")
   Rel(cs, opfs, "navigator.storage.getDirectory")
 ```
 
 ## 4) Data Architecture Strategy
 
-- **Ownership**: DevTools panel accesses `window.__web_sqlite` via eval; content script only tracks icon state
+- **Ownership**: DevTools panel accesses `window.__web_sqlite` via service layer; content script only tracks icon state
 - **Caching**:
   - Table list: Cached in DevTools panel until database changes
   - Query results: Not cached (always fresh from database)
@@ -88,9 +89,9 @@ C4Container
 
 ### 5.1 Message Protocol
 
-- **DevTools Data Access**: Uses `chrome.devtools.inspectedWindow.eval` directly
+- **DevTools Data Access**: Uses service layer → bridge layer → `chrome.scripting.executeScript`
 - **Runtime Messaging**: Only icon state updates and offscreen log storage
-- **Error Handling**: Standard `{ success: boolean, data?: T, error?: string }` response format for eval
+- **Error Handling**: Standard `{ success: boolean, data?: T, error?: string }` response format (ServiceResponse)
 
 ### 5.2 Reconnection Strategy
 
@@ -107,9 +108,9 @@ C4Container
 
 ### 5.4 Security
 
-- **Permissions**: Minimal Chrome permissions (sidePanel, storage, offscreen)
+- **Permissions**: Minimal Chrome permissions (sidePanel, storage, offscreen, scripting)
 - **Content Security Policy**: Strict CSP for extension pages
-- **Eval Usage**: Only `chrome.devtools.inspectedWindow.eval` within DevTools
+- **Eval Usage**: Only `chrome.scripting.executeScript` within DevTools (MAIN world)
 
 ## 6) Code Structure Strategy (High-Level File Tree)
 
@@ -119,6 +120,10 @@ C4Container
 / (root)
   /src
     /devtools           # DevTools Panel (React)
+      /bridge           # Bridge Layer (Chrome API wrapper)
+        inspectedWindow.ts    # chrome.scripting.executeScript wrapper
+      /services         # Service Layer (Business Logic)
+        databaseService.ts    # All database operations (10 functions)
       /components       # React components
         /Sidebar        # Sidebar navigation
         /TableTab       # Table browser
@@ -130,7 +135,7 @@ C4Container
         /OPFSBrowser    # OPFS file tree
       /hooks            # Custom React hooks
       /utils            # Utilities
-      inspectedWindow.ts # DevTools eval helpers
+      inspectedWindow.ts # Public API re-exports
       DevTools.tsx      # Main DevTools component
       index.tsx         # Entry point
     /contentScript      # Content Script (Icon State)
@@ -154,14 +159,17 @@ C4Container
   agent-docs            # Architecture documentation
 ```
 
-**Module Pattern**: Layered architecture (Presentation → Eval Helpers → External API)
+**Module Pattern**: Three-layer architecture (Presentation → Service → Bridge)
 
 ```text
 /src/devtools
   /components          # Presentation Layer (React components)
   /hooks               # Custom hooks (useConnection, useInspectedWindowRequest)
-  /utils               # Route/database helpers
-  inspectedWindow.ts   # Eval helpers (window.__web_sqlite access)
+  /services            # Service Layer (Business Logic)
+    databaseService.ts # Domain logic for all DB operations
+  /bridge              # Bridge Layer (Chrome API)
+    inspectedWindow.ts # Low-level executeScript wrapper
+  inspectedWindow.ts   # Public API layer (re-exports)
 /src/contentScript
   App.tsx              # Icon state monitor
 /src/background
@@ -169,6 +177,19 @@ C4Container
 /src/shared
   messages.ts          # Runtime message IDs
 ```
+
+**Service Layer Functions** (all in `databaseService.ts`):
+
+1. **Database Discovery**: `getDatabases()` - List all open databases
+2. **Table Metadata**: `getTableList(dbname)` - List tables in a database
+3. **Schema Inspection**: `getTableSchema(dbname, tableName)` - Get table structure (PRAGMA table_info)
+4. **Query Execution**: `queryTableData(dbname, sql, limit, offset)` - Execute SELECT with pagination
+5. **SQL Execution**: `execSQL(dbname, sql, params?)` - Execute any SQL with optional params
+6. **Log Streaming**: `subscribeLogs(dbname)` / `unsubscribeLogs(subscriptionId)` - Real-time log monitoring
+7. **Migration Testing**: `devRelease(dbname, version, migrationSQL?, seedSQL?)` - Test migrations
+8. **Version Control**: `devRollback(dbname, toVersion)` - Rollback to previous version
+9. **Version Query**: `getDbVersion(dbname)` - Get current database version
+10. **OPFS Access**: `getOpfsFiles(path?, dbname?)` / `downloadOpfsFile(path)` - File system operations
 
 ## 7) Component Hierarchy (DevTools Panel)
 
@@ -212,3 +233,68 @@ DevTools (Root)
 │               ├── FileNode (Lazy-loaded)
 │               └── DownloadButton
 ```
+
+## 8) Service Layer Architecture (Feature F-001)
+
+**Purpose**: Centralize all database business logic in a single service layer, eliminating direct inspectedWindow access from components.
+
+**Three-Layer Pattern**:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Presentation Layer (Components)                            │
+│  - React UI components                                      │
+│  - No Chrome API or business logic                          │
+│  - Imports: databaseService                                 │
+└─────────────────────────────────────────────────────────────┘
+                            ↓
+┌─────────────────────────────────────────────────────────────┐
+│  Service Layer (Business Logic)                             │
+│  - databaseService.ts                                       │
+│  - Domain operations: queries, migrations, logs, OPFS       │
+│  - Uses ServiceResponse<T> envelope                         │
+│  - Imports: inspectedWindowBridge                           │
+└─────────────────────────────────────────────────────────────┘
+                            ↓
+┌─────────────────────────────────────────────────────────────┐
+│  Bridge Layer (Chrome API)                                  │
+│  - inspectedWindow.ts                                       │
+│  - Low-level chrome.scripting.executeScript wrapper         │
+│  - No business logic                                        │
+└─────────────────────────────────────────────────────────────┘
+                            ↓
+┌─────────────────────────────────────────────────────────────┐
+│  Page Context (window.__web_sqlite)                         │
+│  - Main world execution context                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Service Function Categories**:
+
+1. **Discovery** (2 functions):
+   - `getDatabases()` - List all databases
+   - `getTableList(dbname)` - List all tables
+
+2. **Schema & Data** (3 functions):
+   - `getTableSchema(dbname, tableName)` - PRAGMA table_info
+   - `queryTableData(dbname, sql, limit, offset)` - Paginated SELECT
+   - `execSQL(dbname, sql, params?)` - Generic SQL executor
+
+3. **Logging** (2 functions):
+   - `subscribeLogs(dbname)` - Start log streaming
+   - `unsubscribeLogs(subscriptionId)` - Stop log streaming
+
+4. **Migration & Versioning** (3 functions):
+   - `devRelease(dbname, version, migrationSQL?, seedSQL?)` - Test release
+   - `devRollback(dbname, toVersion)` - Rollback version
+   - `getDbVersion(dbname)` - Query current version
+
+5. **OPFS** (2 functions):
+   - `getOpfsFiles(path?, dbname?)` - List OPFS files
+   - `downloadOpfsFile(path)` - Download file
+
+**Benefits**:
+- **Testability**: Service functions can be unit tested without Chrome APIs
+- **Reusability**: Single source of truth for database operations
+- **Maintainability**: Business logic isolated from Chrome API concerns
+- **Type Safety**: Strong typing via ServiceResponse<T> envelope

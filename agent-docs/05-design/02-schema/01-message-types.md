@@ -13,7 +13,8 @@ NOTES
 # 01 Message Types & Data Structures
 
 > **Note**: Channel-based message types are deprecated. DevTools data access now uses
-> `chrome.devtools.inspectedWindow.eval` directly.
+> service layer functions with `ServiceResponse<T>` envelope. See `01-contracts/01-api.md`
+> for the complete service layer API (Feature F-001).
 
 ## 0) Document Map
 
@@ -25,12 +26,36 @@ agent-docs/05-design/
   02-schema/01-message-types.md  (this file)
   03-modules/
     devtools-panel.md
+    database-service.md  (NEW - Feature F-001)
     content-script-proxy.md
     background-service.md
     opfs-browser.md
 ```
 
 ## 1) Type Definitions
+
+### Service Layer Types (Feature F-001)
+
+> **Service Response Envelope**: All service functions return `ServiceResponse<T>`
+
+```typescript
+/**
+ * Standard response envelope for all service operations
+ * @template T - Type of success data payload
+ *
+ * @example
+ * // Success case
+ * { success: true, data: { name: "main" } }
+ *
+ * // Error case
+ * { success: false, error: "Database not found" }
+ */
+export type ServiceResponse<T> = {
+  success: boolean;
+  data?: T;
+  error?: string;
+};
+```
 
 ### Primitive Types
 
@@ -52,50 +77,79 @@ type SQLParams = SqlValue[] | Record<string, SqlValue>;
 ### Database Types
 
 ```typescript
-// Database record (serialized form of window.__web_sqlite.databases[key])
-interface DatabaseRecord {
+// Database summary (from getDatabases)
+interface DatabaseSummary {
   name: string;
-  migrationSQL: Array<[string, string]>; // [version, SQL] pairs (Map→Array)
-  seedSQL: Array<[string, string]>; // [version, SQL] pairs
 }
 
-// Table information
-interface TableInfo {
-  name: string;
+// Table schema (from getTableSchema)
+interface TableSchema {
   columns: Array<{
-    cid: number;
-    name: string;
-    type: string;
-    notnull: number;
-    dflt_value: any;
-    pk: number;
+    cid: number;          // Column ID
+    name: string;         // Column name
+    type: string;         // Data type
+    notnull: number;      // NOT NULL constraint (0/1)
+    dflt_value: any;      // Default value
+    pk: number;           // Primary key position (0 if not PK)
   }>;
-  ddl: string; // Complete CREATE TABLE SQL
+  ddl: string;            // Complete CREATE TABLE SQL
 }
 
-// Query result
+// Query result (from queryTableData)
 interface QueryResult {
   rows: Array<Record<string, any>>;
-  total: number;
-  columns: string[];
+  total: number;          // Total row count (for pagination)
+  columns: string[];      // Column names
+}
+
+// Execution result (from execSQL)
+interface ExecResult {
+  lastInsertRowid: number | bigint;
+  changes: number | bigint;
+}
+
+// Version info (from getDbVersion, devRelease, devRollback)
+interface VersionInfo {
+  version: string;        // Semantic version (e.g., "1.2.3")
+}
+
+// Log subscription (from subscribeLogs, unsubscribeLogs)
+interface LogSubscription {
+  subscriptionId: string; // Unique subscription identifier
+}
+
+// OPFS file entry (from getOpfsFiles)
+interface OpfsFileEntry {
+  name: string;
+  kind: "file" | "directory";
+  size?: string;          // Human-readable size (e.g., "1.2 MB")
+}
+
+// OPFS download (from downloadOpfsFile)
+interface OpfsDownload {
+  blobUrl: string;        // Object URL for download
+  filename: string;       // Extracted from path
 }
 ```
 
-### Message Types (Request/Response)
+### Message Types (Request/Response) - Deprecated
+
+> **Deprecated**: These channel-based message types are deprecated. Use service layer functions instead.
+> See `01-contracts/01-api.md` for the current service layer API.
 
 ```typescript
-// Generic response
+// Generic response (deprecated)
 interface Response<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
 }
 
-// Database inspection requests
+// Database inspection requests (deprecated)
 interface GetDatabasesRequest {}
 interface GetDatabasesResponse extends Response<{
-  databases: Array<{ name: string; tableCount?: number }>;
-}>;
+  databases: Array<{ name: string; tableCount?: number }>>;
+};
 
 interface GetTableListRequest {
   dbname: string;
@@ -132,7 +186,7 @@ interface QueryTableDataResponse extends Response<{
   columns: string[];
 }> {};
 
-// SQL execution
+// SQL execution (deprecated)
 interface ExecSQLRequest {
   dbname: string;
   sql: string;
@@ -143,7 +197,7 @@ interface ExecSQLResponse extends Response<{
   changes: number | bigint;
 }> {};
 
-// Log streaming
+// Log streaming (deprecated)
 interface SubscribeLogsRequest {
   dbname: string;
 }
@@ -170,7 +224,7 @@ interface LogEvent {
   };
 }
 
-// Migration & Seed testing
+// Migration & Seed testing (deprecated)
 interface DevReleaseRequest {
   dbname: string;
   version: string;
@@ -196,7 +250,7 @@ interface GetDbVersionResponse extends Response<{
   version: string;
 }> {};
 
-// OPFS file browser
+// OPFS file browser (deprecated)
 interface GetOpfsFilesRequest {
   path?: string;
   dbname?: string;
@@ -217,7 +271,7 @@ interface DownloadOpfsFileResponse extends Response<{
   filename: string;
 }> {};
 
-// Connection & health
+// Connection & health (deprecated)
 interface HeartbeatRequest {
   timestamp: number;
 }
@@ -375,4 +429,79 @@ interface AboutTabProps {
 interface OPFSBrowserProps {
   initialPath?: string;
 }
+```
+
+## 4) Service Layer Function Signatures (Feature F-001)
+
+> **Complete API Documentation**: See `01-contracts/01-api.md` for detailed function specs.
+
+```typescript
+// Database Discovery
+export const getDatabases: () => Promise<ServiceResponse<DatabaseSummary[]>>;
+export const getTableList: (dbname: string) => Promise<ServiceResponse<string[]>>;
+
+// Schema & Data Inspection
+export const getTableSchema: (
+  dbname: string,
+  tableName: string
+) => Promise<ServiceResponse<TableSchema>>;
+export const queryTableData: (
+  dbname: string,
+  sql: string,
+  limit: number,
+  offset: number
+) => Promise<ServiceResponse<QueryResult>>;
+export const execSQL: (
+  dbname: string,
+  sql: string,
+  params?: SQLParams
+) => Promise<ServiceResponse<ExecResult>>;
+
+// Log Streaming
+export const subscribeLogs: (
+  dbname: string
+) => Promise<ServiceResponse<LogSubscription>>;
+export const unsubscribeLogs: (
+  subscriptionId: string
+) => Promise<ServiceResponse<void>>;
+
+// Migration & Versioning
+export const devRelease: (
+  dbname: string,
+  version: string,
+  migrationSQL?: string,
+  seedSQL?: string
+) => Promise<ServiceResponse<VersionInfo>>;
+export const devRollback: (
+  dbname: string,
+  toVersion: string
+) => Promise<ServiceResponse<VersionInfo>>;
+export const getDbVersion: (
+  dbname: string
+) => Promise<ServiceResponse<VersionInfo>>;
+
+// OPFS File Browser
+export const getOpfsFiles: (
+  path?: string,
+  dbname?: string
+) => Promise<ServiceResponse<OpfsFileEntry[]>>;
+export const downloadOpfsFile: (
+  path: string
+) => Promise<ServiceResponse<OpfsDownload>>;
+
+// Service API Object
+export const databaseService: {
+  getDatabases: typeof getDatabases;
+  getTableList: typeof getTableList;
+  getTableSchema: typeof getTableSchema;
+  queryTableData: typeof queryTableData;
+  execSQL: typeof execSQL;
+  subscribeLogs: typeof subscribeLogs;
+  unsubscribeLogs: typeof unsubscribeLogs;
+  devRelease: typeof devRelease;
+  devRollback: typeof devRollback;
+  getDbVersion: typeof getDbVersion;
+  getOpfsFiles: typeof getOpfsFiles;
+  downloadOpfsFile: typeof downloadOpfsFile;
+};
 ```

@@ -38,10 +38,10 @@ NOTES
 
 ## 3) Current stage
 
-- **Current stage (1-8)**: Stage 8 - Implementation (Worker)
+- **Current stage (1-8)**: Stage 5 - Design (Service Layer Expansion - Feature F-001)
 - **Active release**: v1.0.0 (MVP) - Target: 2026-01-27
 - **Status summary**: TASK-01, TASK-02, TASK-03, TASK-04, TASK-05 completed, 7 tasks remaining for MVP
-- **Last updated (YYYY-MM-DD)**: 2026-01-13 (Refactor - inspectedWindow eval access)
+- **Last updated (YYYY-MM-DD)**: 2026-01-13 (Feature F-001: Service Layer Expansion - Design Complete)
 
 ## 4) Technology stack (chosen in Stage 2)
 
@@ -50,7 +50,7 @@ NOTES
 - **Client/UI**: React 18 + Tailwind CSS 4 + react-router-dom (hash routing)
 - **Database**: N/A (connects to existing web-sqlite-js v2.1.0+)
 - **Cache**: N/A
-- **Messaging**: Chrome Runtime API (content script proxy pattern)
+- **Messaging**: Chrome Runtime API (content script proxy pattern) + Service Layer (Feature F-001)
 - **Routing**: react-router-dom v6 with HashRouter
 - **SQL Editor**: CodeMirror 6 (pending spike S-003 validation)
 - **Icons**: react-icons
@@ -65,6 +65,7 @@ NOTES
 - `agent-docs/01-discovery/01-brief.md`
 - `agent-docs/01-discovery/02-requirements.md`
 - `agent-docs/01-discovery/03-scope.md`
+- `agent-docs/01-discovery/features/F-001-service-layer-expansion.md` (NEW - Feature F-001)
 - `agent-docs/02-feasibility/01-options.md`
 - `agent-docs/02-feasibility/02-risk-assessment.md`
 - `agent-docs/02-feasibility/03-spike-plan.md`
@@ -77,11 +78,12 @@ NOTES
 - `agent-docs/04-adr/0004-message-protocol.md`
 - `agent-docs/04-adr/0005-log-ring-buffer.md`
 - `agent-docs/04-adr/0006-auto-reconnect-strategy.md`
-- `agent-docs/05-design/01-contracts/01-api.md`
+- `agent-docs/05-design/01-contracts/01-api.md` (UPDATED - Service Layer API)
 - `agent-docs/05-design/01-contracts/02-events.md`
 - `agent-docs/05-design/01-contracts/03-errors.md`
-- `agent-docs/05-design/02-schema/01-message-types.md`
-- `agent-docs/05-design/03-modules/devtools-panel.md`
+- `agent-docs/05-design/02-schema/01-message-types.md` (UPDATED - Service Layer Types)
+- `agent-docs/05-design/03-modules/devtools-panel.md` (UPDATED - Service Layer Integration)
+- `agent-docs/05-design/03-modules/database-service.md` (NEW - Feature F-001)
 - `agent-docs/05-design/03-modules/content-script-proxy.md`
 - `agent-docs/05-design/03-modules/background-service.md`
 - `agent-docs/05-design/03-modules/opfs-browser.md`
@@ -103,3 +105,14 @@ NOTES
 - **2026-01-13**: Stage 7 Task Management completed - 6-phase roadmap (14 days) and 12 actionable tasks created
 - **2026-01-13**: TASK-05 completed - Database List & Table Browser (inspectedWindow eval, sidebar DB list, table list)
 - **2026-01-13**: Architecture refactor - replace channel messaging with inspectedWindow eval for DB access
+- **2026-01-13**: Feature F-001 Architecture Update - Service Layer Expansion (3-layer pattern: Presentation → Service → Bridge)
+  - Updated HLD to document 10 database service functions in centralized service layer
+  - Separation of concerns: Components → databaseService.ts → inspectedWindowBridge → page context
+  - All database operations now go through service layer for testability and maintainability
+- **2026-01-13**: Feature F-001 Design Complete - Service Layer API and LLD Documentation
+  - Updated `01-contracts/01-api.md` with complete service layer API (10 functions)
+  - Created new `03-modules/database-service.md` with detailed service layer LLD
+  - Updated `03-modules/devtools-panel.md` with service layer integration guide
+  - Updated `02-schema/01-message-types.md` with ServiceResponse<T> types
+  - Documented 3-layer architecture: Components → Service → Bridge → Page Context
+  - Migration path defined for components to adopt service layer
