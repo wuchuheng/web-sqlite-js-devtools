@@ -20,18 +20,23 @@ src/devtools/
   index.tsx                 # Entry point
   DevTools.tsx              # Root component
   components/
+    Shared/                 # Shared components (F-006)
+      index.tsx
+      ResizeHandle.tsx      # Reusable resize handle
     Sidebar/                # Sidebar navigation
       index.tsx
       SidebarHeader.tsx
       DatabaseList.tsx
       OPFSLink.tsx
       CollapseToggle.tsx
-    TableTab/               # Table browser
+    TablesTab/              # Table browser (F-005, F-006)
       index.tsx
-      TableList.tsx
-      MultiTableHeader.tsx
-      TableContent.tsx
-      PaginationBar.tsx
+      TableList.tsx         # Table list sidebar
+      OpenedTableTabs.tsx   # Opened tabs with close buttons (F-005 NEW)
+      TableDetail.tsx       # Table detail with resizable schema (F-006 MODIFIED)
+      TableContent.tsx      # Table content area
+      TableSchema.tsx       # Schema panel (F-003, F-006)
+      PaginationBar.tsx     # Pagination controls
     QueryTab/               # SQL editor
       index.tsx
       CodeMirrorEditor.tsx
@@ -187,6 +192,70 @@ flowchart TD
   - **Data Access**:
     - `databaseService.getOpfsFiles(path?, dbname?)`
     - `databaseService.downloadOpfsFile(path)`
+
+- **ResizeHandle** (F-006: Shared Component)
+  - **Purpose**: Reusable draggable resize handle for vertical panel dividers
+  - **Props**:
+    - `position: 'left' | 'right'` - Which edge to attach to
+    - `onDrag: (deltaX: number) => void` - Drag callback
+    - `minWidth?: number` - Minimum panel width (default: 150)
+    - `maxWidth?: number` - Maximum panel width (default: 800)
+    - `currentWidth: number` - Current panel width
+  - **State**:
+    - `isDragging: boolean` - Drag in progress
+    - `dragStartX: number` - Mouse X position at drag start
+  - **Handlers**:
+    - `handleMouseDown(e)` - Start drag, capture initial X
+    - `handleMouseMove(e)` - Calculate delta, call onDrag with constraints
+    - `handleMouseUp()` - End drag, cleanup event listeners
+  - **No Data Access** (Pure UI component)
+
+- **OpenedTableTabs** (F-005: New Component)
+  - **Purpose**: State-managed opened tabs with close buttons
+  - **Props**:
+    - `dbname: string` - Current database name
+    - `tabs: TableTab[]` - Array of opened tabs
+    - `activeTab: TableTab | null` - Currently active tab
+    - `onOpenTable: (tableName: string) => void` - Open table handler
+    - `onSelectTab: (tab: TableTab) => void` - Select tab handler
+    - `onCloseTab: (tab: TableTab) => void` - Close tab handler
+  - **Sub-Component**: `TabButton` (memoized)
+    - `tab: TableTab` - Tab data
+    - `isActive: boolean` - Active state
+    - `onSelect: () => void` - Click handler
+    - `onClose: () => void` - Close button click handler
+  - **Empty State**: Shows "No tables open" message when `tabs.length === 0`
+  - **Close Button**: `IoMdClose` icon (react-icons/io), visible on group-hover
+  - **No Data Access** (Pure UI component)
+
+- **TableDetail** (F-005, F-006: Modified)
+  - **F-005 Changes** (Tab Management):
+    - **New State**:
+      - `openedTabs: TableTab[]` - Array of opened tables
+      - `activeTab: TableTab | null` - Currently active tab
+    - **New Handlers**:
+      - `handleAutoOpenFirstTable()` - Auto-open first table on mount/db change
+      - `handleOpenTable(tableName)` - Add to opened tabs (no duplicates)
+      - `handleCloseTab(tab)` - Remove tab and auto-switch
+      - `handleSelectTab(tab)` - Set as active tab
+    - **Effect**: Auto-open first table when `tables.length > 0 && openedTabs.length === 0`
+  - **F-006 Changes** (Resizable Schema Panel):
+    - **New State**: `schemaPanelWidth: number` (default: 320)
+    - **New Handler**: `handleSchemaResize(deltaX)` - Update width with constraints
+    - **Inline Style**: `style={{ width: \`${schemaPanelWidth}px\` }}`
+    - **ResizeHandle**: Positioned at left edge of schema panel
+  - **Data Access**:
+    - `databaseService.getTableList(dbname)` - For auto-open first table
+    - `databaseService.getTableSchema(dbname, tableName)` - Schema data
+    - `databaseService.queryTableData(dbname, sql, limit, offset)` - Table data
+
+- **TablesTab** (F-006: Modified)
+  - **F-006 Changes** (Resizable Sidebar):
+    - **New State**: `sidebarWidth: number` (default: 300)
+    - **New Handler**: `handleSidebarResize(deltaX)` - Update width with constraints
+    - **Inline Style**: `style={{ width: \`${sidebarWidth}px\`, minWidth: \`${sidebarWidth}px\` }}`
+    - **ResizeHandle**: Positioned at right edge of sidebar
+  - **Data Access**: `databaseService.getTableList(dbname)` - For table list
 
 ### Hooks
 

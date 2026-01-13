@@ -16,9 +16,10 @@ NOTES
 
 - **Feature ID**: F-004
 - **Title**: DDL Syntax Highlight & Copy Button
-- **Status**: Pending Approval
+- **Status**: ✅ Completed
 - **Priority**: P2 (Medium) - UX enhancement for DDL viewing
 - **Created**: 2026-01-14
+- **Completed**: 2026-01-14
 - **Requester**: User feedback on DDL display usability
 - **Dependencies**: F-003 (Schema Panel Enhancement)
 
@@ -397,5 +398,6 @@ import { FaCheck } from "react-icons/fa";
 
 ---
 
-**Feature Status**: Ready for Stage 3 (Architecture) review
-**Next Steps**: Update HLD with DDL copy state management, then proceed to LLD
+**Feature Status**: ✅ Completed
+**Completed**: 2026-01-14
+**Implementation**: DDL syntax highlighting with `react-syntax-highlighter` (Prism.js light theme) + copy button with clipboard API fallback

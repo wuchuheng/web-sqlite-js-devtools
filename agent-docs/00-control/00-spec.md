@@ -38,10 +38,10 @@ NOTES
 
 ## 3) Current stage
 
-- **Current stage (1-8)**: Stage 8 - Implementation (Worker - TASK-202)
-- **Active release**: v1.1.0 (Post-MVP) - Target: TBD
-- **Status summary**: TASK-201 complete, TASK-202 complete, 1 task remaining for v1.1.0
-- **Last updated (YYYY-MM-DD)**: 2026-01-14 (TASK-202: Keyboard Shortcuts)
+- **Current stage (1-8)**: Stage 8 - Implementation (Worker - TASK-301)
+- **Active release**: v1.2.0 (Enhancements) - Target: TBD
+- **Status summary**: TASK-301 complete (F-005), TASK-302 pending (F-006)
+- **Last updated (YYYY-MM-DD)**: 2026-01-14 (TASK-301: Opened Table Tabs Management)
 
 ## 4) Technology stack (chosen in Stage 2)
 
@@ -68,7 +68,9 @@ NOTES
 - `agent-docs/01-discovery/features/F-001-service-layer-expansion.md` (NEW - Feature F-001)
 - `agent-docs/01-discovery/features/F-002-database-tab-navigation.md`
 - `agent-docs/01-discovery/features/F-003-schema-panel-enhancement.md` (NEW - Feature F-003)
-- `agent-docs/01-discovery/features/F-004-ddl-syntax-highlight-copy.md` (NEW - Feature F-004)
+- `agent-docs/01-discovery/features/F-004-ddl-syntax-highlight-copy.md` (COMPLETED - Feature F-004)
+- `agent-docs/01-discovery/features/F-005-opened-table-tabs-management.md` (NEW - Feature F-005)
+- `agent-docs/01-discovery/features/F-006-resizable-vertical-dividers.md` (NEW - Feature F-006)
 - `agent-docs/02-feasibility/01-options.md`
 - `agent-docs/02-feasibility/02-risk-assessment.md`
 - `agent-docs/02-feasibility/03-spike-plan.md`
@@ -149,3 +151,24 @@ NOTES
   - Implemented `getOpfsFiles(path?, dbname?)` using navigator.storage.getDirectory()
   - Implemented `downloadOpfsFile(path)` with blob URL creation (caller responsible for cleanup)
   - Updated `databaseService` exports with getOpfsFiles/downloadOpfsFile functions
+- **2026-01-14**: Feature F-004 completed - DDL Syntax Highlight & Copy Button
+  - Implemented SQL syntax highlighting using `react-syntax-highlighter` with Prism.js light theme
+  - Added copy button with clipboard API (`navigator.clipboard.writeText`)
+  - Success feedback: green checkmark (`FaCheck`) persists until next click
+  - Error handling: inline error message if clipboard API unavailable
+  - Bundle impact: ~18.8KB for Prism.js variant, < 50KB total increase
+- **2026-01-14**: Feature F-005 completed - Opened Table Tabs Management (TASK-301)
+  - Created OpenedTableTabs component with memoized TabButton sub-component
+  - Implemented state-managed opened tabs (show only opened tables, not all)
+  - Close button with IoMdClose icon, visible on group-hover, hidden by default
+  - Auto-switch to next tab after close (tries same index, falls back to last)
+  - React Context for state sharing between TablesTab (parent) and TableDetail (child)
+  - State owned by TablesTab, consumed via useOpenedTabs hook
+  - Removed old TableTabButton component and tables.map() loop
+  - Build passed with no errors (4.30s)
+- **2026-01-14**: Feature F-006 created - Resizable Vertical Dividers
+  - Draggable resize handles on all vertical pane dividers
+  - Cursor change to `col-resize` on hover
+  - Left sidebar resize (min: 200px, max: 600px, default: 300px)
+  - Right schema panel resize (min: 250px, max: 600px, default: 320px)
+  - Reusable component: `ResizeHandle.tsx`

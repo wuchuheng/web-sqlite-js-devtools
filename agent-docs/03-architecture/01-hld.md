@@ -127,8 +127,16 @@ C4Container
       /services         # Service Layer (Business Logic)
         databaseService.ts    # All database operations (10 functions)
       /components       # React components
+        /Shared         # Shared components (F-006)
+          ResizeHandle.tsx    # Reusable resize handle
         /Sidebar        # Sidebar navigation
-        /TableTab       # Table browser
+        /TablesTab      # Table browser (F-005, F-006)
+          TableList.tsx         # Table list sidebar
+          OpenedTableTabs.tsx   # Opened tabs with close buttons (F-005 NEW)
+          TableDetail.tsx       # Table detail with resizable schema (F-006 MODIFIED)
+          TableContent.tsx      # Table content area
+          TableSchema.tsx       # Schema panel (F-003, F-006)
+          PaginationBar.tsx     # Pagination controls
         /QueryTab       # SQL editor
         /LogTab         # Log viewer
         /MigrationTab   # Migration playground
@@ -209,30 +217,37 @@ DevTools (Root)
 │       │   ├── DatabaseTabHeader (5 tabs: Tables, Query, Migration, Seed, About)
 │       │   └── Outlet (Nested Routes)
 │       │       ├── TablesTab (/openedDB/:dbname/tables)
-│       │       │   ├── TableListSidebar (25% width)
-│       │       │   ├── OpenedTableTabs (Tab bar for opened tables)
-│       │       │   └── TableContentArea (75% width)
-│       │       │       ├── TableDetail (/openedDB/:dbname/tables/:tableName)
-│       │       │       │   ├── TableDataPanel (Left: data + pagination) - Full width when schema hidden
-│       │       │       │   └── SchemaPanel (Right: toggleable, tabbed view)
-│       │       │       │       ├── SchemaPanelHeader (Toggle button + Table/DDL tabs)
-│       │       │       │       ├── SchemaTableView (Column info table)
-│       │       │       │       └── SchemaDDLView (SQL with syntax highlight + copy button)
-│       │       │       └── EmptyState (No table selected)
-│       │       ├── QueryTab (/openedDB/:dbname/query)
-│       │       │   ├── CodeMirrorEditor
-│       │       │   ├── QueryResults
-│       │       │   └── ExportButton
-│       │       ├── MigrationTab (/openedDB/:dbname/migration)
-│       │       │   ├── HelperNotice
-│       │       │   ├── CodeMirrorEditor
-│       │       │   └── TestControls (Release/Rollback)
-│       │       ├── SeedTab (/openedDB/:dbname/seed)
-│       │       │   ├── HelperNotice
-│       │       │   ├── CodeMirrorEditor
-│       │       │   └── TestControls (Release/Rollback)
-│       │       └── AboutTab (/openedDB/:dbname/about)
-│       │           └── DatabaseMetadata
+│       │       │   ├── TableListSidebar (Resizable: 200-600px, default 300px)
+│       │       │   │   ├── ResizeHandle (right edge)
+│       │       │   │   └── Table list items (onClick: handleOpenTable)
+│       │       │   ├── OpenedTableTabs (F-005: State-managed opened tabs)
+│       │       │   │   ├── TabButton (opened tables only)
+│       │       │   │   │   ├── Table name (truncate)
+│       │       │   │   │   └── Close button (IoMdClose, group-hover)
+│       │       │   │   └── Empty state
+│       │       │   └── TableContentArea (flex-1, auto-adjusts)
+│       │       │       └── TableDetail (/openedDB/:dbname/tables/:tableName)
+│       │       │           ├── TableDataPanel (Left: data + pagination) - Full width when schema hidden
+│       │       │           └── SchemaPanel (Right: toggleable, resizable, tabbed view)
+│       │       │               ├── ResizeHandle (F-006: left edge)
+│       │       │               ├── SchemaPanelHeader (Toggle button + Table/DDL tabs)
+│       │       │               ├── SchemaTableView (Column info table)
+│       │       │               └── SchemaDDLView (SQL with syntax highlight + copy button)
+│       │       └── EmptyState (No table selected)
+│       ├── QueryTab (/openedDB/:dbname/query)
+│       │   ├── CodeMirrorEditor
+│       │   ├── QueryResults
+│       │   └── ExportButton
+│       ├── MigrationTab (/openedDB/:dbname/migration)
+│       │   ├── HelperNotice
+│       │   ├── CodeMirrorEditor
+│       │   └── TestControls (Release/Rollback)
+│       ├── SeedTab (/openedDB/:dbname/seed)
+│       │   ├── HelperNotice
+│       │   ├── CodeMirrorEditor
+│       │   └── TestControls (Release/Rollback)
+│       └── AboutTab (/openedDB/:dbname/about)
+│           └── DatabaseMetadata
 │       ├── LogView (/logs/:dbname) - Separate route (not under database tabs)
 │       │   ├── LogFilter
 │       │   └── LogList (500 entry ring buffer)
@@ -551,4 +566,405 @@ SchemaPanel
             ├── Language: SQL
             ├── Style: prism (light theme)
             └── Custom Style (gray-50 bg, 12px font)
+```
+
+## 11) Opened Table Tabs Management Architecture (Feature F-005)
+
+**Purpose**: Replace "all tables" tab bar with state-managed opened tabs, enabling users to control which tables are visible in the header.
+
+**Problem Solved**:
+
+- **Current Issue**: Header bar shows ALL tables from database, duplicating sidebar functionality
+- **Solution**: Header bar shows only opened tables (state-managed), with close buttons and auto-switch
+
+**State Management Architecture**:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  TableDetail Component (State Owner)                        │
+│  ├── openedTabs: TableTab[] (default: [])                  │
+│  ├── activeTab: TableTab | null (default: null)            │
+│  └── Handler Functions:                                     │
+│      ├── handleAutoOpenFirstTable() - On mount/db change    │
+│      ├── handleOpenTable(tableName) - Add to opened tabs   │
+│      ├── handleCloseTab(tab) - Remove and auto-switch      │
+│      └── handleSelectTab(tab) - Set as active              │
+└─────────────────────────────────────────────────────────────┘
+                            ↓
+┌─────────────────────────────────────────────────────────────┐
+│  OpenedTableTabs Component (Controlled Props)               │
+│  ├── tabs: TableTab[] (from parent)                        │
+│  ├── activeTab: TableTab | null (from parent)             │
+│  ├── onSelectTab(tab): () => void                          │
+│  └── onCloseTab(tab): () => void                           │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Tab State Flow**:
+
+```
+┌──────────────────┐
+│  Mount Database  │
+└────────┬─────────┘
+         │
+         ▼
+┌──────────────────┐
+│ Auto-open First  │ → openedTabs = [firstTable]
+│      Table       │ → activeTab = firstTable
+└────────┬─────────┘
+         │
+         ▼
+┌──────────────────┐
+│  User Clicks     │ → If not in openedTabs, append
+│  Sidebar Table   │ → Set as activeTab
+└────────┬─────────┘
+         │
+         ▼
+┌──────────────────┐
+│  User Clicks     │ → Remove from openedTabs
+│  Close Button    │ → Auto-switch to next tab
+└──────────────────┘
+```
+
+**Component Hierarchy** (Updated):
+
+```
+TablesTab (/openedDB/:dbname/tables)
+├── TableListSidebar (Resizable width: 200-600px, default 300px)
+│   └── Table list items (onClick: handleOpenTable)
+├── OpenedTableTabs (NEW COMPONENT)
+│   ├── TabButton (opened tables only)
+│   │   ├── Table name (truncate, max-w-150px)
+│   │   ├── Close button (IoMdClose, group-hover opacity)
+│   │   └── Click stops propagation
+│   └── Empty state ("No tables open...")
+└── TableContentArea (flex-1, adjusts automatically)
+    └── TableDetail (/openedDB/:dbname/tables/:tableName)
+        └── Table data + Schema panel
+```
+
+**Auto-Open First Table Logic**:
+
+```typescript
+useEffect(() => {
+  if (tables.length > 0 && openedTabs.length === 0) {
+    const firstTab = { dbname, tableName: tables[0] };
+    setOpenedTabs([firstTab]);
+    setActiveTab(firstTab);
+    navigate(`/openedDB/${rawDbname}/tables/${tables[0]}`);
+  }
+}, [tables, dbname, openedTabs.length]);
+```
+
+**Close Tab Auto-Switch Logic**:
+
+```typescript
+const handleCloseTab = (tabToClose: TableTab) => {
+  setOpenedTabs((prev) => {
+    const filtered = prev.filter((t) => !isSameTab(t, tabToClose));
+
+    if (filtered.length > 0) {
+      // Try to select the tab after the closed one
+      const closedIndex = prev.findIndex((t) => isSameTab(t, tabToClose));
+      const nextTab = filtered[closedIndex] || filtered[filtered.length - 1];
+      setActiveTab(nextTab);
+      navigate(`/openedDB/${rawDbname}/tables/${nextTab.tableName}`);
+    } else {
+      setActiveTab(null);
+      navigate(`/openedDB/${rawDbname}/tables`);
+    }
+
+    return filtered;
+  });
+};
+```
+
+**Close Button Behavior**:
+
+```
+┌─────────────────────────────────────────────┐
+│ [users] [orders] [categories]               │
+│   ↑                                          │
+│   └─ group (hover triggers close button)    │
+│                                              │
+│ Default: Close button hidden (opacity-0)     │
+│ Hover: Close button visible (opacity-100)    │
+│                                              │
+│ Close button:                                │
+│ - Icon: IoMdClose (react-icons/io)          │
+│ - Size: 14px                                │
+│ - Rounded: full (circle background)         │
+│ - Hover: bg-blue-700 (active tab)           │
+│          bg-gray-300 (inactive tab)         │
+└─────────────────────────────────────────────┘
+```
+
+**Empty State Handling**:
+
+```tsx
+if (openedTabs.length === 0) {
+  return (
+    <div className="flex items-center justify-center flex-1 px-4 py-2 text-sm text-gray-500">
+      No tables open. Select a table from the sidebar.
+    </div>
+  );
+}
+```
+
+**Icon Integration**:
+
+- **Close**: `IoMdClose` (react-icons/io) - Close button on each tab
+
+**Theme Colors**:
+
+- **Active Tab**: `bg-blue-600 text-white`
+- **Inactive Tab**: `bg-gray-100 text-gray-700 hover:bg-gray-200`
+- **Close Button (Active)**: `hover:bg-blue-700`
+- **Close Button (Inactive)**: `hover:bg-gray-300`
+
+## 12) Resizable Vertical Dividers Architecture (Feature F-006)
+
+**Purpose**: Add draggable resize handles to all vertical pane dividers, enabling users to customize panel widths.
+
+**Problem Solved**:
+
+- **Current Issue**: Fixed panel widths (sidebar 25%, schema 320px) cannot be adjusted
+- **Solution**: Draggable resize handles with min/max constraints and cursor feedback
+
+**Resize Handle Architecture**:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  ResizeHandle Component (Reusable)                           │
+│  ├── position: 'left' | 'right'                            │
+│  ├── onDrag: (deltaX: number) => void                      │
+│  ├── minWidth: number (default: 150)                       │
+│  ├── maxWidth: number (default: 800)                       │
+│  ├── currentWidth: number                                   │
+│  └── State:                                                 │
+│      ├── isDragging: boolean                               │
+│      ├── dragStartX: number                                │
+│      └── Event handlers (mousedown, mousemove, mouseup)    │
+└─────────────────────────────────────────────────────────────┘
+                            ↓
+┌─────────────────────────────────────────────────────────────┐
+│  Parent Component (TablesTab, TableDetail)                  │
+│  ├── panelWidth state (pixels)                              │
+│  ├── handleResize callback                                  │
+│  └── Inline style for width                                 │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Resizable Panels**:
+
+```
+TablesTab Layout:
+┌────┬──────────────────────────────────────────────────┐
+│    │                                                  │
+ │    │                                                  │
+ │    │                                                  │
+ │ ───┘ ← ResizeHandle (right edge of sidebar)          │
+ │    ├──────────────────────────────────────────────────┤
+ │    │ TableContentArea (flex-1, auto-adjusts)         │
+ └────┴──────────────────────────────────────────────────┘
+      │
+      └─ Sidebar (width: 200-600px, default: 300px)
+
+TableDetail Layout:
+┌──────────────────────────────────────────┬────┐
+│ TableDataPanel (flex-1)                  │    │
+│                                            │    │
+│                                            │ ───┤ ← ResizeHandle (left edge)
+├────────────────────────────────────────────┤    │
+│ SchemaPanel (width: 250-600px, default 320px) │
+└────────────────────────────────────────────┴────┘
+```
+
+**State Management** (TablesTab):
+
+```typescript
+const [sidebarWidth, setSidebarWidth] = useState(300);
+
+const handleSidebarResize = useCallback((deltaX: number) => {
+  setSidebarWidth(prev => {
+    const newWidth = prev + deltaX;
+    return Math.max(200, Math.min(600, newWidth));
+  });
+}, []);
+
+// Apply to sidebar
+<aside
+  className="border-r border-gray-200 bg-white flex flex-col relative"
+  style={{ width: `${sidebarWidth}px`, minWidth: `${sidebarWidth}px` }}
+>
+  {/* Content */}
+  <ResizeHandle
+    position="right"
+    onDrag={handleSidebarResize}
+    currentWidth={sidebarWidth}
+    minWidth={200}
+    maxWidth={600}
+  />
+</aside>
+```
+
+**State Management** (TableDetail):
+
+```typescript
+const [schemaPanelWidth, setSchemaPanelWidth] = useState(320);
+
+const handleSchemaResize = useCallback((deltaX: number) => {
+  setSchemaPanelWidth(prev => {
+    const newWidth = prev - deltaX; // Subtract because dragging left expands
+    return Math.max(250, Math.min(600, newWidth));
+  });
+}, []);
+
+// Apply to schema panel
+<div
+  className="relative"
+  style={{ width: `${schemaPanelWidth}px` }}
+>
+  <ResizeHandle
+    position="left"
+    onDrag={handleSchemaResize}
+    currentWidth={schemaPanelWidth}
+    minWidth={250}
+    maxWidth={600}
+  />
+  <SchemaPanel />
+</div>
+```
+
+**Resize Handle Event Flow**:
+
+```
+┌──────────────────┐
+│  Mouse Down      │ → isDragging = true
+│  on Handle       │ → dragStartX = e.clientX
+└────────┬─────────┘
+         │
+         ▼
+┌──────────────────┐
+│  Mouse Move      │ → deltaX = e.clientX - dragStartX
+│  (document)      │ → Enforce min/max constraints
+└────────┬─────────┘ → Call onDrag(deltaX)
+         │
+         ▼
+┌──────────────────┐
+│  Mouse Up        │ → isDragging = false
+│  (document)      │ → Cleanup event listeners
+└──────────────────┘
+```
+
+**Cursor Change Strategy**:
+
+```css
+/* Resize handle base */
+.resize-handle {
+  cursor: col-resize;
+}
+
+/* Hover state */
+.resize-handle:hover {
+  background: #bfdbfe; /* blue-200 */
+  width: 8px; /* Expand from 4px */
+}
+```
+
+**Visual Feedback**:
+
+```
+Default State:
+┌────────┐
+│        │ 4px transparent, cursor: col-resize
+└────────┘
+
+Hover State:
+┌────────┐
+│        │ 8px blue-200, cursor: col-resize
+└────────┘
+
+Dragging State:
+┌────────┐
+│        │ 8px blue-300, cursor: col-resize
+└────────┘
+```
+
+**Component Hierarchy** (Updated):
+
+```
+Shared Components (NEW)
+└── ResizeHandle.tsx (Reusable)
+    ├── Props: position, onDrag, minWidth, maxWidth, currentWidth
+    └── Handles: mousedown, mousemove, mouseup
+
+TablesTab (MODIFIED)
+├── sidebarWidth state (300px default)
+├── handleSidebarResize callback
+├── TableListSidebar (resizable)
+│   └── ResizeHandle (position: right)
+└── TableContentArea (auto-adjusts)
+
+TableDetail (MODIFIED)
+├── schemaPanelWidth state (320px default)
+├── handleSchemaResize callback
+├── TableDataPanel (auto-adjusts)
+└── SchemaPanel (resizable)
+    └── ResizeHandle (position: left)
+```
+
+**Min/Max Constraints**:
+
+| Panel                    | Min Width | Max Width | Default |
+| ------------------------ | --------- | --------- | ------- |
+| TablesTab Sidebar        | 200px     | 600px     | 300px   |
+| TableDetail Schema Panel | 250px     | 600px     | 320px   |
+
+**Accessibility**:
+
+- **ARIA Role**: `role="separator"`
+- **ARIA Orientation**: `aria-orientation="vertical"`
+- **ARIA Label**: `aria-label="Resize panel"`
+- **Focus**: Handle is focusable (keyboard resize optional, future enhancement)
+
+**Performance Optimizations**:
+
+- **Direct Updates**: No debouncing (drag is user-controlled)
+- **Event Cleanup**: Document event listeners removed on unmount
+- **React.memo**: TabButton component memoized to prevent re-renders
+
+**CSS Styling Strategy**:
+
+```css
+/* Resize handle positioning */
+.resize-handle-left {
+  position: absolute;
+  left: -8px; /* Negative margin for offset */
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  cursor: col-resize;
+}
+
+.resize-handle-right {
+  position: absolute;
+  right: -8px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  cursor: col-resize;
+}
+
+/* Hover state */
+.resize-handle:hover {
+  width: 8px;
+  background: #bfdbfe; /* blue-200 */
+}
+
+/* Dragging state */
+.resize-handle.dragging {
+  width: 8px;
+  background: #93c5fd; /* blue-300 */
+}
 ```

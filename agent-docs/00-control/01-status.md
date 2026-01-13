@@ -14,20 +14,21 @@ NOTES
 
 ## 1) Project stage
 
-- **Current stage**: Stage 7 - Task Management (Roadmap & Catalog)
-- **Current focus**: Feature F-004 - DDL Syntax Highlight & Copy Button
-- **Last updated**: 2026-01-14 (F-004: Implementation complete)
+- **Current stage**: Stage 8 - Implementation (Worker - TASK-301)
+- **Current focus**: Feature F-005 - Opened Table Tabs Management
+- **Last updated**: 2026-01-14 (TASK-301: Implementation complete)
 
 ## 2) Active work
 
 | Item         | Owner     | Status | Evidence                      |
 | ------------ | --------- | ------ | ----------------------------- |
-| All Complete | S8:worker | Done   | F-004 implementation complete |
+| All Complete | S8:worker | Done   | TASK-301 implementation complete |
 
 ## 3) Done (Recent)
 
 | Task                                                                       | Owner     | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | -------------------------------------------------------------------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| TASK-301: Opened Table Tabs Management (F-005)                             | S8:worker | `src/devtools/components/TablesTab/OpenedTableTabs.tsx` (new component with memoized TabButton, IoMdClose close button, empty state), `src/devtools/components/TablesTab/TablesTab.tsx` (OpenedTabsContext, state management, handlers), `src/devtools/components/TablesTab/TableDetail.tsx` (context consumption, OpenedTableTabs integration, removed TableTabButton)                                                                                                                                                       |
 | F-004: DDL Syntax Highlight & Copy Button                                  | S8:worker | `src/devtools/components/TablesTab/SchemaDDLView.tsx` (state, copy button, syntax highlighter), `package.json` (react-syntax-highlighter)                                                                                                                                                                                                                                                                                                                                                                             |
 | F-003: Schema Panel Enhancement                                            | S8:worker | `src/devtools/components/TablesTab/SchemaPanel.tsx`, `src/devtools/components/TablesTab/SchemaPanelHeader.tsx`, `src/devtools/components/TablesTab/SchemaTableView.tsx`, `src/devtools/components/TablesTab/SchemaDDLView.tsx`, `src/devtools/components/TablesTab/SchemaLoadingSkeleton.tsx`, `src/devtools/components/TablesTab/SchemaErrorMessage.tsx`, `src/devtools/components/TablesTab/TableDetail.tsx` (state + handlers + responsive width), `src/devtools/services/databaseService.ts` (DDL generation fix) |
 | TASK-202: Keyboard Shortcuts                                               | S8:worker | `src/devtools/hooks/useKeyboardShortcuts.ts`, `src/devtools/components/KeyboardShortcutsHelp.tsx`, `src/devtools/DevTools.tsx` (keyboard handler), `src/devtools/components/Sidebar/Sidebar.tsx` (collapse state lifted), `src/devtools/components/QueryTab/QueryTab.tsx` (ref callbacks)                                                                                                                                                                                                                             |
@@ -194,3 +195,14 @@ NOTES
   - Build passed (3.96s)
   - Bundle impact: 739.84 kB (259.63 kB gzipped) for syntax highlighter chunk
   - All 5 tasks complete (100%)
+- **C28**: 2026-01-14 - TASK-301 implementation completed (F-005: Opened Table Tabs Management)
+  - Created OpenedTableTabs.tsx component with memoized TabButton sub-component
+  - Implemented React Context (OpenedTabsContext) for state sharing between TablesTab and TableDetail
+  - State owned by TablesTab: openedTabs, activeTab
+  - Handlers: handleOpenTable, handleSelectTab, handleCloseTab with three-phase comments
+  - Close button with IoMdClose icon, visible on group-hover, hidden by default
+  - Auto-switch to next tab after close (tries same index, falls back to last)
+  - Empty state: "No tables open. Select a table from the sidebar."
+  - Updated TableDetail to consume context via useOpenedTabs hook
+  - Removed old TableTabButton component and tables.map() loop
+  - Build passed with no errors (4.30s)

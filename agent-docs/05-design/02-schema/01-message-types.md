@@ -95,6 +95,18 @@ interface TableSchema {
   ddl: string; // Complete CREATE TABLE SQL
 }
 
+// Table tab identifier (F-005: Opened Table Tabs Management)
+interface TableTab {
+  dbname: string; // Database name
+  tableName: string; // Table name
+}
+
+// Equality check for TableTab
+function isSameTab(a: TableTab | null, b: TableTab | null): boolean {
+  if (!a || !b) return false;
+  return a.dbname === b.dbname && a.tableName === b.tableName;
+}
+
 // Query result (from queryTableData)
 interface QueryResult {
   rows: Array<Record<string, any>>;

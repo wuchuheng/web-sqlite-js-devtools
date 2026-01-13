@@ -405,3 +405,158 @@ NOTES
     - [x] Small button size (text-xs) matching pagination style
     - [x] Import icons from react-icons (bs, im)
     - [x] Build passed with no errors
+
+- [x] **F-004**: DDL Syntax Highlight & Copy Button (COMPLETED)
+  - **Priority**: P2 (Medium)
+  - **Dependencies**: F-003 (Schema Panel Enhancement)
+  - **Boundary**: `src/devtools/components/TablesTab/SchemaDDLView.tsx`
+  - **Maps to**: F-004
+  - **Feature**: [F-004: DDL Syntax Highlight & Copy Button](agent-docs/01-discovery/features/F-004-ddl-syntax-highlight-copy.md)
+  - **Completed**: 2026-01-14
+  - **DoD**:
+    - [x] SQL syntax highlighting with react-syntax-highlighter (Prism.js light theme)
+    - [x] Copy button with MdOutlineContentCopy icon
+    - [x] Success feedback with FaCheck icon (green)
+    - [x] Clipboard API integration with error handling
+    - [x] Inline error message if copy fails
+    - [x] Build passed with no errors
+
+- [x] **TASK-301**: Opened Table Tabs Management Feature (F-005)
+  - **Priority**: P1 (High)
+  - **Dependencies**: F-002, F-003
+  - **Boundary**: `src/devtools/components/TablesTab/OpenedTableTabs.tsx`, `src/devtools/components/TablesTab/TableDetail.tsx`, `src/devtools/components/TablesTab/TablesTab.tsx`
+  - **Maps to**: F-005
+  - **Feature**: [F-005: Opened Table Tabs Management](agent-docs/01-discovery/features/F-005-opened-table-tabs-management.md)
+  - **Micro-Spec**: [completed](agent-docs/08-task/active/TASK-301.md)
+  - **Estimated**: 10 hours (3-4 days)
+  - **Completed**: 2026-01-14
+  - **DoD**:
+    - [x] **Component: OpenedTableTabs.tsx** (4 hours)
+      - [x] Create `OpenedTableTabs.tsx` component file
+      - [x] Implement `TabButton` sub-component (memoized with React.memo)
+        - Table name with truncate (max-w-150px)
+        - Close button with `IoMdClose` icon (react-icons/io)
+        - Close button hidden by default (opacity-0), visible on group-hover (opacity-100)
+        - Click stops propagation on close button
+      - [x] Implement empty state: "No tables open. Select a table from the sidebar."
+      - [x] Props interface: `dbname`, `tabs`, `activeTab`, `onOpenTable`, `onSelectTab`, `onCloseTab`
+      - [x] Active tab styling: bg-blue-600 text-white
+      - [x] Inactive tab styling: bg-gray-100 text-gray-700 hover:bg-gray-200
+      - [x] Close button hover: bg-blue-700 (active), bg-gray-300 (inactive)
+      - [x] Export component and types
+    - [x] **State Management in TablesTab** (3 hours)
+      - [x] Add state: `openedTabs: TableTab[]` (default: [])
+      - [x] Add state: `activeTab: TableTab | null` (default: null)
+      - [x] Add `handleOpenTable(tableName)` handler
+        - Check if table already in openedTabs
+        - If not, append to openedTabs
+        - Set as activeTab
+        - Navigate to table route
+      - [x] Add `handleSelectTab(tab)` handler
+        - Set as active tab
+        - Navigate to table route
+      - [x] Add `handleCloseTab(tab)` handler
+        - Filter closed tab from openedTabs
+        - If other tabs exist: select tab at same index (or last), update activeTab, navigate
+        - If no tabs exist: set activeTab to null, navigate to `/openedDB/:dbname/tables`
+    - [x] **Integration with TablesTab** (2 hours)
+      - [x] Create OpenedTabsContext and useOpenedTabs hook
+      - [x] Update TablesTab sidebar onClick to call handleOpenTable
+      - [x] Wire up state and handlers via context provider
+    - [x] **Integration with TableDetail** (1 hour)
+      - [x] Import OpenedTableTabs component
+      - [x] Consume context via useOpenedTabs hook
+      - [x] Remove old TableTabButton component
+      - [x] Remove tables.map() loop and loading states
+      - [x] Render OpenedTableTabs in header
+    - [x] **Testing** (1 hour)
+      - [x] Clicking sidebar table adds to opened tabs
+      - [x] No duplicate tabs created
+      - [x] Close button visible on hover, hidden by default
+      - [x] Closing active tab switches to next tab
+      - [x] Closing inactive tab keeps current active
+      - [x] Closing last tab shows empty state
+      - [x] Navigation updates correctly on all actions
+    - [x] Build passed with no errors
+
+- [ ] **TASK-302**: Resizable Vertical Dividers Feature (F-006)
+  - **Priority**: P2 (Medium)
+  - **Dependencies**: F-005
+  - **Boundary**: `src/devtools/components/Shared/ResizeHandle.tsx`, `src/devtools/components/TablesTab/TablesTab.tsx`, `src/devtools/components/TablesTab/TableDetail.tsx`
+  - **Maps to**: F-006
+  - **Feature**: [F-006: Resizable Vertical Dividers](agent-docs/01-discovery/features/F-006-resizable-vertical-dividers.md)
+  - **Estimated**: 10 hours (3-4 days)
+  - **DoD**:
+    - [ ] **Component: ResizeHandle.tsx** (4 hours)
+      - [ ] Create `ResizeHandle.tsx` in Shared components folder
+      - [ ] Props interface: `position`, `onDrag`, `minWidth`, `maxWidth`, `currentWidth`
+      - [ ] Add state: `isDragging`, `dragStartX`
+      - [ ] Implement `handleMouseDown(e)` - Start drag, capture initial X
+      - [ ] Implement `handleMouseMove(e)` in useEffect
+        - Calculate delta X from dragStartX
+        - Adjust delta based on position (left vs right)
+        - Enforce min/max constraints
+        - Call `onDrag(adjustedDelta)`
+        - Update dragStartX for next frame
+      - [ ] Implement `handleMouseUp()` - End drag, cleanup listeners
+      - [ ] Cursor change: `cursor: col-resize` (inline style)
+      - [ ] Visual hover state: `hover:bg-blue-200 hover:w-2`
+      - [ ] Visual dragging state: `w-2 bg-blue-300`
+      - [ ] Positioning: absolute, left/right offset, top-0, bottom-0
+      - [ ] ARIA attributes: `role="separator"`, `aria-orientation="vertical"`, `aria-label="Resize panel"`
+      - [ ] Export component
+    - [ ] **TablesTab Resizable Sidebar** (3 hours)
+      - [ ] Add state: `sidebarWidth: number` (default: 300)
+      - [ ] Add `handleSidebarResize(deltaX)` handler
+        - Update width: `prev + deltaX`
+        - Enforce constraints: `Math.max(200, Math.min(600, newWidth))`
+      - [ ] Apply inline style to sidebar: `style={{ width: \`${sidebarWidth}px\`, minWidth: \`${sidebarWidth}px\` }}`
+      - [ ] Add `relative` class to sidebar container
+      - [ ] Add ResizeHandle at right edge (position="right", minWidth=200, maxWidth=600)
+      - [ ] Remove fixed `w-1/4` class from sidebar
+    - [ ] **TableDetail Resizable Schema Panel** (3 hours)
+      - [ ] Add state: `schemaPanelWidth: number` (default: 320)
+      - [ ] Add `handleSchemaResize(deltaX)` handler
+        - Update width: `prev - deltaX` (subtract because dragging left expands)
+        - Enforce constraints: `Math.max(250, Math.min(600, newWidth))`
+      - [ ] Apply inline style to schema panel wrapper: `style={{ width: schemaPanelVisible ? \`${schemaPanelWidth}px\` : '0px' }}`
+      - [ ] Add `relative` class to schema panel wrapper
+      - [ ] Add ResizeHandle at left edge (position="left", minWidth=250, maxWidth=600)
+      - [ ] Only show ResizeHandle when `schemaPanelVisible === true`
+      - [ ] Remove fixed `w-80` class from schema panel
+    - [ ] **Testing** (1 hour)
+      - [ ] Cursor changes to col-resize on hover
+      - [ ] Visual indicator appears on hover
+      - [ ] Sidebar resize works (200-600px)
+      - [ ] Schema panel resize works (250-600px)
+      - [ ] Table content area adjusts during resize
+      - [ ] No horizontal scroll during resize
+      - [ ] Resize is smooth (60fps)
+      - [ ] Resize works when schema panel hidden
+    - [ ] Build passed with no errors
+
+- [ ] **TASK-303**: Integration Testing & Polish (F-005, F-006)
+  - **Priority**: P1 (High)
+  - **Dependencies**: TASK-301, TASK-302
+  - **Boundary**: Full extension, manual testing
+  - **Maps to**: F-005, F-006
+  - **Estimated**: 6 hours (1 day)
+  - **DoD**:
+    - [ ] **Cross-feature Testing** (2 hours)
+      - [ ] Resize works with opened tabs
+      - [ ] Schema panel toggle works with custom width
+      - [ ] Tab close works with custom panel widths
+      - [ ] No state conflicts between features
+    - [ ] **Edge Cases** (2 hours)
+      - [ ] Closing tab while resizing
+      - [ ] Switching databases resets opened tabs
+      - [ ] Min/max constraints enforced correctly
+      - [ ] Mouse release outside browser window handled
+    - [ ] **Polish** (2 hours)
+      - [ ] Fix any visual glitches
+      - [ ] Fix any state bugs
+      - [ ] Update HLD if needed
+      - [ ] Update LLD if needed
+      - [ ] Update feature docs with completion status
+    - [ ] Build passed with no errors
+    - [ ] Extension loads and functions correctly

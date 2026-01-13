@@ -92,11 +92,48 @@ NOTES
 - [ ] **TASK-102**: Seed playground (FR-033, FR-034)
   - **Note**: Service layer functions implemented in TASK-05.4
 
-### Release v1.2.0 (Future)
+### Release v1.2.0 (Enhancements)
 
-- [ ] **TASK-201**: Query history (FR-106)
-- [ ] **TASK-202**: Keyboard shortcuts (FR-107)
-- [ ] **TASK-203**: Dark/light theme toggle (FR-108)
+**Target Date**: 2026-01-21 (1 week from 2026-01-14)
+**Focus**: UX improvements - Opened tabs management, Resizable panels, DDL syntax highlighting
+
+#### Phase 1: DDL Syntax Highlight (Day 1)
+
+**Milestone**: F-004 Complete
+
+- [x] **F-004**: DDL Syntax Highlight & Copy Button (Completed 2026-01-14)
+  - SQL syntax highlighting with react-syntax-highlighter (Prism.js light theme)
+  - Copy button with clipboard API and success feedback
+
+#### Phase 2: Tab Management (Days 2-4)
+
+**Milestone**: F-005 Complete - Opened table tabs with close buttons
+
+- [ ] **TASK-301**: Opened Table Tabs Management Feature (F-005)
+  - Create `OpenedTableTabs.tsx` component with close buttons
+  - Implement state-managed opened tabs
+  - Auto-open first table on database selection
+  - Auto-switch to next tab after close
+  - Empty state handling
+
+#### Phase 3: Resizable Panels (Days 5-6)
+
+**Milestone**: F-006 Complete - Draggable resize handles
+
+- [ ] **TASK-302**: Resizable Vertical Dividers Feature (F-006)
+  - Create shared `ResizeHandle.tsx` component
+  - Implement TablesTab resizable sidebar (200-600px)
+  - Implement TableDetail resizable schema panel (250-600px)
+  - Cursor change and visual feedback
+
+#### Phase 4: Testing & Polish (Day 7)
+
+**Milestone**: Production-ready features
+
+- [ ] **TASK-303**: Integration Testing & Polish
+  - Test both features together
+  - Fix any visual glitches or state bugs
+  - Update documentation
 
 ## 3. Milestones (History)
 
