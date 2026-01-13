@@ -60,7 +60,7 @@ export const PaginationBar = ({
         type="button"
         onClick={onRefresh}
         disabled={loading}
-        className="p-1 text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        className="flex items-center justify-center w-6 h-6 text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         title="Refresh"
       >
         <RefreshIcon size={14} className={loading ? "animate-spin" : ""} />
@@ -73,11 +73,11 @@ export const PaginationBar = ({
           type="button"
           onClick={() => onPageChange(0)}
           disabled={page === 0 || loading || totalPages === 0}
-          className="p-1 text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="flex items-center justify-center w-6 h-6 text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           title="First page"
         >
+          <ChevronLeftIcon size={12} className="-mr-1.5" />
           <ChevronLeftIcon size={12} />
-          <ChevronLeftIcon size={12} className="-ml-1.5" />
         </button>
 
         {/* Previous page button */}
@@ -85,7 +85,7 @@ export const PaginationBar = ({
           type="button"
           onClick={() => onPageChange(page - 1)}
           disabled={page === 0 || loading || totalPages === 0}
-          className="p-1 text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="flex items-center justify-center w-6 h-6 text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           title="Previous page"
         >
           <ChevronLeftIcon size={12} />
@@ -99,7 +99,7 @@ export const PaginationBar = ({
           max={totalPages || 1}
           defaultValue={currentPage}
           disabled={loading || totalPages === 0}
-          className="w-14 px-1.5 py-0.5 text-xs text-center border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-14 h-6 px-1.5 text-xs text-center border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
         />
 
         {/* Go button */}
@@ -107,7 +107,7 @@ export const PaginationBar = ({
           type="button"
           onClick={handleGoToPage}
           disabled={loading || totalPages === 0}
-          className="px-2 py-0.5 text-xs font-medium text-gray-600 bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="h-6 px-2 text-xs font-medium text-gray-600 bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           Go
         </button>
@@ -117,7 +117,7 @@ export const PaginationBar = ({
           type="button"
           onClick={() => onPageChange(page + 1)}
           disabled={page >= totalPages - 1 || loading || totalPages === 0}
-          className="p-1 text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="flex items-center justify-center w-6 h-6 text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           title="Next page"
         >
           <ChevronRightIcon size={12} />
@@ -128,7 +128,7 @@ export const PaginationBar = ({
           type="button"
           onClick={() => onPageChange(Math.max(0, totalPages - 1))}
           disabled={page >= totalPages - 1 || loading || totalPages === 0}
-          className="p-1 text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="flex items-center justify-center w-6 h-6 text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           title="Last page"
         >
           <ChevronRightIcon size={12} />
