@@ -1,6 +1,11 @@
 /* Import Tailwind CSS v4 */
 @import "tailwindcss";
 
+@theme {
+  --color-primary: #059669; /* emerald-600 */
+  --color-primary-light: #ecfdf5; /* emerald-50 */
+}
+
 /* DevTools panel base styles */
 :root {
   font-family:
@@ -22,6 +27,13 @@
 * {
   box-sizing: border-box;
 }
+
+a {
+  color: inherit;
+  text-decoration: none;
+  margin: 0;
+}
+
 
 html,
 body {

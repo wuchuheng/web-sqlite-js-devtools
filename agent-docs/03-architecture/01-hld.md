@@ -294,6 +294,7 @@ DevTools (Root)
    - `downloadOpfsFile(path)` - Download file
 
 **Benefits**:
+
 - **Testability**: Service functions can be unit tested without Chrome APIs
 - **Reusability**: Single source of truth for database operations
 - **Maintainability**: Business logic isolated from Chrome API concerns

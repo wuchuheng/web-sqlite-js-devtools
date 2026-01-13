@@ -175,7 +175,7 @@ flowchart TD
 - **MigrationTab**
   - `handleTest()`: Create dev version via service layer
   - `handleRollback()`: Rollback dev version
-  - **render()`: Show helper notice + editor + controls
+  - \*\*render()`: Show helper notice + editor + controls
   - **Data Access**:
     - `databaseService.devRelease(dbname, version, migrationSQL?, seedSQL?)`
     - `databaseService.devRollback(dbname, toVersion)`
@@ -221,8 +221,9 @@ flowchart TD
 **Location**: `src/devtools/services/databaseService.ts`
 
 **Import Pattern**:
+
 ```typescript
-import { databaseService } from '@/devtools/services/databaseService';
+import { databaseService } from "@/devtools/services/databaseService";
 ```
 
 **Available Functions**:
@@ -250,6 +251,7 @@ import { databaseService } from '@/devtools/services/databaseService';
    - `databaseService.downloadOpfsFile(path)`
 
 **Response Handling**:
+
 ```typescript
 const response = await databaseService.getTableList("main");
 if (response.success) {
@@ -268,8 +270,9 @@ if (response.success) {
 **Purpose**: Low-level Chrome API wrapper (not used directly by components)
 
 **Usage**: Only service layer imports this:
+
 ```typescript
-import { inspectedWindowBridge } from '../bridge/inspectedWindow';
+import { inspectedWindowBridge } from "../bridge/inspectedWindow";
 ```
 
 **Public API Re-exports** (Backward Compatible)
@@ -279,6 +282,7 @@ import { inspectedWindowBridge } from '../bridge/inspectedWindow';
 **Purpose**: Re-export service and bridge for backward compatibility
 
 **Deprecated Exports**:
+
 ```typescript
 /**
  * @deprecated Use {@link databaseService.getDatabases} instead
@@ -303,12 +307,13 @@ export const getTableListFromInspectedWindow = databaseService.getTableList;
 ### Component Migration Pattern
 
 **Before** (Direct inspectedWindow access):
+
 ```typescript
-import { getDatabasesFromInspectedWindow } from '@/devtools/inspectedWindow';
+import { getDatabasesFromInspectedWindow } from "@/devtools/inspectedWindow";
 
 const MyComponent = () => {
   useEffect(() => {
-    getDatabasesFromInspectedWindow().then(result => {
+    getDatabasesFromInspectedWindow().then((result) => {
       if (result.success) {
         setDatabases(result.data);
       }
@@ -318,12 +323,13 @@ const MyComponent = () => {
 ```
 
 **After** (Service layer access):
+
 ```typescript
-import { databaseService } from '@/devtools/services/databaseService';
+import { databaseService } from "@/devtools/services/databaseService";
 
 const MyComponent = () => {
   useEffect(() => {
-    databaseService.getDatabases().then(response => {
+    databaseService.getDatabases().then((response) => {
       if (response.success) {
         setDatabases(response.data);
       } else {
@@ -337,9 +343,10 @@ const MyComponent = () => {
 ### Custom Hook Pattern
 
 **Encapsulate service calls in hooks**:
+
 ```typescript
 // hooks/useDatabase.ts
-import { databaseService } from '@/devtools/services/databaseService';
+import { databaseService } from "@/devtools/services/databaseService";
 
 export const useDatabase = (dbname?: string) => {
   const [databases, setDatabases] = useState<DatabaseSummary[]>([]);
@@ -381,6 +388,7 @@ export const useDatabase = (dbname?: string) => {
 ### Error Handling Pattern
 
 **Always check `success` field**:
+
 ```typescript
 const response = await databaseService.getTableSchema("main", "users");
 

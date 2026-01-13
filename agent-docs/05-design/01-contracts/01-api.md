@@ -250,7 +250,9 @@ agent-docs/05-design/
   ```
 - **Response (200)**:
   ```typescript
-  { success: true }
+  {
+    success: true;
+  }
   ```
 - **Business Logic**:
   - Calls `window.__web_sqlite.unsubscribeLogs(subscriptionId)` in inspected page

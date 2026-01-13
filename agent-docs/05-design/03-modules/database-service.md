@@ -435,6 +435,7 @@ export type ServiceResponse<T> = {
 ### Tasks
 
 See [Task Catalog](../07-taskManager/02-task-catalog.md) for detailed task breakdown:
+
 - TASK-05.1: Service Layer - Table Schema Functions
 - TASK-05.2: Service Layer - SQL Execution Functions
 - TASK-05.3: Service Layer - Log Streaming Functions

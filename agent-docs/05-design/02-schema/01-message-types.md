@@ -85,21 +85,21 @@ interface DatabaseSummary {
 // Table schema (from getTableSchema)
 interface TableSchema {
   columns: Array<{
-    cid: number;          // Column ID
-    name: string;         // Column name
-    type: string;         // Data type
-    notnull: number;      // NOT NULL constraint (0/1)
-    dflt_value: any;      // Default value
-    pk: number;           // Primary key position (0 if not PK)
+    cid: number; // Column ID
+    name: string; // Column name
+    type: string; // Data type
+    notnull: number; // NOT NULL constraint (0/1)
+    dflt_value: any; // Default value
+    pk: number; // Primary key position (0 if not PK)
   }>;
-  ddl: string;            // Complete CREATE TABLE SQL
+  ddl: string; // Complete CREATE TABLE SQL
 }
 
 // Query result (from queryTableData)
 interface QueryResult {
   rows: Array<Record<string, any>>;
-  total: number;          // Total row count (for pagination)
-  columns: string[];      // Column names
+  total: number; // Total row count (for pagination)
+  columns: string[]; // Column names
 }
 
 // Execution result (from execSQL)
@@ -110,7 +110,7 @@ interface ExecResult {
 
 // Version info (from getDbVersion, devRelease, devRollback)
 interface VersionInfo {
-  version: string;        // Semantic version (e.g., "1.2.3")
+  version: string; // Semantic version (e.g., "1.2.3")
 }
 
 // Log subscription (from subscribeLogs, unsubscribeLogs)
@@ -122,13 +122,13 @@ interface LogSubscription {
 interface OpfsFileEntry {
   name: string;
   kind: "file" | "directory";
-  size?: string;          // Human-readable size (e.g., "1.2 MB")
+  size?: string; // Human-readable size (e.g., "1.2 MB")
 }
 
 // OPFS download (from downloadOpfsFile)
 interface OpfsDownload {
-  blobUrl: string;        // Object URL for download
-  filename: string;       // Extracted from path
+  blobUrl: string; // Object URL for download
+  filename: string; // Extracted from path
 }
 ```
 
@@ -438,31 +438,33 @@ interface OPFSBrowserProps {
 ```typescript
 // Database Discovery
 export const getDatabases: () => Promise<ServiceResponse<DatabaseSummary[]>>;
-export const getTableList: (dbname: string) => Promise<ServiceResponse<string[]>>;
+export const getTableList: (
+  dbname: string,
+) => Promise<ServiceResponse<string[]>>;
 
 // Schema & Data Inspection
 export const getTableSchema: (
   dbname: string,
-  tableName: string
+  tableName: string,
 ) => Promise<ServiceResponse<TableSchema>>;
 export const queryTableData: (
   dbname: string,
   sql: string,
   limit: number,
-  offset: number
+  offset: number,
 ) => Promise<ServiceResponse<QueryResult>>;
 export const execSQL: (
   dbname: string,
   sql: string,
-  params?: SQLParams
+  params?: SQLParams,
 ) => Promise<ServiceResponse<ExecResult>>;
 
 // Log Streaming
 export const subscribeLogs: (
-  dbname: string
+  dbname: string,
 ) => Promise<ServiceResponse<LogSubscription>>;
 export const unsubscribeLogs: (
-  subscriptionId: string
+  subscriptionId: string,
 ) => Promise<ServiceResponse<void>>;
 
 // Migration & Versioning
@@ -470,23 +472,23 @@ export const devRelease: (
   dbname: string,
   version: string,
   migrationSQL?: string,
-  seedSQL?: string
+  seedSQL?: string,
 ) => Promise<ServiceResponse<VersionInfo>>;
 export const devRollback: (
   dbname: string,
-  toVersion: string
+  toVersion: string,
 ) => Promise<ServiceResponse<VersionInfo>>;
 export const getDbVersion: (
-  dbname: string
+  dbname: string,
 ) => Promise<ServiceResponse<VersionInfo>>;
 
 // OPFS File Browser
 export const getOpfsFiles: (
   path?: string,
-  dbname?: string
+  dbname?: string,
 ) => Promise<ServiceResponse<OpfsFileEntry[]>>;
 export const downloadOpfsFile: (
-  path: string
+  path: string,
 ) => Promise<ServiceResponse<OpfsDownload>>;
 
 // Service API Object

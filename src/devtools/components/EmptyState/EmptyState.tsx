@@ -14,9 +14,9 @@ export const EmptyState = () => {
   return (
     <div className="flex flex-col items-center justify-center h-full p-8 text-center">
       {/* 1. Large SiSqlite icon as visual anchor */}
-      {/* 2. Blue color for brand consistency */}
+      {/* 2. Primary color for brand consistency */}
       {/* 3. Size text-6xl for prominence */}
-      <SiSqlite className="text-blue-600 text-6xl mb-6" />
+      <SiSqlite className="text-primary text-6xl mb-6" />
 
       {/* 1. Main heading for empty state */}
       {/* 2. Large text for readability */}
@@ -38,15 +38,15 @@ export const EmptyState = () => {
       <ul className="text-left text-sm text-gray-500 space-y-2 max-w-md">
         <li className="flex items-start gap-2">
           {/* Bullet point indicator */}
-          <span className="text-blue-600 mt-1">•</span>
+          <span className="text-primary mt-1">•</span>
           <span>Open a page that uses web-sqlite-js</span>
         </li>
         <li className="flex items-start gap-2">
-          <span className="text-blue-600 mt-1">•</span>
+          <span className="text-primary mt-1">•</span>
           <span>Click on a database in the sidebar to view tables</span>
         </li>
         <li className="flex items-start gap-2">
-          <span className="text-blue-600 mt-1">•</span>
+          <span className="text-primary mt-1">•</span>
           <span>Browse OPFS files using the OPFS link</span>
         </li>
       </ul>

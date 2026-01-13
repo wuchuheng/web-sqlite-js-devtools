@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { FaDatabase } from "react-icons/fa";
 import {
   getDatabasesFromInspectedWindow,
@@ -7,6 +7,7 @@ import {
 } from "@/devtools/inspectedWindow";
 import { useInspectedWindowRequest } from "@/devtools/hooks/useInspectedWindowRequest";
 import { getDatabaseNameFromPath } from "@/devtools/utils/databaseNames";
+import { SidebarLink } from "./SidebarLink";
 
 /**
  * Database list navigation item
@@ -45,19 +46,14 @@ export const DatabaseList = ({ isCollapsed }: DatabaseListProps) => {
   );
 
   /**
-   * 1. Check if current route is root ("/")
-   * 2. Return active styling classes if on root route
-   * 3. Return default hover classes if not active
-   */
-  const getActiveClass = (isActive: boolean): string =>
-    isActive ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-100";
-
-  /**
    * 1. Determine if currently on root route
    * 2. Used for "Opened DB" header active styling
    * 3. Keeps header inactive when viewing a specific database
    */
-  const isActive = location.pathname === "/" || location.pathname === "";
+  const isActive =
+    location.pathname === "/"
+    || location.pathname === ""
+    || (isCollapsed && location.pathname.startsWith("/openedDB"));
   const activeDatabase = useMemo(
     () => getDatabaseNameFromPath(location.pathname),
     [location.pathname],
@@ -71,26 +67,20 @@ export const DatabaseList = ({ isCollapsed }: DatabaseListProps) => {
    * @returns JSX.Element - Database list navigation
    */
   return (
-    <div className="flex flex-col">
-      <Link
+    <div className="flex flex-col ">
+      <SidebarLink
         to="/"
-        className={`flex items-center gap-2 px-4 py-2 cursor-pointer transition-colors ${getActiveClass(
-          isActive,
-        )}`}
-      >
-        {/* 1. FaDatabase icon always visible */}
-        {/* 2. Color changes based on active state */}
-        <FaDatabase className="text-sm flex-shrink-0" />
-
-        {/* 1. "Opened DB" text hidden when collapsed */}
-        {/* 2. Database list shown below when expanded */}
-        {!isCollapsed && <span className="text-sm">Opened DB</span>}
-      </Link>
+        label="Opened DB"
+        icon={FaDatabase}
+        isActive={isActive}
+        isCollapsed={isCollapsed}
+        className="px-4 py-2"
+      />
 
       {!isCollapsed && (
         <div className="pb-2">
           {isLoading && (
-            <div className="px-8 py-2 text-xs text-gray-500">
+            <div className="px-8 text-xs text-gray-500">
               Loading databases...
             </div>
           )}
@@ -108,7 +98,7 @@ export const DatabaseList = ({ isCollapsed }: DatabaseListProps) => {
           )}
 
           {!isLoading && !error && databases.length === 0 && (
-            <div className="px-8 py-2 text-xs text-gray-500">
+            <div className="px-8  text-xs text-gray-500">
               No databases opened
             </div>
           )}
@@ -119,17 +109,16 @@ export const DatabaseList = ({ isCollapsed }: DatabaseListProps) => {
               const isDbActive = activeDatabase === database.name;
 
               return (
-                <Link
+                <SidebarLink
                   key={database.name}
                   to={`/openedDB/${encodeURIComponent(database.name)}`}
-                  className={`flex items-center justify-between gap-2 px-8 py-1 text-xs transition-colors ${getActiveClass(
-                    isDbActive,
-                  )}`}
-                >
-                  <span className="truncate" title={database.name}>
-                    {database.name}
-                  </span>
-                </Link>
+                  label={database.name}
+                  isActive={isDbActive}
+                  className="px-8 py-2 text-xs"
+                  style={{
+                    fontSize: "0.8rem",
+                  }}
+                />
               );
             })}
         </div>

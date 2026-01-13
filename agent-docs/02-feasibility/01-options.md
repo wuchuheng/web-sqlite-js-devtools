@@ -135,17 +135,20 @@ NOTES
 After implementing Option A (Content Script Proxy with runtime messaging), the architecture evolved to use `chrome.scripting.executeScript` for direct page context access. This evolution maintains the spirit of Option A while simplifying the data flow.
 
 **Key Changes**:
+
 - **Removed**: Runtime messaging for database operations (chrome.runtime.sendMessage)
 - **Added**: Direct script execution via chrome.scripting.executeScript (MAIN world)
 - **Result**: 3-layer architecture (Presentation → Service → Bridge) instead of message-based proxy
 
 **Why this aligns with Option A**:
+
 - **Separation of Concerns**: Still maintains clean DevTools UI vs page context separation
 - **React Router**: Hash routing remains unchanged
 - **Content Script**: Still used for icon state updates (not database operations)
 - **Performance**: Eliminates message overhead (~1-5ms savings per call)
 
 **Implementation**:
+
 ```
 DevTools Panel → databaseService (business logic)
                 → inspectedWindowBridge (chrome.scripting.executeScript)
@@ -153,6 +156,7 @@ DevTools Panel → databaseService (business logic)
 ```
 
 **Benefits over original Option A**:
+
 - Simpler data flow (no message serialization)
 - Type-safe argument passing (executeScript supports structured args)
 - Better testability (service layer isolated from Chrome APIs)

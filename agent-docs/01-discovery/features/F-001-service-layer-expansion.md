@@ -33,33 +33,33 @@ Complete the `@src/devtools/services` layer by implementing all remaining SQL co
 
 **Location**: `src/devtools/services/databaseService.ts`
 
-| Function | Status | Description |
-|----------|--------|-------------|
-| `getDatabases()` | ✅ Implemented | List all opened databases |
+| Function               | Status         | Description                        |
+| ---------------------- | -------------- | ---------------------------------- |
+| `getDatabases()`       | ✅ Implemented | List all opened databases          |
 | `getTableList(dbname)` | ✅ Implemented | Get tables for a specific database |
 
 ### Missing Service Functions
 
-| API Channel | Missing Service Function | Description |
-|-------------|------------------------|-------------|
-| `GET_TABLE_SCHEMA` | `getTableSchema(dbname, tableName)` | Get table columns, types, constraints, DDL |
-| `QUERY_TABLE_DATA` | `queryTableData(dbname, sql, limit, offset)` | Execute SELECT with pagination |
-| `EXEC_SQL` | `execSQL(dbname, sql, params?)` | Execute INSERT/UPDATE/DELETE/DDL |
-| `SUBSCRIBE_LOGS` | `subscribeLogs(dbname)` | Subscribe to log events |
-| `UNSUBSCRIBE_LOGS` | `unsubscribeLogs(subscriptionId)` | Unsubscribe from log events |
-| `DEV_RELEASE` | `devRelease(dbname, version, migrationSQL?, seedSQL?)` | Create dev version with migration/seed |
-| `DEV_ROLLBACK` | `devRollback(dbname, toVersion)` | Rollback dev version |
-| `GET_DB_VERSION` | `getDbVersion(dbname)` | Get current database version |
-| `GET_OPFS_FILES` | `getOpfsFiles(path?, dbname?)` | List OPFS files |
-| `DOWNLOAD_OPFS_FILE` | `downloadOpfsFile(path)` | Download OPFS file |
+| API Channel          | Missing Service Function                               | Description                                |
+| -------------------- | ------------------------------------------------------ | ------------------------------------------ |
+| `GET_TABLE_SCHEMA`   | `getTableSchema(dbname, tableName)`                    | Get table columns, types, constraints, DDL |
+| `QUERY_TABLE_DATA`   | `queryTableData(dbname, sql, limit, offset)`           | Execute SELECT with pagination             |
+| `EXEC_SQL`           | `execSQL(dbname, sql, params?)`                        | Execute INSERT/UPDATE/DELETE/DDL           |
+| `SUBSCRIBE_LOGS`     | `subscribeLogs(dbname)`                                | Subscribe to log events                    |
+| `UNSUBSCRIBE_LOGS`   | `unsubscribeLogs(subscriptionId)`                      | Unsubscribe from log events                |
+| `DEV_RELEASE`        | `devRelease(dbname, version, migrationSQL?, seedSQL?)` | Create dev version with migration/seed     |
+| `DEV_ROLLBACK`       | `devRollback(dbname, toVersion)`                       | Rollback dev version                       |
+| `GET_DB_VERSION`     | `getDbVersion(dbname)`                                 | Get current database version               |
+| `GET_OPFS_FILES`     | `getOpfsFiles(path?, dbname?)`                         | List OPFS files                            |
+| `DOWNLOAD_OPFS_FILE` | `downloadOpfsFile(path)`                               | Download OPFS file                         |
 
 ### Components Using Direct `inspectedWindow` Access
 
-| Component | Current Import | Should Import From |
-|-----------|----------------|-------------------|
-| `Sidebar/DatabaseList.tsx` | `@/devtools/inspectedWindow` | `@/devtools/services/databaseService` |
-| `TableTab/TableList.tsx` | `@/devtools/inspectedWindow` | `@/devtools/services/databaseService` |
-| `hooks/useConnection.ts` | Direct `chrome.devtools.inspectedWindow.eval` | Keep for heartbeat (not data access) |
+| Component                  | Current Import                                | Should Import From                    |
+| -------------------------- | --------------------------------------------- | ------------------------------------- |
+| `Sidebar/DatabaseList.tsx` | `@/devtools/inspectedWindow`                  | `@/devtools/services/databaseService` |
+| `TableTab/TableList.tsx`   | `@/devtools/inspectedWindow`                  | `@/devtools/services/databaseService` |
+| `hooks/useConnection.ts`   | Direct `chrome.devtools.inspectedWindow.eval` | Keep for heartbeat (not data access)  |
 
 ## 4) Requirements
 
@@ -118,11 +118,11 @@ Complete the `@src/devtools/services` layer by implementing all remaining SQL co
 
 ## 7) Risks
 
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| web-sqlite-js API undocumented behavior | Medium | Test with real databases, use fallback queries |
-| Offscreen log streaming complexity | Medium | Implement ring buffer in background, defer streaming to later |
-| OPFS API browser support | Low | Check availability, return clear error if unsupported |
+| Risk                                    | Impact | Mitigation                                                    |
+| --------------------------------------- | ------ | ------------------------------------------------------------- |
+| web-sqlite-js API undocumented behavior | Medium | Test with real databases, use fallback queries                |
+| Offscreen log streaming complexity      | Medium | Implement ring buffer in background, defer streaming to later |
+| OPFS API browser support                | Low    | Check availability, return clear error if unsupported         |
 
 ## 8) Acceptance Criteria
 
