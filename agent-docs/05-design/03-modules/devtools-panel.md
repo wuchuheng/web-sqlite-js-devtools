@@ -686,7 +686,7 @@ interface SchemaTableViewProps {
 </div>
 ```
 
-### SchemaDDLView Component
+### SchemaDDLView Component (Enhanced - Feature F-004)
 
 **Location**: `src/devtools/components/TablesTab/SchemaDDLView.tsx`
 
@@ -698,17 +698,113 @@ interface SchemaDDLViewProps {
 }
 ```
 
+**State Interface**:
+
+```typescript
+interface SchemaDDLViewState {
+  copied: boolean;      // Copy success state
+  error: string | null; // Error message from clipboard API
+}
+```
+
+**Icon Imports**:
+
+```typescript
+import { MdOutlineContentCopy } from "react-icons/md";
+import { FaCheck } from "react-icons/fa";
+```
+
+**Syntax Highlighter Import**:
+
+```typescript
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { prism } from "react-syntax-highlighter/dist/esm/styles/prism";
+```
+
+**Handler Functions**:
+
+```typescript
+const handleCopy = async () => {
+  try {
+    await navigator.clipboard.writeText(ddl);
+    setCopied(true);
+    setError(null);
+  } catch (err) {
+    setError("Failed to copy");
+    setCopied(false);
+  }
+};
+
+const handleClick = () => {
+  if (copied) {
+    // Reset copied state on next click
+    setCopied(false);
+  } else {
+    handleCopy();
+  }
+};
+```
+
 **Render Structure**:
 
 ```tsx
 <div className="px-4 py-3">
-  {/* No "DDL" sub-heading - redundant with tab button */}
+  {/* Header row with copy button */}
+  <div className="flex items-center justify-between mb-2">
+    <div className="flex-1" /> {/* Spacer */}
+    <button
+      onClick={handleClick}
+      className="p-1 text-gray-600 hover:text-gray-800 transition-colors"
+      title={copied ? "Copied!" : "Copy DDL"}
+    >
+      {copied ? (
+        <FaCheck className="text-green-600" size={14} />
+      ) : (
+        <MdOutlineContentCopy size={14} />
+      )}
+    </button>
+  </div>
 
-  {/* Dark code block */}
-  <pre className="bg-gray-900 text-green-400 p-3 rounded text-xs overflow-x-auto">
+  {/* Inline error message (conditional) */}
+  {error && (
+    <div className="text-red-600 text-xs mb-2 text-right">{error}</div>
+  )}
+
+  {/* Syntax highlighted DDL (light theme) */}
+  <SyntaxHighlighter
+    language="sql"
+    style={prism}
+    customStyle={{
+      background: '#f9fafb',    // gray-50 (light theme)
+      padding: '12px',
+      borderRadius: '6px',
+      fontSize: '12px',         // text-xs (12px)
+    }}
+  >
     {ddl || "-- No DDL available --"}
-  </pre>
+  </SyntaxHighlighter>
 </div>
+```
+
+**CSS Classes Reference**:
+
+```css
+/* Copy button base */
+.p-1.text-gray-600.hover\:text-gray-800.transition-colors
+
+/* Success state */
+.text-green-600 (FaCheck icon)
+
+/* Error state */
+.text-red-600.text-xs.mb-2.text-right (inline error)
+
+/* Syntax highlighter container */
+customStyle: {
+  background: '#f9fafb',
+  padding: '12px',
+  borderRadius: '6px',
+  fontSize: '12px',
+}
 ```
 
 ### SchemaLoadingSkeleton Component
@@ -750,7 +846,7 @@ interface SchemaErrorMessageProps {
 </div>
 ```
 
-## 9) Type Definitions (Feature F-003)
+## 9) Type Definitions (Feature F-003 + F-004)
 
 ```typescript
 // From databaseService.ts (already exists)
@@ -773,9 +869,48 @@ type SchemaTab = "table" | "ddl";
 
 // Schema panel visibility state
 type SchemaPanelVisibility = boolean;
+
+// F-004: DDL copy state types
+type DDLCopyState = boolean; // true = copied (show checkmark), false = not copied (show copy icon)
+
+type DDLCopyError = string | null; // Error message from clipboard API, or null if no error
 ```
 
-## 10) Icon Dependencies (Feature F-003)
+### Clipboard API Contract (F-004)
+
+```typescript
+// Browser clipboard API
+interface Clipboard {
+  writeText(text: string): Promise<void>;
+}
+
+// Usage in component
+const copyToClipboard = async (text: string): Promise<void> => {
+  await navigator.clipboard.writeText(text);
+};
+
+// Error handling
+try {
+  await navigator.clipboard.writeText(ddl);
+  // Success: set copied state
+} catch (error) {
+  // Error: set error state, keep copied as false
+  setError("Failed to copy");
+}
+```
+
+**Browser Support**:
+- Chrome 66+
+- Edge 79+
+- Firefox 63+
+- Safari 13.1+
+
+**Graceful Degradation**:
+- If `navigator.clipboard` is undefined, catch block will set error state
+- Inline error message: "Failed to copy"
+- Icon remains as copy icon (does not change to checkmark)
+
+## 10) Icon Dependencies (Feature F-003 + F-004)
 
 ```json
 {
@@ -786,6 +921,38 @@ type SchemaPanelVisibility = boolean;
 **Required imports**:
 
 ```typescript
+// F-003: Schema Panel Enhancement
 import { BsReverseLayoutSidebarInsetReverse } from "react-icons/bs";
 import { ImTable2 } from "react-icons/im";
+
+// F-004: DDL Copy Button
+import { MdOutlineContentCopy } from "react-icons/md";
+import { FaCheck } from "react-icons/fa";
+```
+
+## 11) External Dependencies (Feature F-004)
+
+```json
+{
+  "react-syntax-highlighter": "^15.5.0",
+  "@types/react-syntax-highlighter": "^15.5.0"
+}
+```
+
+**Required imports**:
+
+```typescript
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { prism } from "react-syntax-highlighter/dist/esm/styles/prism";
+```
+
+**Bundle Impact**:
+- `react-syntax-highlighter`: ~18.8KB minified (Prism.js variant)
+- Tree-shaking: Can import only SQL language and prism theme
+- Total bundle increase: < 50KB
+
+**Installation Command**:
+
+```bash
+npm install react-syntax-highlighter @types/react-syntax-highlighter
 ```
