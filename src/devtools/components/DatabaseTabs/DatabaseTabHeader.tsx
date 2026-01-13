@@ -50,7 +50,7 @@ export const DatabaseTabHeader = ({ dbname }: DatabaseTabHeaderProps) => {
         <NavLink
           key={tab.path}
           to={`/openedDB/${dbname}/${tab.path}`}
-          end={tab.path === "tables"}
+          end={tab.path === "tables" ? false : undefined}
           className={({ isActive }) =>
             `flex items-center gap-2 px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
               isActive
