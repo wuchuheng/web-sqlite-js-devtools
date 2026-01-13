@@ -38,10 +38,10 @@ NOTES
 
 ## 3) Current stage
 
-- **Current stage (1-8)**: Stage 8 - Implementation (Worker - TASK-05.4)
+- **Current stage (1-8)**: Stage 8 - Implementation (Worker - TASK-05.5)
 - **Active release**: v1.0.0 (MVP) - Target: 2026-01-27
-- **Status summary**: TASK-01 through TASK-05.3 completed, TASK-05.4 in progress, 7 tasks remaining for MVP
-- **Last updated (YYYY-MM-DD)**: 2026-01-13 (TASK-05.4: Service Layer - Migration & Versioning Functions)
+- **Status summary**: TASK-01 through TASK-05.4 completed, TASK-05.5 in progress, 6 tasks remaining for MVP
+- **Last updated (YYYY-MM-DD)**: 2026-01-13 (TASK-05.5: Service Layer - OPFS File Browser Functions)
 
 ## 4) Technology stack (chosen in Stage 2)
 
@@ -140,3 +140,9 @@ NOTES
   - Implemented `devRollback(dbname, toVersion)` using db.devTool.rollback()
   - Implemented `getDbVersion(dbname)` with PRAGMA user_version and fallback to DatabaseRecord maps
   - Updated `databaseService` exports with devRelease/devRollback/getDbVersion functions
+- **2026-01-13**: TASK-05.5 completed - Service Layer OPFS File Browser Functions
+  - Added `OpfsFileEntry`, `OpfsDownloadResult` types for OPFS file metadata
+  - Implemented `formatFileSize` helper function for human-readable file sizes
+  - Implemented `getOpfsFiles(path?, dbname?)` using navigator.storage.getDirectory()
+  - Implemented `downloadOpfsFile(path)` with blob URL creation (caller responsible for cleanup)
+  - Updated `databaseService` exports with getOpfsFiles/downloadOpfsFile functions

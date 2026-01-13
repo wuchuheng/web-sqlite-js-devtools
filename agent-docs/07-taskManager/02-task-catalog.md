@@ -190,12 +190,13 @@ NOTES
     - Unit tests with mocked bridge layer
     - Update `databaseService.ts` with JSDoc comments
 
-- [ ] **TASK-05.5**: Service Layer - OPFS File Browser Functions
+- [x] **TASK-05.5**: Service Layer - OPFS File Browser Functions
   - **Priority**: P1
   - **Dependencies**: TASK-05.2
   - **Boundary**: `src/devtools/services/databaseService.ts`, `src/devtools/bridge/inspectedWindow.ts`
   - **Maps to**: F-001, FR-010, FR-011, FR-027, FR-028, FR-036, FR-037, FR-038
   - **Feature**: F-001 Service Layer Expansion - OPFS Group
+  - **Micro-Spec**: [completed](agent-docs/08-task/active/TASK-05.5.md)
   - **DoD**:
     - Implement `getOpfsFiles(path?, dbname?)` service function
       - Call `navigator.storage.getDirectory()` in inspected page

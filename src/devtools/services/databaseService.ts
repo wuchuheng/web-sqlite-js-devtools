@@ -147,6 +147,30 @@ export type DbVersionResult = {
 };
 
 // ============================================================================
+// OPFS FILE BROWSER TYPES
+// ============================================================================
+
+/**
+ * OPFS file entry with metadata
+ */
+export type OpfsFileEntry = {
+  name: string; // File or directory name
+  path: string; // Full path from root
+  type: "file" | "directory"; // Entry type
+  size: number; // File size in bytes (0 for directories)
+  sizeFormatted: string; // Human-readable size (e.g., "1.5 KB")
+  lastModified?: number; // Timestamp (optional, browser support varies)
+};
+
+/**
+ * OPFS download result with blob URL
+ */
+export type OpfsDownloadResult = {
+  blobUrl: string; // Object URL for download
+  filename: string; // Extracted filename
+};
+
+// ============================================================================
 // SERVICE FUNCTIONS
 // ============================================================================
 
@@ -866,6 +890,219 @@ export const getDbVersion = async (
 };
 
 /**
+ * Helper function to format file size to human-readable format
+ *
+ * @param bytes - File size in bytes
+ * @returns Formatted size string (e.g., "1.5 KB", "2.3 MB")
+ *
+ * @remarks
+ * - If bytes < 1024: return "X B"
+ * - If bytes < 1024 * 1024: return "X.X KB"
+ * - If bytes < 1024 * 1024 * 1024: return "X.X MB"
+ * - Otherwise: return "X.X GB"
+ */
+const formatFileSize = (bytes: number): string => {
+  if (bytes < 1024) {
+    return `${bytes} B`;
+  }
+  if (bytes < 1024 * 1024) {
+    return `${(bytes / 1024).toFixed(1)} KB`;
+  }
+  if (bytes < 1024 * 1024 * 1024) {
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
+};
+
+/**
+ * List OPFS files with lazy loading
+ *
+ * @remarks
+ * 1. Access OPFS root and navigate to path
+ * 2. List directory contents and filter
+ * 3. Format and return entries
+ *
+ * @param path - Optional path to navigate to (defaults to root)
+ * @param dbname - Optional database name to filter entries
+ * @returns OPFS file entries with metadata
+ *
+ * @example
+ * ```typescript
+ * const result = await databaseService.getOpfsFiles();
+ * if (result.success) {
+ *   console.log(result.data); // [{ name: "file.sqlite", type: "file", ... }]
+ * }
+ * ```
+ */
+export const getOpfsFiles = async (
+  path?: string,
+  dbname?: string,
+): Promise<ServiceResponse<OpfsFileEntry[]>> => {
+  return inspectedWindowBridge.execute({
+    func: async (pathArg?: string, dbnameArg?: string) => {
+      try {
+        const ok = <T>(data: T) => ({ success: true as const, data });
+        const fail = (message: string) => ({
+          success: false as const,
+          error: message,
+        });
+
+        // Phase 1: Access OPFS root and navigate to path
+        if (typeof navigator === "undefined" || !navigator.storage) {
+          return fail("OPFS not supported in this browser");
+        }
+
+        const root = await navigator.storage.getDirectory();
+
+        // Navigate to path if provided
+        let currentDir = root;
+        if (pathArg && pathArg.trim() !== "") {
+          const segments = pathArg.split("/").filter(Boolean);
+          for (const segment of segments) {
+            try {
+              currentDir = await currentDir.getDirectoryHandle(segment, {
+                create: false,
+              });
+            } catch {
+              return fail(`Path not found: ${pathArg}`);
+            }
+          }
+        }
+
+        // Phase 2: List directory contents and filter
+        const entries: OpfsFileEntry[] = [];
+        const basePath = pathArg ? pathArg.replace(/^\/+|\/+$/g, "") : "";
+
+        for await (const entry of (currentDir as any).values()) {
+          const entryName = entry.name;
+          const entryPath = basePath ? `${basePath}/${entryName}` : entryName;
+
+          // Filter by dbname if provided
+          if (dbnameArg && !entryName.includes(dbnameArg)) {
+            continue;
+          }
+
+          // Get entry metadata
+          const kind = entry.kind;
+          let size = 0;
+          let lastModified: number | undefined = undefined;
+
+          if (kind === "file") {
+            try {
+              const file = await entry.getFile();
+              size = file.size;
+              lastModified = file.lastModified;
+            } catch {
+              // File might be inaccessible, skip
+              continue;
+            }
+          }
+
+          entries.push({
+            name: entryName,
+            path: entryPath,
+            type: kind === "file" ? ("file" as const) : ("directory" as const),
+            size,
+            sizeFormatted: formatFileSize(size),
+            lastModified,
+          });
+        }
+
+        // Phase 3: Return formatted entries
+        return ok(entries);
+      } catch (error) {
+        return { success: false as const, error: String(error) };
+      }
+    },
+    args: [path, dbname],
+  });
+};
+
+/**
+ * Download OPFS file to user's machine
+ *
+ * @remarks
+ * 1. Resolve file handle from path
+ * 2. Read file and create blob URL
+ * 3. Return response with cleanup responsibility
+ *
+ * @param path - Path to the file to download
+ * @returns Download result with blob URL and filename
+ *
+ * **IMPORTANT**: The caller is responsible for cleanup:
+ * ```typescript
+ * const result = await databaseService.downloadOpfsFile(path);
+ * if (result.success) {
+ *   // Use blobUrl for download
+ *   // Later: URL.revokeObjectURL(result.data.blobUrl);
+ * }
+ * ```
+ */
+export const downloadOpfsFile = async (
+  path: string,
+): Promise<ServiceResponse<OpfsDownloadResult>> => {
+  return inspectedWindowBridge.execute({
+    func: async (filePath: string) => {
+      try {
+        const ok = <T>(data: T) => ({ success: true as const, data });
+        const fail = (message: string) => ({
+          success: false as const,
+          error: message,
+        });
+
+        // Phase 1: Resolve file handle from path
+        if (typeof navigator === "undefined" || !navigator.storage) {
+          return fail("OPFS not supported in this browser");
+        }
+
+        const root = await navigator.storage.getDirectory();
+
+        // Split path into segments and navigate
+        const segments = filePath.split("/").filter(Boolean);
+        if (segments.length === 0) {
+          return fail("Invalid path: empty path");
+        }
+
+        // Navigate to parent directory
+        let currentDir = root;
+        for (let i = 0; i < segments.length - 1; i++) {
+          try {
+            currentDir = await currentDir.getDirectoryHandle(segments[i], {
+              create: false,
+            });
+          } catch {
+            return fail(`Path not found: ${filePath}`);
+          }
+        }
+
+        // Get file handle
+        const filename = segments[segments.length - 1];
+        let fileHandle: FileSystemFileHandle;
+        try {
+          fileHandle = await currentDir.getFileHandle(filename, {
+            create: false,
+          });
+        } catch {
+          return fail(`File not found: ${filePath}`);
+        }
+
+        // Phase 2: Read file and create blob URL
+        const file = await fileHandle.getFile();
+        const arrayBuffer = await file.arrayBuffer();
+        const blob = new Blob([arrayBuffer], { type: file.type });
+        const blobUrl = URL.createObjectURL(blob);
+
+        // Phase 3: Return response with cleanup responsibility
+        return ok({ blobUrl, filename });
+      } catch (error) {
+        return { success: false as const, error: String(error) };
+      }
+    },
+    args: [path],
+  });
+};
+
+/**
  * Helper function to escape SQL identifiers
  *
  * @param identifier - SQL identifier to escape (table name, column name)
@@ -890,4 +1127,6 @@ export const databaseService = Object.freeze({
   devRelease,
   devRollback,
   getDbVersion,
+  getOpfsFiles,
+  downloadOpfsFile,
 });
