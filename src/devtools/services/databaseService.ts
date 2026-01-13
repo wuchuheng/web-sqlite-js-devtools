@@ -28,6 +28,32 @@ function escapeIdentifier(identifier: string): string {
 }
 
 /**
+ * Helper function to format file sizes in human-readable format
+ * MUST be defined at top level (not const) to avoid ReferenceError
+ *
+ * @remarks
+ * - If bytes < 1024: return "X B"
+ * - If bytes < 1024 * 1024: return "X.X KB"
+ * - If bytes < 1024 * 1024 * 1024: return "X.X MB"
+ * - Otherwise: return "X.X GB"
+ *
+ * @param bytes - File size in bytes
+ * @returns Formatted file size string
+ */
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) {
+    return `${bytes} B`;
+  }
+  if (bytes < 1024 * 1024) {
+    return `${(bytes / 1024).toFixed(1)} KB`;
+  }
+  if (bytes < 1024 * 1024 * 1024) {
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
+}
+
+/**
  * Standard response envelope for service operations
  */
 export type ServiceResponse<T> = {
@@ -899,31 +925,6 @@ export const getDbVersion = async (
     },
     args: [dbname],
   });
-};
-
-/**
- * Helper function to format file size to human-readable format
- *
- * @param bytes - File size in bytes
- * @returns Formatted size string (e.g., "1.5 KB", "2.3 MB")
- *
- * @remarks
- * - If bytes < 1024: return "X B"
- * - If bytes < 1024 * 1024: return "X.X KB"
- * - If bytes < 1024 * 1024 * 1024: return "X.X MB"
- * - Otherwise: return "X.X GB"
- */
-const formatFileSize = (bytes: number): string => {
-  if (bytes < 1024) {
-    return `${bytes} B`;
-  }
-  if (bytes < 1024 * 1024) {
-    return `${(bytes / 1024).toFixed(1)} KB`;
-  }
-  if (bytes < 1024 * 1024 * 1024) {
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  }
-  return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
 };
 
 /**
