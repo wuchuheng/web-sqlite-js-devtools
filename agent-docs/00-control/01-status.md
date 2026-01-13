@@ -16,15 +16,14 @@ NOTES
 
 - **Current stage**: Stage 7 - Task Management (Roadmap & Catalog)
 - **Current focus**: Feature F-004 - DDL Syntax Highlight & Copy Button
-- **Last updated**: 2026-01-14 (S5: LLD updated for F-004)
+- **Last updated**: 2026-01-14 (S7: Task catalog created for F-004)
 
 ## 2) Active work
 
 | Item         | Owner     | Status | Evidence                      |
 | ------------ | --------- | ------ | ----------------------------- |
-| F-004 S3     | S3:systemArchitect | Done | HLD updated with DDL copy state |
-| F-004 S5     | S5:contractDesigner | Done | LLD updated with component interfaces |
-| F-004 S7     | S7:taskManager | In Progress | Awaiting task catalog |
+| F-004 S1-S7  | S1-S7 | Done | Ready for implementation |
+| F-004 Impl   | S8:worker | Pending | Awaiting implementation start |
 
 ## 3) Done (Recent)
 
@@ -178,3 +177,10 @@ NOTES
   - Added CSS classes reference for copy button, success/error states
   - Added external dependencies section (react-syntax-highlighter)
   - Updated icon dependencies with MdOutlineContentCopy and FaCheck
+- **C26**: 2026-01-14 - F-004 S7 Task Management completed
+  - Created roadmap (agent-docs/07-task/00-roadmap.md)
+  - Created micro-spec with 5 implementation tasks (agent-docs/08-task/active/F-004.md)
+  - Target release: v1.1.1
+  - Tasks: Install deps, update component state, copy button, syntax highlight, build/test/commit
+  - Bundle impact: ~18.8KB for Prism.js, < 50KB total
+  - Definition of Done: All tasks complete, build passes, manual testing done
