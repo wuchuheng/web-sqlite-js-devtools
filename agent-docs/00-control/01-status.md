@@ -15,40 +15,40 @@ NOTES
 ## 1) Project stage
 
 - **Current stage**: Stage 8 - Implementation (Worker)
-- **Current focus**: F-002 completed, TASK-10 (OPFS File Browser) ready to start
-- **Last updated**: 2026-01-14 (F-002 - Database Tab Navigation Restructuring)
+- **Current focus**: TASK-10 completed, TASK-12 (Testing & Release) ready to start
+- **Last updated**: 2026-01-14 (TASK-10 - OPFS File Browser)
 
 ## 2) Active work
 
-| Item              | Owner     | Status | Evidence                 |
-| ----------------- | --------- | ------ | ------------------------ |
-| (None - awaiting next task selection) | S8:worker | -      | -                        |
+| Item                                  | Owner     | Status | Evidence |
+| ------------------------------------- | --------- | ------ | -------- |
+| (None - awaiting next task selection) | S8:worker | -      | -        |
 
 ## 3) Done (Recent)
 
-| Task                                                                       | Owner     | Evidence                                                                                                                                                                                                                                                                  |
-| -------------------------------------------------------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| F-002: Database Tab Navigation Restructuring                              | S8:worker | `src/devtools/components/DatabaseTabs/`, `src/devtools/components/TablesTab/`, `src/devtools/components/QueryTab/`, `src/devtools/components/MigrationTab/`, `src/devtools/components/SeedTab/`, `src/devtools/components/AboutTab/`, `src/devtools/DevTools.tsx` (nested routes), documentation updates |
-| TASK-09: Log Streaming & Ring Buffer UI                                    | S8:worker | `src/devtools/hooks/useLogSubscription.ts`, `src/devtools/components/LogTab/LogView.tsx`, `src/devtools/components/LogTab/LogList.tsx`, `src/devtools/components/LogTab/LogFilter.tsx`, `src/devtools/DevTools.tsx` (log route)                                           |
-| TASK-06: Table Data & Schema UI                                            | S8:worker | `src/devtools/components/TableTab/TableSchemaPanel.tsx`, `src/devtools/components/TableTab/PaginationBar.tsx`, `src/devtools/components/TableTab/TableTabs.tsx`, `src/devtools/components/TableTab/TableContent.tsx`, `src/devtools/components/TableTab/DatabaseView.tsx` |
-| TASK-05.7/05.8: Component Migration (SKIPPED - components don't exist yet) | S8:worker | QueryTab, LogTab, OPFSBrowser components created in later tasks will use service layer directly from the start                                                                                                                                                            |
-| TASK-05.6: Component Migration - Table Browser Components                  | S8:worker | `src/devtools/components/Sidebar/DatabaseList.tsx` (databaseService.getDatabases), `src/devtools/components/TableTab/TableList.tsx` (databaseService.getTableList), `src/devtools/hooks/useInspectedWindowRequest.ts` (ServiceResponse)                                   |
-| TASK-05.5: Service Layer - OPFS File Browser Functions                     | S8:worker | `src/devtools/services/databaseService.ts` (OpfsFileEntry, OpfsDownloadResult types, formatFileSize, getOpfsFiles, downloadOpfsFile)                                                                                                                                      |
-| TASK-05.4: Service Layer - Migration & Versioning Functions                | S8:worker | `src/devtools/services/databaseService.ts` (ReleaseConfig, DevReleaseResult, RollbackResult, DbVersionResult types, devRelease, devRollback, getDbVersion)                                                                                                                |
-| TASK-05.3: Service Layer - Log Streaming Functions                         | S8:worker | `src/devtools/services/databaseService.ts` (LogEntry, LogSubscription, SubscribeResult types, subscribeLogs, unsubscribeLogs), `src/contentScript/subscriptions/LogRingBuffer.ts` (new file)                                                                              |
-| TASK-05.2: Service Layer - SQL Execution Functions                         | S8:worker | `src/devtools/services/databaseService.ts` (SqlValue, SQLParams, ExecResult types, execSQL)                                                                                                                                                                               |
-| TASK-05.1: Service Layer - Table Schema Functions                          | S8:worker | `src/devtools/services/databaseService.ts` (ColumnInfo, TableSchema, QueryResult types, getTableSchema, queryTableData)                                                                                                                                                   |
-| TASK-05: Database List & Table Browser                                     | S8:worker | `src/devtools/inspectedWindow.ts`, `src/devtools/hooks/useInspectedWindowRequest.ts`, `src/devtools/utils/databaseNames.ts`, `src/devtools/components/Sidebar/DatabaseList.tsx`, `src/devtools/components/TableTab/`, `src/devtools/DevTools.tsx`                         |
-| TASK-04: Icon State & Auto-Reconnect                                       | S8:worker | `src/background/iconState/`, `src/devtools/hooks/useConnection.ts`, `public/img/*-inactive.png`                                                                                                                                                                           |
-| TASK-03: Content Script Proxy & Messaging                                  | S8:worker | `src/contentScript/messaging/`, `src/background/messaging/`                                                                                                                                                                                                               |
-| TASK-02: Sidebar UI & Navigation                                           | S8:worker | `src/devtools/components/Sidebar/`, `EmptyState/`                                                                                                                                                                                                                         |
-| TASK-01: Project Setup (Bug Fix)                                           | S8:worker | `devtools.html` panel creation script added                                                                                                                                                                                                                               |
-| TASK-01: Project Setup (Original)                                          | S8:worker | `src/manifest.ts`, `src/messaging/`, `src/devtools/`                                                                                                                                                                                                                      |
+| Task                                                                       | Owner     | Evidence                                                                                                                                                                                                                                                                                                 |
+| -------------------------------------------------------------------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| TASK-10: OPFS File Browser                                                 | S8:worker | `src/devtools/components/OPFSBrowser/OPFSGallery.tsx`, `src/devtools/components/OPFSBrowser/FileTree.tsx`, `src/devtools/components/OPFSBrowser/FileNode.tsx`, `src/devtools/DevTools.tsx` (OPFS route)                               |
+| F-002: Database Tab Navigation Restructuring                               | S8:worker | `src/devtools/components/DatabaseTabs/`, `src/devtools/components/TablesTab/`, `src/devtools/components/QueryTab/`, `src/devtools/components/MigrationTab/`, `src/devtools/components/SeedTab/`, `src/devtools/components/AboutTab/`, `src/devtools/DevTools.tsx` (nested routes), documentation updates |
+| TASK-09: Log Streaming & Ring Buffer UI                                    | S8:worker | `src/devtools/hooks/useLogSubscription.ts`, `src/devtools/components/LogTab/LogView.tsx`, `src/devtools/components/LogTab/LogList.tsx`, `src/devtools/components/LogTab/LogFilter.tsx`, `src/devtools/DevTools.tsx` (log route)                                                                          |
+| TASK-06: Table Data & Schema UI                                            | S8:worker | `src/devtools/components/TableTab/TableSchemaPanel.tsx`, `src/devtools/components/TableTab/PaginationBar.tsx`, `src/devtools/components/TableTab/TableTabs.tsx`, `src/devtools/components/TableTab/TableContent.tsx`, `src/devtools/components/TableTab/DatabaseView.tsx`                                |
+| TASK-05.7/05.8: Component Migration (SKIPPED - components don't exist yet) | S8:worker | QueryTab, LogTab, OPFSBrowser components created in later tasks will use service layer directly from the start                                                                                                                                                                                           |
+| TASK-05.6: Component Migration - Table Browser Components                  | S8:worker | `src/devtools/components/Sidebar/DatabaseList.tsx` (databaseService.getDatabases), `src/devtools/components/TableTab/TableList.tsx` (databaseService.getTableList), `src/devtools/hooks/useInspectedWindowRequest.ts` (ServiceResponse)                                                                  |
+| TASK-05.5: Service Layer - OPFS File Browser Functions                     | S8:worker | `src/devtools/services/databaseService.ts` (OpfsFileEntry, OpfsDownloadResult types, formatFileSize, getOpfsFiles, downloadOpfsFile)                                                                                                                                                                     |
+| TASK-05.4: Service Layer - Migration & Versioning Functions                | S8:worker | `src/devtools/services/databaseService.ts` (ReleaseConfig, DevReleaseResult, RollbackResult, DbVersionResult types, devRelease, devRollback, getDbVersion)                                                                                                                                               |
+| TASK-05.3: Service Layer - Log Streaming Functions                         | S8:worker | `src/devtools/services/databaseService.ts` (LogEntry, LogSubscription, SubscribeResult types, subscribeLogs, unsubscribeLogs), `src/contentScript/subscriptions/LogRingBuffer.ts` (new file)                                                                                                             |
+| TASK-05.2: Service Layer - SQL Execution Functions                         | S8:worker | `src/devtools/services/databaseService.ts` (SqlValue, SQLParams, ExecResult types, execSQL)                                                                                                                                                                                                              |
+| TASK-05.1: Service Layer - Table Schema Functions                          | S8:worker | `src/devtools/services/databaseService.ts` (ColumnInfo, TableSchema, QueryResult types, getTableSchema, queryTableData)                                                                                                                                                                                  |
+| TASK-05: Database List & Table Browser                                     | S8:worker | `src/devtools/inspectedWindow.ts`, `src/devtools/hooks/useInspectedWindowRequest.ts`, `src/devtools/utils/databaseNames.ts`, `src/devtools/components/Sidebar/DatabaseList.tsx`, `src/devtools/components/TableTab/`, `src/devtools/DevTools.tsx`                                                        |
+| TASK-04: Icon State & Auto-Reconnect                                       | S8:worker | `src/background/iconState/`, `src/devtools/hooks/useConnection.ts`, `public/img/*-inactive.png`                                                                                                                                                                                                          |
+| TASK-03: Content Script Proxy & Messaging                                  | S8:worker | `src/contentScript/messaging/`, `src/background/messaging/`                                                                                                                                                                                                                                              |
+| TASK-02: Sidebar UI & Navigation                                           | S8:worker | `src/devtools/components/Sidebar/`, `EmptyState/`                                                                                                                                                                                                                                                        |
+| TASK-01: Project Setup (Bug Fix)                                           | S8:worker | `devtools.html` panel creation script added                                                                                                                                                                                                                                                              |
+| TASK-01: Project Setup (Original)                                          | S8:worker | `src/manifest.ts`, `src/messaging/`, `src/devtools/`                                                                                                                                                                                                                                                     |
 
 ## 4) Upcoming
 
-- **Next task**: TASK-10 - OPFS File Browser
-- **Pending**: TASK-12 - Testing & Release (depends on all features)
+- **Next task**: TASK-12 - Testing & Release (final task before MVP)
 - **Target date**: 2026-01-27 MVP release
 
 ## 5) Risks / blockers
@@ -83,3 +83,12 @@ NOTES
   - Implemented nested routing structure with redirect to /tables
   - Updated Sidebar links to point to /openedDB/:dbname/tables
   - All S1-S8 documentation updated and conflicts resolved
+- **C13**: 2026-01-14 - F-002 bug fixes completed
+  - Fixed pagination state closure issue in TableDetail
+  - Added SQL injection protection for table names
+  - Improved route detection logic with regex matching
+- **C14**: 2026-01-14 - TASK-10 implementation completed
+  - Created OPFSGallery, FileTree, FileNode components
+  - Implemented lazy-loaded directory expansion
+  - Added per-file download with proper blob URL cleanup
+  - Updated DevTools.tsx to use OPFSGallery component
