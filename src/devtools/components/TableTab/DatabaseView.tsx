@@ -37,9 +37,7 @@ export const DatabaseView = () => {
 
   if (!dbname) {
     return (
-      <div className="p-4 text-sm text-gray-500">
-        No database selected.
-      </div>
+      <div className="p-4 text-sm text-gray-500">No database selected.</div>
     );
   }
 

@@ -26,14 +26,14 @@ NOTES
 
 ## 3) Done (Recent)
 
-| Task                                      | Owner     | Evidence                                                                                        |
-| ----------------------------------------- | --------- | ----------------------------------------------------------------------------------------------- |
+| Task                                      | Owner     | Evidence                                                                                                                                                                                                                                          |
+| ----------------------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | TASK-05: Database List & Table Browser    | S8:worker | `src/devtools/inspectedWindow.ts`, `src/devtools/hooks/useInspectedWindowRequest.ts`, `src/devtools/utils/databaseNames.ts`, `src/devtools/components/Sidebar/DatabaseList.tsx`, `src/devtools/components/TableTab/`, `src/devtools/DevTools.tsx` |
-| TASK-04: Icon State & Auto-Reconnect      | S8:worker | `src/background/iconState/`, `src/devtools/hooks/useConnection.ts`, `public/img/*-inactive.png` |
-| TASK-03: Content Script Proxy & Messaging | S8:worker | `src/contentScript/messaging/`, `src/background/messaging/`                                     |
-| TASK-02: Sidebar UI & Navigation          | S8:worker | `src/devtools/components/Sidebar/`, `EmptyState/`                                               |
-| TASK-01: Project Setup (Bug Fix)          | S8:worker | `devtools.html` panel creation script added                                                     |
-| TASK-01: Project Setup (Original)         | S8:worker | `src/manifest.ts`, `src/messaging/`, `src/devtools/`                                            |
+| TASK-04: Icon State & Auto-Reconnect      | S8:worker | `src/background/iconState/`, `src/devtools/hooks/useConnection.ts`, `public/img/*-inactive.png`                                                                                                                                                   |
+| TASK-03: Content Script Proxy & Messaging | S8:worker | `src/contentScript/messaging/`, `src/background/messaging/`                                                                                                                                                                                       |
+| TASK-02: Sidebar UI & Navigation          | S8:worker | `src/devtools/components/Sidebar/`, `EmptyState/`                                                                                                                                                                                                 |
+| TASK-01: Project Setup (Bug Fix)          | S8:worker | `devtools.html` panel creation script added                                                                                                                                                                                                       |
+| TASK-01: Project Setup (Original)         | S8:worker | `src/manifest.ts`, `src/messaging/`, `src/devtools/`                                                                                                                                                                                              |
 
 ## 4) Upcoming
 

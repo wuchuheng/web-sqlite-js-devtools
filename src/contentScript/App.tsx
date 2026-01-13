@@ -9,18 +9,6 @@
 import { useEffect } from "react";
 import { ICON_STATE_MESSAGE } from "@/shared/messages";
 
-// Declare web-sqlite-js global type
-declare global {
-  interface Window {
-    __web_sqlite?: {
-      databases?: Record<string, unknown>;
-      onDatabaseChange?: (callback: () => void) => void;
-      _updateDatabases?: () => void;
-      _emitEvent?: (event: string, data: unknown) => void;
-    };
-  }
-}
-
 /**
  * Main content script component
  *

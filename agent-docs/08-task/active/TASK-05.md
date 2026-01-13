@@ -11,13 +11,13 @@
 
 ## 2. Requirements Mapping
 
-| FR ID  | Requirement                                   | Implementation                                    |
-| ------ | --------------------------------------------- | ------------------------------------------------- |
-| FR-001 | List opened databases                         | inspectedWindow eval + Sidebar DatabaseList       |
-| FR-008 | Display database list in sidebar              | DatabaseList with nested DB links                 |
-| FR-009 | Table list available per database             | inspectedWindow eval + TableList component        |
-| FR-016 | Navigate to database view on selection        | /openedDB/:dbname route + Link navigation         |
-| FR-017 | Table list sorted and visually active on click | Alphabetical sort + active styling in TableList   |
+| FR ID  | Requirement                                    | Implementation                                  |
+| ------ | ---------------------------------------------- | ----------------------------------------------- |
+| FR-001 | List opened databases                          | inspectedWindow eval + Sidebar DatabaseList     |
+| FR-008 | Display database list in sidebar               | DatabaseList with nested DB links               |
+| FR-009 | Table list available per database              | inspectedWindow eval + TableList component      |
+| FR-016 | Navigate to database view on selection         | /openedDB/:dbname route + Link navigation       |
+| FR-017 | Table list sorted and visually active on click | Alphabetical sort + active styling in TableList |
 
 ## 3. Functional Design
 
@@ -99,6 +99,7 @@ export const useInspectedWindowRequest = <T>(
 **File**: `src/devtools/components/Sidebar/DatabaseList.tsx`
 
 **Behavior**:
+
 - Fetch database list on mount via `getDatabasesFromInspectedWindow` + `useInspectedWindowRequest`.
 - Render "Opened DB" label with nested DB items (indented).
 - Each DB item links to `/openedDB/:dbname`.
@@ -108,11 +109,13 @@ export const useInspectedWindowRequest = <T>(
 ### 4.5 TableList Component + Database View
 
 **Files**:
+
 - `src/devtools/components/TableTab/TableList.tsx`
 - `src/devtools/components/TableTab/DatabaseView.tsx`
 - `src/devtools/DevTools.tsx` (route swap)
 
 **Behavior**:
+
 - TableList fetches tables via `getTableListFromInspectedWindow(dbname)`.
 - Tables are displayed in alphabetical order (already sorted in response).
 - Clicking a table sets active styling (local selection state).

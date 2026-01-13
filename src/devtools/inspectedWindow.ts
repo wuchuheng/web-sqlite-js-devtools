@@ -1,177 +1,52 @@
 /**
- * DevTools inspected window helpers
+ * DevTools Inspected Window API
  *
  * @remarks
- * Executes code in the inspected page via chrome.devtools.inspectedWindow.eval.
- * Used for direct access to window.__web_sqlite without channel messaging.
- */
-
-/**
- * Exception info from chrome.devtools.inspectedWindow.eval
- */
-interface EvaluationExceptionInfo {
-  isException: boolean;
-  value?: unknown;
-}
-
-/**
- * Standard response envelope for inspected window calls
- */
-export type InspectedWindowResponse<T> = {
-  success: boolean;
-  data?: T;
-  error?: string;
-};
-
-/**
- * Database list entry returned from inspected window
- */
-export type DatabaseSummary = {
-  name: string;
-};
-
-/**
- * 1. Wrap evaluation body with try/catch
- * 2. Allow async execution when needed
- * 3. Return standardized response envelope
+ * Public API layer for DevTools panel interaction with inspected page.
+ * Re-exports from bridge and services layers for backward compatibility.
  *
- * @param body - Function body content
- * @param isAsync - Whether to wrap in async IIFE
- * @returns Eval-ready expression string
+ * @module
  */
-const buildEvalExpression = (body: string, isAsync = false): string => {
-  const asyncKeyword = isAsync ? "async " : "";
 
-  return `(${asyncKeyword}() => {
-    try {
-      ${body}
-    } catch (error) {
-      return { success: false, error: String(error) };
-    }
-  })()`;
-};
+// ============================================================================
+// BRIDGE LAYER RE-EXPORTS
+// ============================================================================
+
+export {
+  inspectedWindowBridge,
+  type ExecuteOptions,
+} from "./bridge/inspectedWindow";
+
+// ============================================================================
+// SERVICE LAYER RE-EXPORTS (backward compatible aliases)
+// ============================================================================
+
+import {
+  databaseService,
+  type ServiceResponse,
+  type DatabaseSummary,
+} from "./services/databaseService";
 
 /**
- * 1. Execute expression in inspected window
- * 2. Reject on evaluation exception
- * 3. Resolve with evaluated result
- *
- * @param expression - JavaScript expression string
- * @returns Evaluated result
+ * @deprecated Use {@link ServiceResponse} instead
  */
-const evalInInspectedWindow = <T>(expression: string): Promise<T> => {
-  return new Promise((resolve, reject) => {
-    chrome.devtools.inspectedWindow.eval(
-      expression,
-      (result: T, exceptionInfo: EvaluationExceptionInfo) => {
-        if (exceptionInfo?.isException) {
-          reject(
-            new Error(
-              exceptionInfo.value ? String(exceptionInfo.value) : "Eval failed",
-            ),
-          );
-          return;
-        }
-
-        resolve(result);
-      },
-    );
-  });
-};
+export type InspectedWindowResponse<T> = ServiceResponse<T>;
 
 /**
- * 1. Read window.__web_sqlite.databases
- * 2. Return database names
- * 3. Return empty list when API missing
- *
- * @returns Databases response
+ * @deprecated Use {@link databaseService.getDatabases} instead
  */
-export const getDatabasesFromInspectedWindow = async (): Promise<
-  InspectedWindowResponse<DatabaseSummary[]>
-> => {
-  const expression = buildEvalExpression(`
-    const api = window.__web_sqlite;
-    if (!api || !api.databases) {
-      return { success: true, data: [] };
-    }
-
-    const databaseKeys =
-      typeof api.databases?.keys === "function"
-        ? Array.from(api.databases.keys())
-        : Object.keys(api.databases || {});
-
-    const databases = databaseKeys.map((name) => ({
-      name: String(name),
-    }));
-
-    return { success: true, data: databases };
-  `);
-
-  return evalInInspectedWindow(expression);
-};
+export const getDatabasesFromInspectedWindow = databaseService.getDatabases;
 
 /**
- * 1. Query tables for the selected database
- * 2. Normalize table names and remove sqlite_ internals
- * 3. Return alphabetically sorted table list
- *
- * @param dbname - Database name to inspect
- * @returns Table list response
+ * @deprecated Use {@link databaseService.getTableList} instead
  */
-export const getTableListFromInspectedWindow = async (
-  dbname: string,
-): Promise<InspectedWindowResponse<string[]>> => {
-  const serializedName = JSON.stringify(dbname);
-  const expression = buildEvalExpression(
-    `
-    const api = window.__web_sqlite;
-    if (!api || !api.databases) {
-      return { success: false, error: "web-sqlite-js API not available" };
-    }
+export const getTableListFromInspectedWindow = databaseService.getTableList;
 
-    const db =
-      typeof api.databases?.get === "function"
-        ? api.databases.get(${serializedName})
-        : api.databases?.[${serializedName}];
-    if (!db) {
-      return { success: false, error: "Database not found: " + ${serializedName} };
-    }
+// Type re-exports for backward compatibility
+export type { ServiceResponse, DatabaseSummary };
 
-    const normalizeTableNames = (rows) => {
-      const names = rows
-        .map((row) => {
-          const nameValue = row.name ?? row.tbl_name;
-          if (!nameValue) return null;
+// ============================================================================
+// DIRECT EXPORTS
+// ============================================================================
 
-          const typeValue = row.type;
-          if (typeof typeValue === "string" && typeValue.toLowerCase() !== "table") {
-            return null;
-          }
-
-          if (String(nameValue).startsWith("sqlite_")) {
-            return null;
-          }
-
-          return String(nameValue);
-        })
-        .filter(Boolean);
-
-      return Array.from(new Set(names)).sort((a, b) => a.localeCompare(b));
-    };
-
-    let rows;
-    try {
-      rows = await db.query("PRAGMA table_list");
-    } catch (error) {
-      rows = await db.query(
-        "SELECT name, type FROM sqlite_master WHERE type='table'",
-      );
-    }
-
-    return { success: true, data: normalizeTableNames(rows || []) };
-  `,
-    true,
-  );
-
-  return evalInInspectedWindow(expression);
-};
+export { databaseService };

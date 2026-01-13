@@ -9,9 +9,11 @@ agent-docs/06-implementation/01-build-and-run.md
 # 01 Build & Run Guide
 
 ## 1) Prerequisites
+
 - **Runtime**: Node.js v18+ (npm included)
 
 ## 2) Quick Start
+
 ```bash
 # 1. Install dependencies
 npm install
@@ -21,6 +23,7 @@ npm run dev
 ```
 
 ## 3) Development Workflow (The Loop)
+
 Every change should follow this loop:
 
 1. **Phase 1: Code (Implement)**
@@ -33,5 +36,6 @@ Every change should follow this loop:
    - Re-run `npm run build` after refactors.
 
 ## 4) Build Commands
+
 - `npm run build`: Type-check and build the extension.
 - `npm run format`: Format sources (optional).

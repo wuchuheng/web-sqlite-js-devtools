@@ -7,9 +7,11 @@
  */
 
 import { initializeIconState, setIconState } from "./iconState";
+import { initRouter } from "@/messaging/core";
 import { ICON_STATE_MESSAGE } from "@/shared/messages";
 
 console.log("[Background] Service worker starting...");
+initRouter();
 
 // ============================================================================
 // OFFSCREEN DOCUMENT SETUP
