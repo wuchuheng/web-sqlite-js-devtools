@@ -176,8 +176,9 @@ export const TableDetail = () => {
   return (
     <div className="flex flex-col h-full">
       {/* Table tabs header bar - shows all tables as tabs */}
-      <div className="border-b border-gray-200 bg-white overflow-x-auto">
-        <div className="flex items-center">
+      <div className="flex items-center justify-between border-b border-gray-200 bg-white">
+        {/* Left: Table tabs container with overflow */}
+        <div className="flex items-center overflow-x-auto flex-1">
           {tablesLoading ? (
             <div className="px-4 py-2 text-sm text-gray-500">
               Loading tables...
@@ -197,25 +198,24 @@ export const TableDetail = () => {
             ))
           )}
         </div>
+
+        {/* Right: Schema toggle button */}
+        <button
+          type="button"
+          onClick={handleToggleSchema}
+          className="p-1.5 text-gray-600 hover:text-gray-700 border-l border-gray-200 transition-colors"
+          title={schemaPanelVisible ? "Hide schema panel" : "Show schema panel"}
+        >
+          <BsReverseLayoutSidebarInsetReverse size={14} />
+        </button>
       </div>
 
       {/* Split View: Table Data (Left) + Schema Panel (Right) */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left: Table Data Panel - Responsive width */}
         <div
-          className={`flex flex-col overflow-hidden transition-all duration-200 ease-in-out relative ${schemaPanelVisible ? "flex-1" : "w-full"}`}
+          className={`flex flex-col overflow-hidden transition-all duration-200 ease-in-out ${schemaPanelVisible ? "flex-1" : "w-full"}`}
         >
-          {/* Schema Toggle Button - Always visible on right edge */}
-          <button
-            type="button"
-            onClick={handleToggleSchema}
-            className="absolute top-2 right-2 z-10 p-1.5 bg-white border border-gray-200 rounded shadow-sm text-gray-600 hover:text-gray-800 hover:bg-gray-50 transition-colors"
-            title={
-              schemaPanelVisible ? "Hide schema panel" : "Show schema panel"
-            }
-          >
-            <BsReverseLayoutSidebarInsetReverse size={14} />
-          </button>
           {schemaLoading || dataLoading ? (
             <div className="flex-1 flex items-center justify-center text-gray-500">
               Loading...
