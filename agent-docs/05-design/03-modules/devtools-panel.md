@@ -702,7 +702,7 @@ interface SchemaDDLViewProps {
 
 ```typescript
 interface SchemaDDLViewState {
-  copied: boolean;      // Copy success state
+  copied: boolean; // Copy success state
   error: string | null; // Error message from clipboard API
 }
 ```
@@ -766,19 +766,17 @@ const handleClick = () => {
   </div>
 
   {/* Inline error message (conditional) */}
-  {error && (
-    <div className="text-red-600 text-xs mb-2 text-right">{error}</div>
-  )}
+  {error && <div className="text-red-600 text-xs mb-2 text-right">{error}</div>}
 
   {/* Syntax highlighted DDL (light theme) */}
   <SyntaxHighlighter
     language="sql"
     style={prism}
     customStyle={{
-      background: '#f9fafb',    // gray-50 (light theme)
-      padding: '12px',
-      borderRadius: '6px',
-      fontSize: '12px',         // text-xs (12px)
+      background: "#f9fafb", // gray-50 (light theme)
+      padding: "12px",
+      borderRadius: "6px",
+      fontSize: "12px", // text-xs (12px)
     }}
   >
     {ddl || "-- No DDL available --"}
@@ -900,12 +898,14 @@ try {
 ```
 
 **Browser Support**:
+
 - Chrome 66+
 - Edge 79+
 - Firefox 63+
 - Safari 13.1+
 
 **Graceful Degradation**:
+
 - If `navigator.clipboard` is undefined, catch block will set error state
 - Inline error message: "Failed to copy"
 - Icon remains as copy icon (does not change to checkmark)
@@ -947,6 +947,7 @@ import { prism } from "react-syntax-highlighter/dist/esm/styles/prism";
 ```
 
 **Bundle Impact**:
+
 - `react-syntax-highlighter`: ~18.8KB minified (Prism.js variant)
 - Tree-shaking: Can import only SQL language and prism theme
 - Total bundle increase: < 50KB

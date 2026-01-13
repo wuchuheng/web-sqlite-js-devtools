@@ -47,6 +47,7 @@ When viewing DDL in the SchemaPanel DDL tab, the user wants:
 ### Architecture Changes
 
 **Current DDL View:**
+
 ```
 ┌─────────────────────────────────┐
 │ ┌─────────────────────────────┐ │
@@ -61,6 +62,7 @@ When viewing DDL in the SchemaPanel DDL tab, the user wants:
 ```
 
 **Target DDL View:**
+
 ```
 ┌─────────────────────────────────┐
 │ ┌─────────────────────────────┐ │
@@ -75,6 +77,7 @@ When viewing DDL in the SchemaPanel DDL tab, the user wants:
 ```
 
 After copy:
+
 ```
 ┌─────────────────────────────────┐
 │ ┌─────────────────────────────┐ │
@@ -180,6 +183,7 @@ export const SchemaDDLView = ({ ddl }: SchemaDDLViewProps) => {
 ## 3) Functional Requirements
 
 ### FR-001: SQL Syntax Highlighting
+
 - **Given**: User opens DDL tab in SchemaPanel
 - **When**: DDL SQL is displayed
 - **Then**:
@@ -190,6 +194,7 @@ export const SchemaDDLView = ({ ddl }: SchemaDDLViewProps) => {
   - Code is properly formatted with preserved whitespace
 
 ### FR-002: Copy Button Placement
+
 - **Given**: User is viewing DDL tab
 - **When**: User looks at the DDL section header
 - **Then**:
@@ -199,6 +204,7 @@ export const SchemaDDLView = ({ ddl }: SchemaDDLViewProps) => {
   - Tooltip shows "Copy DDL" on hover
 
 ### FR-003: Copy Functionality
+
 - **Given**: User clicks the copy button
 - **When**: Click action is triggered
 - **Then**:
@@ -209,6 +215,7 @@ export const SchemaDDLView = ({ ddl }: SchemaDDLViewProps) => {
   - No inline error is shown
 
 ### FR-004: Reset on Next Click
+
 - **Given**: User has successfully copied DDL (checkmark visible)
 - **When**: User clicks the button again
 - **Then**:
@@ -217,6 +224,7 @@ export const SchemaDDLView = ({ ddl }: SchemaDDLViewProps) => {
   - State resets to "not copied"
 
 ### FR-005: Error Handling
+
 - **Given**: User clicks copy button but clipboard API is unavailable
 - **When**: Copy operation fails
 - **Then**:
@@ -228,20 +236,24 @@ export const SchemaDDLView = ({ ddl }: SchemaDDLViewProps) => {
 ## 4) Non-Functional Requirements
 
 ### NFR-001: Performance
+
 - Syntax highlighting should not block rendering
 - Component should mount within 100ms
 - Copy operation should complete within 200ms
 
 ### NFR-002: Bundle Size
+
 - `react-syntax-highlighter` package: ~18.8KB minified
 - Total bundle increase should be < 50KB after tree-shaking
 
 ### NFR-003: Accessibility
+
 - Copy button should have proper ARIA labels
 - Keyboard should be able to activate copy button (Tab + Enter)
 - Color contrast should meet WCAG AA standards
 
 ### NFR-004: Browser Compatibility
+
 - Clipboard API: Chrome 66+, Edge 79+, Firefox 63+
 - Graceful degradation: Show inline error if not supported
 - Syntax highlighting: Works in all modern browsers
@@ -249,6 +261,7 @@ export const SchemaDDLView = ({ ddl }: SchemaDDLViewProps) => {
 ## 5) Acceptance Criteria
 
 ### AC-001: Syntax Highlighting
+
 - [ ] DDL is displayed with SQL syntax highlighting (light theme)
 - [ ] Keywords are color-coded (CREATE, TABLE, SELECT, etc.)
 - [ ] Code is readable with proper contrast
@@ -256,29 +269,34 @@ export const SchemaDDLView = ({ ddl }: SchemaDDLViewProps) => {
 - [ ] Empty DDL shows "-- No DDL available --" message
 
 ### AC-002: Copy Button
+
 - [ ] Copy icon button is visible in right top corner of DDL section
 - [ ] Button is properly aligned with tab buttons
 - [ ] Hover effect is applied
 - [ ] Tooltip shows "Copy DDL" before click
 
 ### AC-003: Copy Success
+
 - [ ] Clicking copy button copies DDL text to clipboard
 - [ ] Icon changes to green checkmark after successful copy
 - [ ] Tooltip changes to "Copied!" after successful copy
 - [ ] Pasting from clipboard shows correct DDL text
 
 ### AC-004: Checkmark Persistence
+
 - [ ] Checkmark remains visible until button is clicked again
 - [ ] Clicking again resets icon to copy icon
 - [ ] Second click copies DDL again
 
 ### AC-005: Error Handling
+
 - [ ] If clipboard API fails, inline error appears: "Failed to copy"
 - [ ] Error is red text, right-aligned below button
 - [ ] Icon does not change to checkmark on error
 - [ ] User can retry by clicking again
 
 ### AC-006: Dependencies
+
 - [ ] `react-syntax-highlighter` package is installed
 - [ ] `react-icons/md` and `react-icons/fa` are available
 - [ ] TypeScript types are properly imported
@@ -286,30 +304,36 @@ export const SchemaDDLView = ({ ddl }: SchemaDDLViewProps) => {
 ## 6) Dependencies
 
 ### External Dependencies
+
 - `react-syntax-highlighter`: ^15.5.0
 - `react-icons`: ^5.0.0 (already installed)
 
 ### Internal Dependencies
+
 - F-003: Schema Panel Enhancement (must be completed first)
 - Component: `SchemaDDLView.tsx` (will be modified)
 - Component: `SchemaPanel.tsx` (no changes needed)
 
 ### Blocking Issues
+
 - None identified
 
 ## 7) Risks
 
 ### R1: Clipboard API Permissions
+
 - **Risk**: Some browsers may block clipboard access without user gesture
 - **Mitigation**: Copy is triggered by explicit click event (user gesture)
 - **Fallback**: Show inline error if clipboard API is unavailable
 
 ### R2: Bundle Size Increase
+
 - **Risk**: Adding syntax highlighter increases bundle size
 - **Mitigation**: Use lightweight Prism.js variant (~18.8KB)
 - **Acceptable**: Total increase < 50KB, well under 2MB limit
 
 ### R3: Theme Consistency
+
 - **Risk**: Light theme DDL may not match other dark theme components
 - **Mitigation**: User explicitly requested light theme
 - **Future**: Could add theme toggle if requested
@@ -336,10 +360,10 @@ npm install react-syntax-highlighter @types/react-syntax-highlighter
 ### Import Statement
 
 ```typescript
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { prism } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import { MdOutlineContentCopy } from 'react-icons/md';
-import { FaCheck } from 'react-icons/fa';
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { prism } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { MdOutlineContentCopy } from "react-icons/md";
+import { FaCheck } from "react-icons/fa";
 ```
 
 ### CSS Styling Notes
@@ -353,16 +377,19 @@ import { FaCheck } from 'react-icons/fa';
 ## 10) Testing Strategy
 
 ### Unit Tests
+
 - [ ] Test copy functionality with mock clipboard API
 - [ ] Test error handling when clipboard API throws
 - [ ] Test state transition (copied → not copied)
 
 ### Integration Tests
+
 - [ ] Test DDL renders with syntax highlighting
 - [ ] Test copy button copies correct text
 - [ ] Test error message displays on failure
 
 ### Manual Testing
+
 - [ ] Verify syntax highlighting colors are readable
 - [ ] Verify paste from clipboard works correctly
 - [ ] Verify checkmark persists until next click
