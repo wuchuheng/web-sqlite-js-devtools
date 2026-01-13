@@ -423,8 +423,11 @@ src/devtools/components/
 │   ├── TableListSidebar.tsx         # Left column (25% width)
 │   ├── OpenedTableTabs.tsx          # Tab bar for opened tables
 │   ├── TableDetail.tsx              # Table detail for :tableName route
-│   │   ├── TableDataPanel.tsx       # Left: data + pagination
-│   │   └── DDLPanel.tsx             # Right: schema
+│   │   ├── TableDataPanel.tsx       # Left: data + pagination (responsive width)
+│   │   └── SchemaPanel.tsx          # Right: toggleable, tabbed view (F-003)
+│   │       ├── SchemaPanelHeader.tsx   # Toggle button + Table/DDL tabs
+│   │       ├── SchemaTableView.tsx     # Column info table
+│   │       └── SchemaDDLView.tsx       # CREATE TABLE SQL
 │   └── EmptyState.tsx               # No table selected
 ├── QueryTab/
 │   ├── index.tsx                    # Query tab component
@@ -453,4 +456,336 @@ src/devtools/components/
 │   └── DownloadButton.tsx           # Download button (uses databaseService.downloadOpfsFile)
 └── EmptyState/
     └── index.tsx                    # Empty state notice
+```
+
+## 8) Component Interface Definitions (Feature F-003)
+
+### TableDetail Component (State Owner)
+
+**Location**: `src/devtools/components/TablesTab/TableDetail.tsx`
+
+**Props**: None (uses route params from react-router)
+
+**State**:
+
+```typescript
+const [schemaPanelVisible, setSchemaPanelVisible] = useState(false); // Hidden by default
+const [schemaTab, setSchemaTab] = useState<"table" | "ddl">("table"); // Default to table view
+```
+
+**Handlers**:
+
+```typescript
+const handleToggleSchema = useCallback(() => {
+  setSchemaPanelVisible((prev) => !prev);
+}, []);
+
+const handleSchemaTabChange = useCallback((tab: "table" | "ddl") => {
+  setSchemaTab(tab);
+}, []);
+```
+
+**Render Logic**:
+
+```tsx
+<div className="flex-1 flex overflow-hidden">
+  {/* Table Data Panel - Responsive width */}
+  <TableDataPanel
+    className={schemaPanelVisible ? "flex-1" : "w-full"}
+    // ... other props
+  />
+
+  {/* Schema Panel - Conditional width */}
+  <SchemaPanel
+    visible={schemaPanelVisible}
+    activeTab={schemaTab}
+    onToggle={handleToggleSchema}
+    onTabChange={handleSchemaTabChange}
+    schema={schema}
+    loading={schemaLoading}
+    error={schemaError}
+  />
+</div>
+```
+
+### SchemaPanel Component
+
+**Location**: `src/devtools/components/TablesTab/SchemaPanel.tsx`
+
+**Props Interface**:
+
+```typescript
+interface SchemaPanelProps {
+  schema: TableSchema | null;
+  loading?: boolean;
+  error?: string | null;
+  visible: boolean;
+  activeTab: "table" | "ddl";
+  onToggle: () => void;
+  onTabChange: (tab: "table" | "ddl") => void;
+}
+```
+
+**CSS Classes**:
+
+```typescript
+// Panel container - responsive width with transition
+const panelClasses = `
+  transition-all duration-200 ease-in-out
+  ${visible ? "w-80 opacity-100" : "w-0 opacity-0 overflow-hidden"}
+  bg-gray-50 border-l border-gray-200
+`;
+```
+
+**Render Logic**:
+
+```tsx
+<div className={panelClasses}>
+  {/* Header with toggle + tabs */}
+  <SchemaPanelHeader
+    visible={visible}
+    activeTab={activeTab}
+    onToggle={onToggle}
+    onTabChange={onTabChange}
+  />
+
+  {/* Content - conditional render */}
+  {loading && <SchemaLoadingSkeleton />}
+  {error && <SchemaErrorMessage error={error} />}
+  {!loading && !error && schema && (
+    <>
+      {activeTab === "table" && <SchemaTableView columns={schema.columns} />}
+      {activeTab === "ddl" && <SchemaDDLView ddl={schema.ddl} />}
+    </>
+  )}
+</div>
+```
+
+### SchemaPanelHeader Component
+
+**Location**: `src/devtools/components/TablesTab/SchemaPanelHeader.tsx`
+
+**Props Interface**:
+
+```typescript
+interface SchemaPanelHeaderProps {
+  visible: boolean;
+  activeTab: "table" | "ddl";
+  onToggle: () => void;
+  onTabChange: (tab: "table" | "ddl") => void;
+}
+```
+
+**Icon Imports**:
+
+```typescript
+import { BsReverseLayoutSidebarInsetReverse } from "react-icons/bs";
+import { ImTable2 } from "react-icons/im";
+```
+
+**Render Structure**:
+
+```tsx
+<div className="flex items-center justify-between px-2 py-1.5 bg-gray-50 border-b border-gray-200">
+  {/* Left: Toggle button */}
+  <button
+    type="button"
+    onClick={onToggle}
+    className="p-1 text-gray-600 hover:text-gray-800 transition-colors"
+    title={visible ? "Hide schema panel" : "Show schema panel"}
+  >
+    <BsReverseLayoutSidebarInsetReverse size={14} />
+  </button>
+
+  {/* Right: Tab buttons */}
+  <div className="flex items-center gap-1">
+    {/* Table icon button */}
+    <button
+      type="button"
+      onClick={() => onTabChange("table")}
+      className={`px-2 py-1 text-xs font-medium rounded transition-colors ${
+        activeTab === "table"
+          ? "bg-emerald-50 text-emerald-600 border border-emerald-200"
+          : "text-gray-500 hover:text-gray-700 border border-gray-200 hover:bg-gray-50"
+      }`}
+      title="Table view"
+    >
+      <ImTable2 size={14} />
+    </button>
+
+    {/* DDL text button */}
+    <button
+      type="button"
+      onClick={() => onTabChange("ddl")}
+      className={`px-2 py-1 text-xs font-medium rounded transition-colors ${
+        activeTab === "ddl"
+          ? "bg-emerald-50 text-emerald-600 border border-emerald-200"
+          : "text-gray-500 hover:text-gray-700 border border-gray-200 hover:bg-gray-50"
+      }`}
+      title="DDL view"
+    >
+      DDL
+    </button>
+  </div>
+</div>
+```
+
+### SchemaTableView Component
+
+**Location**: `src/devtools/components/TablesTab/SchemaTableView.tsx`
+
+**Props Interface**:
+
+```typescript
+interface SchemaTableViewProps {
+  columns: ColumnInfo[];
+}
+```
+
+**Render Structure**:
+
+```tsx
+<div className="px-4 py-3">
+  {/* No "SCHEMA" title - removed per F-003 */}
+
+  {/* Column info table */}
+  <table className="w-full text-sm">
+    <thead>
+      <tr className="bg-gray-100">
+        <th className="px-3 py-2 text-left font-medium">Column</th>
+        <th className="px-3 py-2 text-left font-medium">Type</th>
+        <th className="px-3 py-2 text-left font-medium">Constraints</th>
+      </tr>
+    </thead>
+    <tbody>
+      {columns.map((col) => (
+        <tr key={col.cid} className="border-t border-gray-100">
+          <td className="px-3 py-2">{col.name}</td>
+          <td className="px-3 py-2 text-gray-600">{col.type || "-"}</td>
+          <td className="px-3 py-2">
+            {col.pk > 0 && (
+              <span className="inline-block mr-2 text-blue-600 text-xs">
+                PK
+              </span>
+            )}
+            {col.notnull > 0 && (
+              <span className="inline-block mr-2 text-red-600 text-xs">
+                NOT NULL
+              </span>
+            )}
+            {col.dflt_value !== null && (
+              <span className="inline-block text-gray-500 text-xs">
+                DEFAULT {String(col.dflt_value)}
+              </span>
+            )}
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
+```
+
+### SchemaDDLView Component
+
+**Location**: `src/devtools/components/TablesTab/SchemaDDLView.tsx`
+
+**Props Interface**:
+
+```typescript
+interface SchemaDDLViewProps {
+  ddl: string;
+}
+```
+
+**Render Structure**:
+
+```tsx
+<div className="px-4 py-3">
+  {/* No "DDL" sub-heading - redundant with tab button */}
+
+  {/* Dark code block */}
+  <pre className="bg-gray-900 text-green-400 p-3 rounded text-xs overflow-x-auto">
+    {ddl || "-- No DDL available --"}
+  </pre>
+</div>
+```
+
+### SchemaLoadingSkeleton Component
+
+**Location**: `src/devtools/components/TablesTab/SchemaLoadingSkeleton.tsx`
+
+**Render Structure**:
+
+```tsx
+<div className="px-4 py-3">
+  <div className="animate-pulse">
+    <div className="h-4 bg-gray-200 rounded w-1/4 mb-4" />
+    <div className="space-y-2">
+      <div className="h-3 bg-gray-200 rounded" />
+      <div className="h-3 bg-gray-200 rounded" />
+      <div className="h-3 bg-gray-200 rounded" />
+    </div>
+  </div>
+</div>
+```
+
+### SchemaErrorMessage Component
+
+**Location**: `src/devtools/components/TablesTab/SchemaErrorMessage.tsx`
+
+**Props Interface**:
+
+```typescript
+interface SchemaErrorMessageProps {
+  error: string;
+}
+```
+
+**Render Structure**:
+
+```tsx
+<div className="px-4 py-3 border-b border-red-200 bg-red-50">
+  <p className="text-sm text-red-600">{error}</p>
+</div>
+```
+
+## 9) Type Definitions (Feature F-003)
+
+```typescript
+// From databaseService.ts (already exists)
+type TableSchema = {
+  columns: Array<{
+    cid: number;
+    name: string;
+    type: string;
+    notnull: number;
+    dflt_value: any;
+    pk: number;
+  }>;
+  ddl: string;
+};
+
+type ColumnInfo = TableSchema["columns"][number];
+
+// Schema tab state type
+type SchemaTab = "table" | "ddl";
+
+// Schema panel visibility state
+type SchemaPanelVisibility = boolean;
+```
+
+## 10) Icon Dependencies (Feature F-003)
+
+```json
+{
+  "react-icons": "^5.5.0"
+}
+```
+
+**Required imports**:
+
+```typescript
+import { BsReverseLayoutSidebarInsetReverse } from "react-icons/bs";
+import { ImTable2 } from "react-icons/im";
 ```

@@ -211,8 +211,11 @@ DevTools (Root)
 │       │       │   ├── OpenedTableTabs (Tab bar for opened tables)
 │       │       │   └── TableContentArea (75% width)
 │       │       │       ├── TableDetail (/openedDB/:dbname/tables/:tableName)
-│       │       │       │   ├── TableDataPanel (Left: data + pagination)
-│       │       │       │   └── DDLPanel (Right: schema)
+│       │       │       │   ├── TableDataPanel (Left: data + pagination) - Full width when schema hidden
+│       │       │       │   └── SchemaPanel (Right: toggleable, tabbed view)
+│       │       │       │       ├── SchemaPanelHeader (Toggle button + Table/DDL tabs)
+│       │       │       │       ├── SchemaTableView (Column info table)
+│       │       │       │       └── SchemaDDLView (CREATE TABLE SQL)
 │       │       │       └── EmptyState (No table selected)
 │       │       ├── QueryTab (/openedDB/:dbname/query)
 │       │       │   ├── CodeMirrorEditor
@@ -302,3 +305,92 @@ DevTools (Root)
 - **Reusability**: Single source of truth for database operations
 - **Maintainability**: Business logic isolated from Chrome API concerns
 - **Type Safety**: Strong typing via ServiceResponse<T> envelope
+
+## 9) Schema Panel Architecture (Feature F-003)
+
+**Purpose**: Enhance the schema panel with toggle visibility and tabbed view for better UX.
+
+**State Management**:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  TableDetail Component (State Owner)                        │
+│  ├── schemaPanelVisible: boolean (default: false)          │
+│  ├── schemaTab: 'table' | 'ddl' (default: 'table')         │
+│  └── Handler Functions:                                     │
+│      ├── handleToggleSchema()                               │
+│      └── handleSchemaTabChange('table' | 'ddl')            │
+└─────────────────────────────────────────────────────────────┘
+                            ↓
+┌─────────────────────────────────────────────────────────────┐
+│  SchemaPanel Component (Controlled Props)                   │
+│  ├── visible: boolean (from parent)                         │
+│  ├── activeTab: 'table' | 'ddl' (from parent)              │
+│  ├── onToggle(): () => void                                 │
+│  └── onTabChange(tab): () => void                           │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Responsive Layout Behavior**:
+
+```
+Visible State (schemaPanelVisible = true):
+┌────────────────────────┬──────────────────┐
+│ TableDataPanel         │ SchemaPanel      │
+│ width: flex-1          │ width: w-80      │
+│ (320px)                │                  │
+└────────────────────────┴──────────────────┘
+
+Hidden State (schemaPanelVisible = false):
+┌───────────────────────────────────────────┐
+│ TableDataPanel                             │
+│ width: 100% (full width)                  │
+└───────────────────────────────────────────┘
+```
+
+**Tab Switching Architecture**:
+
+```
+SchemaPanel Header:
+┌────────────────────────────────────────────┐
+│ [Toggle Icon]  [Table Icon] [DDL Text]   │
+│                  ↓           ↓            │
+│           Active Tab   Inactive Tab       │
+│           (emerald-50)  (gray-500)        │
+└────────────────────────────────────────────┘
+                    ↓
+┌────────────────────────────────────────────┐
+│ Content Area (Conditional Render)          │
+│                                            │
+│ if (activeTab === 'table'):               │
+│   <SchemaTableView />                      │
+│     - Column info table                    │
+│     - Type, constraints badges             │
+│                                            │
+│ if (activeTab === 'ddl'):                 │
+│   <SchemaDDLView />                        │
+│     - Dark code block (bg-gray-900)        │
+│     - Green text (text-green-400)          │
+│     - CREATE TABLE statement               │
+└────────────────────────────────────────────┘
+```
+
+**CSS Transition Strategy**:
+
+- **Panel Width**: `transition-all duration-200 ease-in-out`
+- **Visible**: `w-80 opacity-100`
+- **Hidden**: `w-0 opacity-0 overflow-hidden`
+- **Table Panel**: `transition-all duration-200` (flex-1 ↔ w-full)
+
+**Icon Integration**:
+
+- **Toggle**: `BsReverseLayoutSidebarInsetReverse` (react-icons/bs)
+- **Table Tab**: `ImTable2` (react-icons/im)
+- **DDL Tab**: Pure text "DDL"
+
+**Theme Colors** (from `src/devtools/index.css`):
+
+- **Primary**: `#059669` (emerald-600)
+- **Primary Light**: `#ecfdf5` (emerald-50)
+- **Active Tab**: `bg-emerald-50 text-emerald-600 border-emerald-200`
+- **Inactive Tab**: `text-gray-500 hover:text-gray-700 border-gray-200`

@@ -14,15 +14,15 @@ NOTES
 
 ## 1) Project stage
 
-- **Current stage**: Stage 8 - Implementation (Worker - TASK-202)
-- **Current focus**: Post-MVP v1.1.0 development, Keyboard shortcuts feature
-- **Last updated**: 2026-01-14 (TASK-202 - Keyboard Shortcuts)
+- **Current stage**: Stage 7 - Task Management (Roadmap & Catalog)
+- **Current focus**: Feature F-003 - Schema Panel Enhancement
+- **Last updated**: 2026-01-14 (S5: LLD updated for F-003)
 
 ## 2) Active work
 
-| Item         | Owner     | Status | Evidence                                 |
-| ------------ | --------- | ------ | ---------------------------------------- |
-| All Complete | S8:worker | Done   | v1.1.0 tasks complete (TASK-203 skipped) |
+| Item                            | Owner     | Status                   | Evidence                             |
+| ------------------------------- | --------- | ------------------------ | ------------------------------------ |
+| F-003: Schema Panel Enhancement | S8:worker | Ready for Implementation | `agent-docs/08-task/active/F-003.md` |
 
 ## 3) Done (Recent)
 
@@ -126,3 +126,15 @@ NOTES
   - Feature not required for current release
   - Task catalog updated with skip note
   - Micro-spec deleted
+- **C19**: 2026-01-14 - F-003 feature documented (Schema Panel Enhancement)
+  - Added toggle visibility with BsReverseLayoutSidebarInsetReverse icon
+  - Added tabbed view (Table icon / DDL text) with emerald theme
+  - Panel hidden by default, table expands to full width when collapsed
+  - Removed "SCHEMA" title to save vertical space
+  - Small button size (text-xs) matching pagination style
+- **C20**: 2026-01-14 - F-003 S1-S7 documentation completed
+  - S1 Discovery: Feature spec created (F-003)
+  - S3 Architecture: HLD updated with schema panel state management
+  - S5 Design: LLD updated with component interfaces
+  - S7 Task Management: Micro-spec created with implementation tasks
+  - Task catalog updated with F-003 in v1.2.0 release

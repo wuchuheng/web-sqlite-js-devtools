@@ -1,7 +1,7 @@
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useMemo, useCallback, useState, useEffect } from "react";
 import { decodeDatabaseName } from "@/devtools/utils/databaseNames";
-import { TableSchemaPanel } from "../TableTab/TableSchema";
+import { SchemaPanel } from "./SchemaPanel";
 import { PaginationBar } from "../TableTab/PaginationBar";
 import { databaseService } from "@/devtools/services/databaseService";
 import { useInspectedWindowRequest } from "@/devtools/hooks/useInspectedWindowRequest";
@@ -63,6 +63,10 @@ export const TableDetail = () => {
   // Pagination state - properly sync with URL search params
   const [page, setPage] = useState(0);
   const [limit, setLimit] = useState(50);
+
+  // Schema panel state - toggle visibility and tabbed view (F-003)
+  const [schemaPanelVisible, setSchemaPanelVisible] = useState(false); // Hidden by default
+  const [schemaTab, setSchemaTab] = useState<"table" | "ddl">("table"); // Default to table view
 
   // Update state when URL search params change
   useEffect(() => {
@@ -159,6 +163,15 @@ export const TableDetail = () => {
     }
   };
 
+  // Schema panel handlers (F-003)
+  const handleToggleSchema = useCallback(() => {
+    setSchemaPanelVisible((prev) => !prev);
+  }, []);
+
+  const handleSchemaTabChange = useCallback((tab: "table" | "ddl") => {
+    setSchemaTab(tab);
+  }, []);
+
   return (
     <div className="flex flex-col h-full">
       {/* Table tabs header bar - shows all tables as tabs */}
@@ -185,10 +198,12 @@ export const TableDetail = () => {
         </div>
       </div>
 
-      {/* Split View: Table Data (Left) + DDL Panel (Right) */}
+      {/* Split View: Table Data (Left) + Schema Panel (Right) */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Left: Table Data Panel */}
-        <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Left: Table Data Panel - Responsive width */}
+        <div
+          className={`flex flex-col overflow-hidden transition-all duration-200 ease-in-out ${schemaPanelVisible ? "flex-1" : "w-full"}`}
+        >
           {schemaLoading || dataLoading ? (
             <div className="flex-1 flex items-center justify-center text-gray-500">
               Loading...
@@ -249,14 +264,16 @@ export const TableDetail = () => {
           )}
         </div>
 
-        {/* Right: DDL Panel */}
-        <div className="w-80 border-l border-gray-200 bg-gray-50 overflow-auto">
-          <TableSchemaPanel
-            schema={schema}
-            loading={schemaLoading}
-            error={schemaError}
-          />
-        </div>
+        {/* Right: Schema Panel - Toggleable with tabbed view */}
+        <SchemaPanel
+          schema={schema}
+          loading={schemaLoading}
+          error={schemaError}
+          visible={schemaPanelVisible}
+          activeTab={schemaTab}
+          onToggle={handleToggleSchema}
+          onTabChange={handleSchemaTabChange}
+        />
       </div>
     </div>
   );

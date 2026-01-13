@@ -66,6 +66,8 @@ NOTES
 - `agent-docs/01-discovery/02-requirements.md`
 - `agent-docs/01-discovery/03-scope.md`
 - `agent-docs/01-discovery/features/F-001-service-layer-expansion.md` (NEW - Feature F-001)
+- `agent-docs/01-discovery/features/F-002-database-tab-navigation.md`
+- `agent-docs/01-discovery/features/F-003-schema-panel-enhancement.md` (NEW - Feature F-003)
 - `agent-docs/02-feasibility/01-options.md`
 - `agent-docs/02-feasibility/02-risk-assessment.md`
 - `agent-docs/02-feasibility/03-spike-plan.md`
