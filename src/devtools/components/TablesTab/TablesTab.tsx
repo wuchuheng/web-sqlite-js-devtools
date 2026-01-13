@@ -16,6 +16,7 @@ import { databaseService } from "@/devtools/services/databaseService";
 import { useInspectedWindowRequest } from "@/devtools/hooks/useInspectedWindowRequest";
 import { EmptyState } from "./EmptyState";
 import { type TableTab } from "./OpenedTableTabs";
+import { ResizeHandle } from "@/devtools/components/Shared/ResizeHandle";
 
 /**
  * Context for opened tabs state management
@@ -88,6 +89,29 @@ export const TablesTab = () => {
 
   /** Active tab state - currently selected table */
   const [activeTab, setActiveTab] = useState<TableTab | null>(null);
+
+  // ============================================
+  // Sidebar Resizable Width (F-006)
+  // ============================================
+
+  /** Sidebar width state - resizable with drag handle (default: 300px) */
+  const [sidebarWidth, setSidebarWidth] = useState(300);
+
+  /**
+   * Handle sidebar resize drag
+   *
+   * @param deltaX - Change in mouse X position
+   * @remarks
+   * - Updates sidebar width by adding delta
+   * - Enforces min (200px) and max (600px) constraints
+   * - Uses Math.max/min for clamping
+   */
+  const handleSidebarResize = useCallback((deltaX: number) => {
+    setSidebarWidth((prev) => {
+      const newWidth = prev + deltaX;
+      return Math.max(200, Math.min(600, newWidth));
+    });
+  }, []);
 
   /**
    * Handle opening a table and adding it to opened tabs
@@ -238,8 +262,11 @@ export const TablesTab = () => {
   return (
     <OpenedTabsContext.Provider value={contextValue}>
       <div className="flex h-full">
-        {/* 25% Table List Sidebar */}
-        <aside className="w-1/4 min-w-[200px] max-w-[300px] border-r border-gray-200 bg-white flex flex-col">
+        {/* Table List Sidebar - Resizable (F-006) */}
+        <aside
+          className="relative border-r border-gray-200 bg-white flex flex-col"
+          style={{ width: `${sidebarWidth}px`, minWidth: `${sidebarWidth}px` }}
+        >
           <div className="px-4 py-3 border-b border-gray-200">
             <h2 className="text-xs font-semibold uppercase text-gray-500">
               Tables
@@ -291,6 +318,15 @@ export const TablesTab = () => {
                 );
               })}
           </div>
+
+          {/* Resize Handle at Right Edge (F-006) */}
+          <ResizeHandle
+            position="right"
+            onDrag={handleSidebarResize}
+            currentWidth={sidebarWidth}
+            minWidth={200}
+            maxWidth={600}
+          />
         </aside>
 
         {/* 75% Table Content Area */}

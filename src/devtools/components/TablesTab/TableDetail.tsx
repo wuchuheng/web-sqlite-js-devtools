@@ -8,6 +8,7 @@ import { databaseService } from "@/devtools/services/databaseService";
 import { useInspectedWindowRequest } from "@/devtools/hooks/useInspectedWindowRequest";
 import { OpenedTableTabs } from "./OpenedTableTabs";
 import { useOpenedTabs } from "./TablesTab";
+import { ResizeHandle } from "@/devtools/components/Shared/ResizeHandle";
 
 /**
  * TableDetail component
@@ -38,6 +39,24 @@ export const TableDetail = () => {
   // Schema panel state - toggle visibility and tabbed view (F-003)
   const [schemaPanelVisible, setSchemaPanelVisible] = useState(false); // Hidden by default
   const [schemaTab, setSchemaTab] = useState<"table" | "ddl">("table"); // Default to table view
+
+  // Schema panel resizable width (F-006)
+  const [schemaPanelWidth, setSchemaPanelWidth] = useState(320); // Default 320px (w-80)
+
+  /**
+   * Handle schema panel resize drag
+   *
+   * @param deltaX - Change in mouse X position
+   * @remarks
+   * - Subtracts delta (dragging left expands panel)
+   * - Enforces min (250px) and max (600px) constraints
+   */
+  const handleSchemaResize = useCallback((deltaX: number) => {
+    setSchemaPanelWidth((prev) => {
+      const newWidth = prev - deltaX; // Subtract because dragging left expands
+      return Math.max(250, Math.min(600, newWidth));
+    });
+  }, []);
 
   // ============================================
   // Opened Tabs Context (F-005)
@@ -237,15 +256,32 @@ export const TableDetail = () => {
           )}
         </div>
 
-        {/* Right: Schema Panel - Toggleable with tabbed view */}
-        <SchemaPanel
-          schema={schema}
-          loading={schemaLoading}
-          error={schemaError}
-          visible={schemaPanelVisible}
-          activeTab={schemaTab}
-          onTabChange={handleSchemaTabChange}
-        />
+        {/* Right: Schema Panel - Toggleable with tabbed view (F-006: Resizable) */}
+        <div
+          className="relative transition-all duration-200 ease-in-out"
+          style={{
+            width: schemaPanelVisible ? `${schemaPanelWidth}px` : "0px",
+            minWidth: schemaPanelVisible ? `${schemaPanelWidth}px` : "0px",
+          }}
+        >
+          {schemaPanelVisible && (
+            <ResizeHandle
+              position="left"
+              onDrag={handleSchemaResize}
+              currentWidth={schemaPanelWidth}
+              minWidth={250}
+              maxWidth={600}
+            />
+          )}
+          <SchemaPanel
+            schema={schema}
+            loading={schemaLoading}
+            error={schemaError}
+            visible={schemaPanelVisible}
+            activeTab={schemaTab}
+            onTabChange={handleSchemaTabChange}
+          />
+        </div>
       </div>
     </div>
   );

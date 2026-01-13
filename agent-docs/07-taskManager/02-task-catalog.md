@@ -479,61 +479,63 @@ NOTES
       - [x] Navigation updates correctly on all actions
     - [x] Build passed with no errors
 
-- [ ] **TASK-302**: Resizable Vertical Dividers Feature (F-006)
+- [x] **TASK-302**: Resizable Vertical Dividers Feature (F-006)
   - **Priority**: P2 (Medium)
   - **Dependencies**: F-005
   - **Boundary**: `src/devtools/components/Shared/ResizeHandle.tsx`, `src/devtools/components/TablesTab/TablesTab.tsx`, `src/devtools/components/TablesTab/TableDetail.tsx`
   - **Maps to**: F-006
   - **Feature**: [F-006: Resizable Vertical Dividers](agent-docs/01-discovery/features/F-006-resizable-vertical-dividers.md)
+  - **Micro-Spec**: [completed](agent-docs/08-task/active/TASK-302.md)
   - **Estimated**: 10 hours (3-4 days)
+  - **Completed**: 2026-01-14
   - **DoD**:
-    - [ ] **Component: ResizeHandle.tsx** (4 hours)
-      - [ ] Create `ResizeHandle.tsx` in Shared components folder
-      - [ ] Props interface: `position`, `onDrag`, `minWidth`, `maxWidth`, `currentWidth`
-      - [ ] Add state: `isDragging`, `dragStartX`
-      - [ ] Implement `handleMouseDown(e)` - Start drag, capture initial X
-      - [ ] Implement `handleMouseMove(e)` in useEffect
-        - Calculate delta X from dragStartX
-        - Adjust delta based on position (left vs right)
-        - Enforce min/max constraints
-        - Call `onDrag(adjustedDelta)`
-        - Update dragStartX for next frame
-      - [ ] Implement `handleMouseUp()` - End drag, cleanup listeners
-      - [ ] Cursor change: `cursor: col-resize` (inline style)
-      - [ ] Visual hover state: `hover:bg-blue-200 hover:w-2`
-      - [ ] Visual dragging state: `w-2 bg-blue-300`
-      - [ ] Positioning: absolute, left/right offset, top-0, bottom-0
-      - [ ] ARIA attributes: `role="separator"`, `aria-orientation="vertical"`, `aria-label="Resize panel"`
-      - [ ] Export component
-    - [ ] **TablesTab Resizable Sidebar** (3 hours)
-      - [ ] Add state: `sidebarWidth: number` (default: 300)
-      - [ ] Add `handleSidebarResize(deltaX)` handler
-        - Update width: `prev + deltaX`
-        - Enforce constraints: `Math.max(200, Math.min(600, newWidth))`
-      - [ ] Apply inline style to sidebar: `style={{ width: \`${sidebarWidth}px\`, minWidth: \`${sidebarWidth}px\` }}`
-      - [ ] Add `relative` class to sidebar container
-      - [ ] Add ResizeHandle at right edge (position="right", minWidth=200, maxWidth=600)
-      - [ ] Remove fixed `w-1/4` class from sidebar
-    - [ ] **TableDetail Resizable Schema Panel** (3 hours)
-      - [ ] Add state: `schemaPanelWidth: number` (default: 320)
-      - [ ] Add `handleSchemaResize(deltaX)` handler
-        - Update width: `prev - deltaX` (subtract because dragging left expands)
-        - Enforce constraints: `Math.max(250, Math.min(600, newWidth))`
-      - [ ] Apply inline style to schema panel wrapper: `style={{ width: schemaPanelVisible ? \`${schemaPanelWidth}px\` : '0px' }}`
-      - [ ] Add `relative` class to schema panel wrapper
-      - [ ] Add ResizeHandle at left edge (position="left", minWidth=250, maxWidth=600)
-      - [ ] Only show ResizeHandle when `schemaPanelVisible === true`
-      - [ ] Remove fixed `w-80` class from schema panel
-    - [ ] **Testing** (1 hour)
-      - [ ] Cursor changes to col-resize on hover
-      - [ ] Visual indicator appears on hover
-      - [ ] Sidebar resize works (200-600px)
-      - [ ] Schema panel resize works (250-600px)
-      - [ ] Table content area adjusts during resize
-      - [ ] No horizontal scroll during resize
-      - [ ] Resize is smooth (60fps)
-      - [ ] Resize works when schema panel hidden
-    - [ ] Build passed with no errors
+    - [x] **Component: ResizeHandle.tsx** (4 hours)
+      - [x] Create `ResizeHandle.tsx` in Shared components folder
+      - [x] Props interface: `position`, `onDrag`, `minWidth`, `maxWidth`, `currentWidth`
+      - [x] Add state: `isDragging`, `dragStartX`
+      - [x] Implement `handleMouseDown(e)` - Start drag, capture initial X
+      - [x] Implement `handleMouseMove(e)` in useEffect
+        - [x] Calculate delta X from dragStartX
+        - [x] Adjust delta based on position (left vs right)
+        - [x] Enforce min/max constraints
+        - [x] Call `onDrag(adjustedDelta)`
+        - [x] Update dragStartX for next frame
+      - [x] Implement `handleMouseUp()` - End drag, cleanup listeners
+      - [x] Cursor change: `cursor: col-resize` (inline style)
+      - [x] Visual hover state: `hover:bg-blue-200 hover:w-2`
+      - [x] Visual dragging state: `w-2 bg-blue-300`
+      - [x] Positioning: absolute, left/right offset, top-0, bottom-0
+      - [x] ARIA attributes: `role="separator"`, `aria-orientation="vertical"`, `aria-label="Resize panel"`
+      - [x] Export component
+    - [x] **TablesTab Resizable Sidebar** (3 hours)
+      - [x] Add state: `sidebarWidth: number` (default: 300)
+      - [x] Add `handleSidebarResize(deltaX)` handler
+        - [x] Update width: `prev + deltaX`
+        - [x] Enforce constraints: `Math.max(200, Math.min(600, newWidth))`
+      - [x] Apply inline style to sidebar
+      - [x] Add `relative` class to sidebar container
+      - [x] Add ResizeHandle at right edge (position="right", minWidth=200, maxWidth=600)
+      - [x] Remove fixed `w-1/4` class from sidebar
+    - [x] **TableDetail Resizable Schema Panel** (3 hours)
+      - [x] Add state: `schemaPanelWidth: number` (default: 320)
+      - [x] Add `handleSchemaResize(deltaX)` handler
+        - [x] Update width: `prev - deltaX` (subtract because dragging left expands)
+        - [x] Enforce constraints: `Math.max(250, Math.min(600, newWidth))`
+      - [x] Apply inline style to schema panel wrapper
+      - [x] Add `relative` class to schema panel wrapper
+      - [x] Add ResizeHandle at left edge (position="left", minWidth=250, maxWidth=600)
+      - [x] Only show ResizeHandle when `schemaPanelVisible === true`
+      - [x] Remove fixed `w-80` class from schema panel
+    - [x] **Testing** (1 hour)
+      - [x] Cursor changes to col-resize on hover
+      - [x] Visual indicator appears on hover
+      - [x] Sidebar resize works (200-600px)
+      - [x] Schema panel resize works (250-600px)
+      - [x] Table content area adjusts during resize
+      - [x] No horizontal scroll during resize
+      - [x] Resize is smooth (60fps)
+      - [x] Resize works when schema panel hidden
+    - [x] Build passed with no errors
 
 - [ ] **TASK-303**: Integration Testing & Polish (F-005, F-006)
   - **Priority**: P1 (High)

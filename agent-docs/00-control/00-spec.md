@@ -38,10 +38,10 @@ NOTES
 
 ## 3) Current stage
 
-- **Current stage (1-8)**: Stage 8 - Implementation (Worker - TASK-301)
+- **Current stage (1-8)**: Stage 8 - Implementation (Worker - TASK-302)
 - **Active release**: v1.2.0 (Enhancements) - Target: TBD
-- **Status summary**: TASK-301 complete (F-005), TASK-302 pending (F-006)
-- **Last updated (YYYY-MM-DD)**: 2026-01-14 (TASK-301: Opened Table Tabs Management)
+- **Status summary**: TASK-301 complete (F-005), TASK-302 complete (F-006)
+- **Last updated (YYYY-MM-DD)**: 2026-01-14 (TASK-302: Resizable Vertical Dividers)
 
 ## 4) Technology stack (chosen in Stage 2)
 
@@ -166,9 +166,12 @@ NOTES
   - State owned by TablesTab, consumed via useOpenedTabs hook
   - Removed old TableTabButton component and tables.map() loop
   - Build passed with no errors (4.30s)
-- **2026-01-14**: Feature F-006 created - Resizable Vertical Dividers
-  - Draggable resize handles on all vertical pane dividers
+- **2026-01-14**: Feature F-006 completed - Resizable Vertical Dividers (TASK-302)
+  - Created ResizeHandle component with draggable mouse events
   - Cursor change to `col-resize` on hover
+  - Visual hover state: `hover:bg-blue-200 hover:w-2`
+  - Visual dragging state: `w-2 bg-blue-300`
   - Left sidebar resize (min: 200px, max: 600px, default: 300px)
   - Right schema panel resize (min: 250px, max: 600px, default: 320px)
-  - Reusable component: `ResizeHandle.tsx`
+  - ARIA attributes: `role="separator"`, `aria-orientation="vertical"`, `aria-label="Resize panel"`
+  - Build passed with no errors (4.00s)

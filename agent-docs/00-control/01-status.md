@@ -14,21 +14,23 @@ NOTES
 
 ## 1) Project stage
 
-- **Current stage**: Stage 8 - Implementation (Worker - TASK-301)
-- **Current focus**: Feature F-005 - Opened Table Tabs Management
-- **Last updated**: 2026-01-14 (TASK-301: Implementation complete)
+- **Current stage**: Stage 8 - Implementation (Worker - TASK-302)
+- **Current focus**: Feature F-006 - Resizable Vertical Dividers
+- **Last updated**: 2026-01-14 (TASK-302: Implementation complete)
 
 ## 2) Active work
 
-| Item         | Owner     | Status | Evidence                      |
-| ------------ | --------- | ------ | ----------------------------- |
+| Item         | Owner     | Status | Evidence                         |
+| ------------ | --------- | ------ | -------------------------------- |
 | All Complete | S8:worker | Done   | TASK-301 implementation complete |
 
 ## 3) Done (Recent)
 
 | Task                                                                       | Owner     | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | -------------------------------------------------------------------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| TASK-301: Opened Table Tabs Management (F-005)                             | S8:worker | `src/devtools/components/TablesTab/OpenedTableTabs.tsx` (new component with memoized TabButton, IoMdClose close button, empty state), `src/devtools/components/TablesTab/TablesTab.tsx` (OpenedTabsContext, state management, handlers), `src/devtools/components/TablesTab/TableDetail.tsx` (context consumption, OpenedTableTabs integration, removed TableTabButton)                                                                                                                                                       |
+| TASK-302: Resizable Vertical Dividers (F-006)                              | S8:worker | `src/devtools/components/Shared/ResizeHandle.tsx` (new component with mouse events, drag state, visual feedback, ARIA), `src/devtools/components/TablesTab/TablesTab.tsx` (sidebarWidth state, handleSidebarResize, relative class, inline styles, ResizeHandle at right edge), `src/devtools/components/TablesTab/TableDetail.tsx` (schemaPanelWidth state, handleSchemaResize, wrapper div with inline styles, ResizeHandle at left edge when visible)                                                                                                                               |
+| -------------------------------------------------------------------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| TASK-301: Opened Table Tabs Management (F-005)                             | S8:worker | `src/devtools/components/TablesTab/OpenedTableTabs.tsx` (new component with memoized TabButton, IoMdClose close button, empty state), `src/devtools/components/TablesTab/TablesTab.tsx` (OpenedTabsContext, state management, handlers), `src/devtools/components/TablesTab/TableDetail.tsx` (context consumption, OpenedTableTabs integration, removed TableTabButton)                                                                                                                                               |
 | F-004: DDL Syntax Highlight & Copy Button                                  | S8:worker | `src/devtools/components/TablesTab/SchemaDDLView.tsx` (state, copy button, syntax highlighter), `package.json` (react-syntax-highlighter)                                                                                                                                                                                                                                                                                                                                                                             |
 | F-003: Schema Panel Enhancement                                            | S8:worker | `src/devtools/components/TablesTab/SchemaPanel.tsx`, `src/devtools/components/TablesTab/SchemaPanelHeader.tsx`, `src/devtools/components/TablesTab/SchemaTableView.tsx`, `src/devtools/components/TablesTab/SchemaDDLView.tsx`, `src/devtools/components/TablesTab/SchemaLoadingSkeleton.tsx`, `src/devtools/components/TablesTab/SchemaErrorMessage.tsx`, `src/devtools/components/TablesTab/TableDetail.tsx` (state + handlers + responsive width), `src/devtools/services/databaseService.ts` (DDL generation fix) |
 | TASK-202: Keyboard Shortcuts                                               | S8:worker | `src/devtools/hooks/useKeyboardShortcuts.ts`, `src/devtools/components/KeyboardShortcutsHelp.tsx`, `src/devtools/DevTools.tsx` (keyboard handler), `src/devtools/components/Sidebar/Sidebar.tsx` (collapse state lifted), `src/devtools/components/QueryTab/QueryTab.tsx` (ref callbacks)                                                                                                                                                                                                                             |
@@ -206,3 +208,16 @@ NOTES
   - Updated TableDetail to consume context via useOpenedTabs hook
   - Removed old TableTabButton component and tables.map() loop
   - Build passed with no errors (4.30s)
+- **C29**: 2026-01-14 - TASK-302 implementation completed (F-006: Resizable Vertical Dividers)
+  - Created ResizeHandle.tsx component in Shared folder
+  - Implemented mouse event handlers: handleMouseDown, handleMouseMove, handleMouseUp
+  - Cursor change: `col-resize` on hover
+  - Visual hover state: `hover:bg-blue-200 hover:w-2`
+  - Visual dragging state: `w-2 bg-blue-300`
+  - ARIA attributes: `role="separator"`, `aria-orientation="vertical"`, `aria-label="Resize panel"`
+  - TablesTab: sidebarWidth state (300px default), handleSidebarResize (200-600px constraints)
+  - TableDetail: schemaPanelWidth state (320px default), handleSchemaResize (250-600px constraints)
+  - Inline styles for width, relative class for positioning
+  - ResizeHandle at right edge of sidebar (position="right")
+  - ResizeHandle at left edge of schema panel (position="left", only when visible)
+  - Build passed with no errors (4.00s)
