@@ -57,6 +57,8 @@ C4Context
   - **Reason**: Full-featured code editor with SQL syntax highlighting
 - **Icons**: react-icons
   - **Reason**: Comprehensive icon library, tree-shakeable
+- **Syntax Highlighting**: react-syntax-highlighter (Prism.js)
+  - **Reason**: Lightweight SQL syntax highlighting for DDL display
 
 ```mermaid
 C4Container
@@ -215,7 +217,7 @@ DevTools (Root)
 │       │       │       │   └── SchemaPanel (Right: toggleable, tabbed view)
 │       │       │       │       ├── SchemaPanelHeader (Toggle button + Table/DDL tabs)
 │       │       │       │       ├── SchemaTableView (Column info table)
-│       │       │       │       └── SchemaDDLView (CREATE TABLE SQL)
+│       │       │       │       └── SchemaDDLView (SQL with syntax highlight + copy button)
 │       │       │       └── EmptyState (No table selected)
 │       │       ├── QueryTab (/openedDB/:dbname/query)
 │       │       │   ├── CodeMirrorEditor
@@ -394,3 +396,159 @@ SchemaPanel Header:
 - **Primary Light**: `#ecfdf5` (emerald-50)
 - **Active Tab**: `bg-emerald-50 text-emerald-600 border-emerald-200`
 - **Inactive Tab**: `text-gray-500 hover:text-gray-700 border-gray-200`
+
+## 10) DDL Syntax Highlight & Copy Architecture (Feature F-004)
+
+**Purpose**: Enhance DDL view with SQL syntax highlighting and one-click copy functionality.
+
+**Technology Stack**:
+
+- **Syntax Highlighting**: `react-syntax-highlighter` with Prism.js engine
+  - Package: `react-syntax-highlighter` (~18.8KB minified)
+  - Language: SQL
+  - Theme: `prism` (light theme)
+  - Bundle impact: < 50KB total increase
+- **Icons**: React Icons
+  - Copy: `react-icons/md` → `MdOutlineContentCopy`
+  - Success: `react-icons/fa` → `FaCheck`
+- **Clipboard API**: `navigator.clipboard.writeText()`
+  - Browser support: Chrome 66+, Edge 79+, Firefox 63+
+  - Graceful degradation: Inline error if unavailable
+
+**Component State Management**:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  SchemaDDLView Component (State Owner)                      │
+│  ├── copied: boolean (default: false)                       │
+│  ├── error: string | null (default: null)                  │
+│  └── Handler Functions:                                     │
+│      ├── handleCopy() - Async clipboard write               │
+│      └── handleClick() - Reset copied state on next click   │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Copy Button State Machine**:
+
+```
+┌─────────────┐     Click (not copied)     ┌─────────────┐
+│   Initial   │ ──────────────────────────> │  Copying    │
+│  (Copy Icon)│                            │  (API Call)  │
+└─────────────┘                            └─────────────┘
+       │                                          │
+       │                                          │ Success
+       │                                          ↓
+       │                                   ┌─────────────┐
+       │                                   │   Copied    │
+       │                                   │ (Checkmark) │
+       │                                   └─────────────┘
+       │                                          │
+       │                                  Click again (reset)
+       │                                          │
+       └──────────────────────────────────────────┘
+                    (back to Initial)
+
+Error Path: Copying → Error State (Inline error, copy icon)
+```
+
+**DDL View Layout** (Enhanced):
+
+```
+┌──────────────────────────────────────────────────────┐
+│ SchemaDDLView Component                              │
+│ ┌────────────────────────────────────────────────┐  │
+│ │ Header Row (flex justify-between)              │  │
+│ │ ┌────────────┐  ┌──────────────────────────┐  │  │
+│ │ │ Spacer (   │  │ Copy Button (right top)  │  │  │
+│ │ │ flex-1)    │  │ [MdOutlineContentCopy]   │  │  │
+│ │ └────────────┘  └──────────────────────────┘  │  │
+│ ├────────────────────────────────────────────────┤  │
+│ │ Error Container (if error exists)               │  │
+│ │ "Failed to copy" (text-red-600 text-right)      │  │
+│ ├────────────────────────────────────────────────┤  │
+│ │ Syntax Highlighter (Prism.js)                   │  │
+│ │ CREATE TABLE users (                            │  │
+│ │   id INTEGER PRIMARY KEY,   ← keywords (blue)  │  │
+│ │   name TEXT NOT NULL       ← types (purple)   │  │
+│ │ );                        ← formatted output  │  │
+│ └────────────────────────────────────────────────┘  │
+└──────────────────────────────────────────────────────┘
+```
+
+**State Persistence & Reset Behavior**:
+
+- **Success**: Icon changes to green `FaCheck`, persists indefinitely
+- **Reset**: Next click resets to copy icon and triggers copy again
+- **Error**: Shows inline error, icon remains as copy icon
+- **User Intent**: Checkmark confirms action completed, reset on next interaction allows re-copy
+
+**Clipboard API Error Handling**:
+
+```typescript
+try {
+  await navigator.clipboard.writeText(ddl);
+  setCopied(true);
+  setError(null);
+} catch (err) {
+  setError("Failed to copy");
+  setCopied(false);
+}
+```
+
+**CSS Styling Strategy**:
+
+```css
+/* Copy Button */
+.p-1.text-gray-600.hover\:text-gray-800.transition-colors
+
+/* Success State */
+.text-green-600 (FaCheck icon)
+
+/* Error State */
+.text-red-600.text-xs.mb-2.text-right (inline error)
+
+/* Syntax Highlighter */
+.customStyle: {
+  background: '#f9fafb',    /* gray-50 (light theme) */
+  padding: '12px',
+  borderRadius: '6px',
+  fontSize: '12px',         /* text-xs (12px) */
+}
+```
+
+**Accessibility Considerations**:
+
+- **ARIA Labels**: Copy button has `title` attribute for screen readers
+- **Keyboard Navigation**: Button is focusable (Tab key), activates on Enter/Space
+- **Color Contrast**: Green checkmark (`#16a34a`) meets WCAG AA standards
+- **Error Visibility**: Inline error positioned near action, not in alert
+
+**Performance Optimizations**:
+
+- **Lazy Import**: Syntax highlighter only loads when DDL tab is active
+- **Code Splitting**: `react-syntax-highlighter` can be tree-shaken to SQL language only
+- **Debounce**: None needed (click event is user-triggered, not continuous)
+- **Bundle Impact**: ~18.8KB for Prism.js variant, < 50KB total increase
+
+**Updated Component Hierarchy** (DDL View):
+
+```
+SchemaPanel
+├── SchemaPanelHeader
+│   ├── Table Tab Button (ImTable2)
+│   └── DDL Tab Button (Text "DDL")
+└── Content Area
+    ├── SchemaTableView (Column info)
+    └── SchemaDDLView (Enhanced)
+        ├── Header Row
+        │   ├── Spacer (flex-1)
+        │   └── Copy Button
+        │       ├── MdOutlineContentCopy (default)
+        │       └── FaCheck (success, green)
+        ├── Error Container (conditional)
+        │   └── Error Message (text-red-600)
+        └── SyntaxHighlighter
+            ├── Language: SQL
+            ├── Style: prism (light theme)
+            └── Custom Style (gray-50 bg, 12px font)
+```

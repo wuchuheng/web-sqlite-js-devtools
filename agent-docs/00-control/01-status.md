@@ -16,13 +16,14 @@ NOTES
 
 - **Current stage**: Stage 7 - Task Management (Roadmap & Catalog)
 - **Current focus**: Feature F-004 - DDL Syntax Highlight & Copy Button
-- **Last updated**: 2026-01-14 (S1: F-004 spec created)
+- **Last updated**: 2026-01-14 (S3: HLD updated for F-004)
 
 ## 2) Active work
 
 | Item         | Owner     | Status | Evidence                      |
 | ------------ | --------- | ------ | ----------------------------- |
-| F-004 Spec   | S1:projectManager | In Progress | Awaiting S3/S5/S7 stages |
+| F-004 S3     | S3:systemArchitect | Done | HLD updated with DDL copy state |
+| F-004 S5     | S5:contractDesigner | In Progress | Awaiting LLD update |
 
 ## 3) Done (Recent)
 
@@ -159,3 +160,11 @@ NOTES
   - Added inline error message if clipboard API fails
   - Light theme requested for syntax highlighting
   - Dependencies: react-syntax-highlighter, react-icons/md, react-icons/fa
+- **C24**: 2026-01-14 - F-004 S3 Architecture completed
+  - Added section 10 to HLD: DDL Syntax Highlight & Copy Architecture
+  - Defined component state management (copied, error states)
+  - Documented copy button state machine (Initial → Copying → Copied → Reset)
+  - Updated tech stack to include react-syntax-highlighter (Prism.js)
+  - Updated component hierarchy with enhanced SchemaDDLView structure
+  - Documented CSS styling strategy, accessibility, and performance optimizations
+  - Bundle impact: ~18.8KB for Prism.js, < 50KB total increase
