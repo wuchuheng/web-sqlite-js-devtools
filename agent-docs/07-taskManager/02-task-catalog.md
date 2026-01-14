@@ -922,25 +922,27 @@ NOTES
     - [x] Test with various nesting depths (manual testing done)
     - [x] Verify VSCode-style appearance (1px gray-200 lines)
 
-- [ ] **TASK-310**: Delete Confirmation Modal (F-012)
+- [x] **TASK-310**: Delete Confirmation Modal (F-012)
   - **Priority**: P1 (High)
   - **Dependencies**: TASK-308 (Service Layer - Delete Operations)
   - **Boundary**: `src/devtools/components/OPFSBrowser/DeleteConfirmModal.tsx` (NEW)
   - **Maps to**: F-012, FR-OPFS-002, FR-OPFS-003, FR-OPFS-006
   - **Feature**: [F-012: OPFS Browser Enhancement](agent-docs/01-discovery/features/F-012-opfs-browser-enhancement.md)
-  - **Micro-Spec**: [pending](agent-docs/08-task/active/TASK-310.md)
+  - **Micro-Spec**: [complete](agent-docs/08-task/active/TASK-310.md)
   - **Estimated**: 2 hours
   - **DoD**:
-    - [ ] Create `DeleteConfirmModal.tsx` component
-    - [ ] Implement modal structure (backdrop, centered container)
-    - [ ] Implement metadata display grid (title, type badge, size, type, modified, path)
-    - [ ] Implement warning text ("This action cannot be undone.", enhanced for directories)
-    - [ ] Show item count for directories
-    - [ ] Implement buttons (Cancel gray secondary, Delete red danger with IoMdTrash icon)
-    - [ ] Loading state on Delete button during deletion
-    - [ ] Add accessibility features (role="dialog", aria-modal="true", focus trap, Escape key)
-    - [ ] Export component and types
-    - [ ] Close on: Cancel button, backdrop click, Escape key
+    - [x] Create `DeleteConfirmModal.tsx` component
+    - [x] Implement modal structure (backdrop, centered container)
+    - [x] Implement metadata display grid (title, type badge, size, type, modified, path)
+    - [x] Implement warning text ("This action cannot be undone.", enhanced for directories)
+    - [x] Show item count for directories
+    - [x] Implement buttons (Cancel gray secondary, Delete red danger with IoMdTrash icon)
+    - [x] Loading state on Delete button during deletion
+    - [x] Add accessibility features (role="dialog", aria-modal="true", Escape key)
+    - [x] Export component and types
+    - [x] Close on: Cancel button, backdrop click, Escape key
+    - [x] TSDoc comments added
+    - [x] Type check passed with no new errors
 
 - [ ] **TASK-311**: Enhanced Metadata Display (F-012)
   - **Priority**: P1 (High)

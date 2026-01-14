@@ -40,8 +40,8 @@ NOTES
 
 - **Current stage (1-8)**: Stage 8 - Worker (S8:worker - F-012)
 - **Active release**: v1.2.0 (Enhancements) - Target: 2026-01-21
-- **Status summary**: TASK-309 complete (F-012 Tree Lines), TASK-308 complete (F-012 Service Layer), TASK-307 complete (F-011), TASK-306 complete (F-010), TASK-305 complete (F-009), TASK-304 complete (F-008), TASK-303 complete (Integration), TASK-302 complete (F-006), TASK-301 complete (F-005)
-- **Last updated (YYYY-MM-DD)**: 2026-01-15 (F-012: OPFS Tree Lines - TASK-309 Complete)
+- **Status summary**: TASK-310 complete (F-012 Delete Modal), TASK-309 complete (F-012 Tree Lines), TASK-308 complete (F-012 Service Layer), TASK-307 complete (F-011), TASK-306 complete (F-010), TASK-305 complete (F-009), TASK-304 complete (F-008), TASK-303 complete (Integration), TASK-302 complete (F-006), TASK-301 complete (F-005)
+- **Last updated (YYYY-MM-DD)**: 2026-01-15 (F-012: Delete Confirmation Modal - TASK-310 Complete)
 
 ## 4) Technology stack (chosen in Stage 2)
 
@@ -217,4 +217,16 @@ NOTES
   - Integrated with FileTree.tsx (wrap children with TreeLines, pass depth/showLines/isLast props)
   - Added horizontal connector to each non-root item in FileTreeItem
   - Accessibility: `aria-hidden="true"` on decorative line elements
+  - Type check passed with no new errors
+- **2026-01-15**: TASK-310 completed - Delete Confirmation Modal (F-012)
+  - Created `DeleteConfirmModal.tsx` component for file and directory deletion confirmation
+  - Implemented modal structure with backdrop overlay and centered container
+  - Added metadata display grid (type badge, size, file type, modified date, item count, full path)
+  - Implemented conditional rendering for files vs directories (size/fileType vs itemCount)
+  - Added warning text with enhanced directory warning showing total items count
+  - Implemented Escape key handler and backdrop click handler for closing modal
+  - Added confirm (red with trash icon) and cancel (gray) buttons
+  - Implemented loading state with spinner during deletion operation
+  - Disabled close actions during deletion (isDeleting state)
+  - Accessibility: `role="dialog"`, `aria-modal="true"`, `aria-labelledby="delete-modal-title"`
   - Type check passed with no new errors
