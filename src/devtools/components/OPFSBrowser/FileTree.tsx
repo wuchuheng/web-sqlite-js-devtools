@@ -1,7 +1,8 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { databaseService } from "@/devtools/services/databaseService";
 import { useInspectedWindowRequest } from "@/devtools/hooks/useInspectedWindowRequest";
 import type { OpfsFileEntry } from "@/devtools/services/databaseService";
+import { TreeLines } from "./TreeLines";
 
 /**
  * FileTree component props
@@ -18,16 +19,20 @@ interface FileTreeItemProps {
   level: number;
   onDownload: (_path: string, name: string) => Promise<void>;
   keyPrefix: string;
+  showLines: boolean; // NEW: F-012
+  isLast?: boolean; // NEW: F-012
 }
 
 /**
- * FileTreeItem - Internal component for tree items with lazy-loading
+ * FileTreeItem - Internal component for tree items with lazy-loading (F-012 enhanced)
  */
 const FileTreeItem = ({
   entry,
   level,
   onDownload,
   keyPrefix,
+  showLines,
+  isLast = false,
 }: FileTreeItemProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [children, setChildren] = useState<OpfsFileEntry[]>([]);
@@ -77,12 +82,23 @@ const FileTreeItem = ({
 
   return (
     <div>
-      {/* Parent Node */}
+      {/* Parent Node with horizontal connector (F-012) */}
       <div
-        className={`flex items-center gap-2 py-1 px-2 hover:bg-gray-100 cursor-pointer select-none`}
+        className={`flex items-center gap-2 py-1 px-2 hover:bg-gray-100 cursor-pointer select-none relative`}
         style={{ paddingLeft: `${paddingLeft + 16}px` }}
         onClick={handleClick}
       >
+        {/* Horizontal connector line (F-012) */}
+        {level > 0 && showLines && (
+          <div
+            className="absolute top-1/2 -translate-y-1/2 h-px bg-gray-200 pointer-events-none"
+            style={{
+              left: `${paddingLeft}px`,
+              width: "12px",
+            }}
+            aria-hidden="true"
+          />
+        )}
         {/* Icon */}
         {isDirectory ? (
           isLoading ? (
@@ -162,19 +178,21 @@ const FileTreeItem = ({
         </div>
       )}
 
-      {/* Children (when expanded) */}
+      {/* Children (when expanded) - F-012 enhanced with TreeLines */}
       {isExpanded && hasLoaded && children.length > 0 && (
-        <div>
-          {children.map((child) => (
+        <TreeLines depth={level + 1} isLast={isLast} isCollapsed={!showLines}>
+          {children.map((child, index) => (
             <FileTreeItem
               key={`${keyPrefix}/${child.name}`}
               entry={child}
               level={level + 1}
               onDownload={onDownload}
               keyPrefix={`${keyPrefix}/${child.name}`}
+              showLines={showLines}
+              isLast={index === children.length - 1}
             />
           ))}
-        </div>
+        </TreeLines>
       )}
 
       {/* Empty State */}
@@ -191,19 +209,42 @@ const FileTreeItem = ({
 };
 
 /**
- * FileTree component
+ * FileTree component (F-012 enhanced with responsive tree lines)
  *
  * @remarks
  * - Displays OPFS file tree with lazy-loaded directories
  * - Root level files are shown initially
  * - Directories are loaded on-demand when expanded
  * - Supports file download via callback
+ * - VSCode-style tree lines with responsive hiding (F-012)
  *
  * @param props.onDownload - Callback for downloading files
  *
  * @returns JSX.Element - File tree display
  */
 export const FileTree = ({ onDownload }: FileTreeProps) => {
+  // F-012: Track container width for responsive tree lines
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [showLines, setShowLines] = useState(true);
+
+  // F-012: ResizeObserver to detect sidebar collapse
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) {
+      return;
+    }
+
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        // Hide lines when width < 200px (collapsed sidebar)
+        setShowLines(entry.contentRect.width >= 200);
+      }
+    });
+
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, []);
+
   // Fetch root level files
   const {
     data: entries,
@@ -249,14 +290,17 @@ export const FileTree = ({ onDownload }: FileTreeProps) => {
   }
 
   return (
-    <div className="flex flex-col">
-      {entries.map((entry) => (
+    // F-012: Add containerRef for responsive tree lines
+    <div ref={containerRef} className="flex flex-col">
+      {entries.map((entry, index) => (
         <FileTreeItem
           key={entry.name}
           entry={entry}
           level={0}
           onDownload={onDownload}
           keyPrefix={entry.name}
+          showLines={showLines} // F-012: Pass to all items
+          isLast={index === entries.length - 1} // F-012: Track last child
         />
       ))}
     </div>

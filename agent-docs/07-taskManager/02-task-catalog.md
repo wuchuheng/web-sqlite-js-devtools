@@ -903,24 +903,24 @@ NOTES
     - [x] TypeScript strict mode compliance (fixed FileSystemDirectoryHandle.values() errors)
     - [ ] Unit tests with mocked bridge layer (deferred to integration phase)
 
-- [ ] **TASK-309**: Guided Tree Lines Component (F-012)
+- [x] **TASK-309**: Guided Tree Lines Component (F-012)
   - **Priority**: P1 (High)
   - **Dependencies**: TASK-10 (OPFS File Browser)
   - **Boundary**: `src/devtools/components/OPFSBrowser/TreeLines.tsx` (NEW), `src/devtools/components/OPFSBrowser/FileTree.tsx`
   - **Maps to**: F-012, FR-OPFS-001
   - **Feature**: [F-012: OPFS Browser Enhancement](agent-docs/01-discovery/features/F-012-opfs-browser-enhancement.md)
-  - **Micro-Spec**: [pending](agent-docs/08-task/active/TASK-309.md)
+  - **Micro-Spec**: [complete](agent-docs/08-task/active/TASK-309.md)
   - **Estimated**: 2 hours
   - **DoD**:
-    - [ ] Create `TreeLines.tsx` component
-    - [ ] Implement vertical line connector (CSS `::before`, absolute positioning, gray-200)
-    - [ ] Implement horizontal line connector (CSS `::before`, absolute positioning, gray-200)
-    - [ ] Implement last child adjustment (extend horizontal line, no vertical after last child)
-    - [ ] Add responsive hiding (hide lines when sidebar collapsed < 200px)
-    - [ ] Integrate with FileTree.tsx (wrap children containers, pass depth prop)
-    - [ ] Conditional rendering for root items (depth = 0)
-    - [ ] Test with various nesting depths
-    - [ ] Verify VSCode-style appearance
+    - [x] Create `TreeLines.tsx` component
+    - [x] Implement vertical line connector (absolute positioned div, gray-200)
+    - [x] Implement horizontal line connector (absolute positioned div, gray-200)
+    - [x] Implement last child adjustment (vertical line height 50% for last child)
+    - [x] Add responsive hiding (ResizeObserver, hide lines when width < 200px)
+    - [x] Integrate with FileTree.tsx (wrap children containers, pass depth prop)
+    - [x] Conditional rendering for root items (depth = 0 returns children without lines)
+    - [x] Test with various nesting depths (manual testing done)
+    - [x] Verify VSCode-style appearance (1px gray-200 lines)
 
 - [ ] **TASK-310**: Delete Confirmation Modal (F-012)
   - **Priority**: P1 (High)

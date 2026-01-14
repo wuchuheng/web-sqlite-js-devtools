@@ -40,8 +40,8 @@ NOTES
 
 - **Current stage (1-8)**: Stage 8 - Worker (S8:worker - F-012)
 - **Active release**: v1.2.0 (Enhancements) - Target: 2026-01-21
-- **Status summary**: TASK-308 complete (F-012 Service Layer), TASK-307 complete (F-011), TASK-306 complete (F-010), TASK-305 complete (F-009), TASK-304 complete (F-008), TASK-303 complete (Integration), TASK-302 complete (F-006), TASK-301 complete (F-005)
-- **Last updated (YYYY-MM-DD)**: 2026-01-15 (F-012: OPFS Service Layer - TASK-308 Complete)
+- **Status summary**: TASK-309 complete (F-012 Tree Lines), TASK-308 complete (F-012 Service Layer), TASK-307 complete (F-011), TASK-306 complete (F-010), TASK-305 complete (F-009), TASK-304 complete (F-008), TASK-303 complete (Integration), TASK-302 complete (F-006), TASK-301 complete (F-005)
+- **Last updated (YYYY-MM-DD)**: 2026-01-15 (F-012: OPFS Tree Lines - TASK-309 Complete)
 
 ## 4) Technology stack (chosen in Stage 2)
 
@@ -208,3 +208,13 @@ NOTES
   - Added `detectFileType()` helper function for file type detection based on extension
   - Exported new functions via `databaseService` object
   - TypeScript compliance: Fixed `FileSystemDirectoryHandle.values()` type errors with `eslint-disable-next-line` comments
+- **2026-01-15**: TASK-309 completed - Guided Tree Lines Component (F-012)
+  - Added `TreeLines.tsx` component for VSCode-style tree hierarchy
+  - Implemented vertical line connector (1px gray-200, absolute positioned div)
+  - Implemented horizontal line connector (12px gray-200, absolute positioned div)
+  - Implemented last child adjustment (L-shaped connector with 50% height vertical)
+  - Added responsive hiding with ResizeObserver (hide lines when sidebar < 200px)
+  - Integrated with FileTree.tsx (wrap children with TreeLines, pass depth/showLines/isLast props)
+  - Added horizontal connector to each non-root item in FileTreeItem
+  - Accessibility: `aria-hidden="true"` on decorative line elements
+  - Type check passed with no new errors
