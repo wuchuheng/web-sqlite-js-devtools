@@ -40,7 +40,9 @@ export const MigrationTab = () => {
   );
 
   const handleTestRelease = async () => {
-    if (!dbname) return;
+    if (!dbname) {
+      return;
+    }
 
     setIsTesting(true);
     setError(null);
@@ -67,7 +69,9 @@ export const MigrationTab = () => {
   };
 
   const handleRollback = async () => {
-    if (!dbname) return;
+    if (!dbname) {
+      return;
+    }
 
     setIsTesting(true);
     setError(null);

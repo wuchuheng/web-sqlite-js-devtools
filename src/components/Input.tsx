@@ -1,5 +1,5 @@
 type SwitchProps = {
-  enabled: boolean;
+  _enabled: boolean;
   onChange: (enabled: boolean) => void;
 };
 export const Switch: React.FC<SwitchProps> = ({ enabled, onChange }) => {

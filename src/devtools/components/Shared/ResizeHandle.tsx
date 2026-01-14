@@ -11,7 +11,7 @@ interface ResizeHandleProps {
   /** Which edge to attach to ("left" or "right") */
   position: "left" | "right";
   /** Callback when dragging occurs with delta X */
-  onDrag: (deltaX: number) => void;
+  onDrag: (_deltaX: number) => void;
   /** Minimum panel width in pixels (default: 150) */
   minWidth?: number;
   /** Maximum panel width in pixels (default: 800) */
@@ -78,7 +78,9 @@ export const ResizeHandle = ({
    */
   useEffect(() => {
     // Only attach listeners when dragging
-    if (!isDragging) return;
+    if (!isDragging) {
+      return;
+    }
 
     /**
      * Handle mouse move during drag

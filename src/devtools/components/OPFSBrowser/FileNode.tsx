@@ -8,7 +8,7 @@ import type { OpfsFileEntry } from "@/devtools/services/databaseService";
 interface FileNodeProps {
   entry: OpfsFileEntry;
   level?: number;
-  onDownload: (path: string, name: string) => Promise<void>;
+  onDownload: (_path: string, name: string) => Promise<void>;
 }
 
 /**
@@ -41,7 +41,9 @@ export const FileNode = ({ entry, level = 0, onDownload }: FileNodeProps) => {
   }, [isDirectory]);
 
   const handleDownload = useCallback(async () => {
-    if (isDirectory || isDownloading) return;
+    if (isDirectory || isDownloading) {
+      return;
+    }
 
     setIsDownloading(true);
     setError(null);

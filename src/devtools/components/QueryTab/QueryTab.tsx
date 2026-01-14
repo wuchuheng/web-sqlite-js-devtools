@@ -71,7 +71,9 @@ export const QueryTab = ({
    * 4. Update results or error state
    */
   const handleExecute = async () => {
-    if (!dbname) return;
+    if (!dbname) {
+      return;
+    }
 
     setIsLoading(true);
     setError(null);

@@ -73,11 +73,14 @@ export function defineChannel<Req, Res>(channelName: string) {
     } satisfies WireMessage);
 
     const msg = response as WireMessage | undefined;
-    if (!msg)
+    if (!msg) {
       throw new Error(
         "No response received (receiver might not have called sendResponse)",
       );
-    if (msg.success === false) throw new Error(msg.error ?? "Messaging error");
+    }
+    if (msg.success === false) {
+      throw new Error(msg.error ?? "Messaging error");
+    }
     return msg.payload as Res;
   };
 
@@ -123,7 +126,9 @@ export function defineChannel<Req, Res>(channelName: string) {
         sendResponse: (response?: unknown) => void,
       ) => {
         const msg = message as WireMessage;
-        if (msg.type !== "request" || msg.channel !== channelName) return false;
+        if (msg.type !== "request" || msg.channel !== channelName) {
+          return false;
+        }
 
         Promise.resolve()
           .then(() => handler(msg.payload as Req))
@@ -218,7 +223,9 @@ export const initRouter = (options: RouterOptions = {}): (() => void) => {
   const { debug = false } = options;
 
   const log = (...args: unknown[]) => {
-    if (debug) console.log("[messaging:router]", ...args);
+    if (debug) {
+      console.log("[messaging:router]", ...args);
+    }
   };
 
   const buildErrorResponse = (
@@ -238,8 +245,13 @@ export const initRouter = (options: RouterOptions = {}): (() => void) => {
     sendResponse: (response?: unknown) => void,
   ) => {
     const msg = message as WireMessage;
-    if (!msg || typeof msg.type !== "string" || typeof msg.channel !== "string")
+    if (
+      !msg
+      || typeof msg.type !== "string"
+      || typeof msg.channel !== "string"
+    ) {
       return false;
+    }
 
     if (msg.type === "register") {
       handledChannels.add(msg.channel);
@@ -269,7 +281,9 @@ export const initRouter = (options: RouterOptions = {}): (() => void) => {
       return true;
     }
 
-    if (msg.type !== "request" || msg.via === "router") return false;
+    if (msg.type !== "request" || msg.via === "router") {
+      return false;
+    }
 
     if (canceledChannels.has(msg.channel)) {
       sendResponse(

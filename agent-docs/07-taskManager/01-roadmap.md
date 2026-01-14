@@ -164,12 +164,25 @@ NOTES
 
 **Milestone**: F-010 Complete - Coordinated refresh between sidebar and main page
 
-- [ ] **TASK-306**: Database Refresh Coordination Feature (F-010)
+- [x] **TASK-306**: Database Refresh Coordination Feature (F-010) (Completed 2026-01-14)
   - Create DatabaseRefreshContext with Provider and hook
   - Add refresh button to sidebar "Opened DB" header (left side)
   - Integrate context with DatabaseList and OpenedDBList
   - Test bidirectional refresh synchronization
   - Testing and documentation
+
+#### Phase 8: ESLint Integration (Day 13)
+
+**Milestone**: F-011 Complete - Automated code linting with ESLint 9
+
+- [ ] **TASK-307**: ESLint Integration Feature (F-011)
+  - Install ESLint packages (7 packages: eslint, @eslint/js, @typescript-eslint/\*, eslint-plugin-react, eslint-plugin-react-hooks, eslint-plugin-prettier)
+  - Create eslint.config.js (flat config format with 5 layers)
+  - Create .vscode/settings.json (ESLint integration)
+  - Add NPM scripts (lint, lint:fix)
+  - Test configuration and IDE integration
+  - Run lint:fix on existing codebase
+  - Documentation updates
 
 ### Release v1.3.0 (Future Enhancements)
 
@@ -194,7 +207,8 @@ NOTES
 - [ ] **v1.0.0 MVP Released**: 2026-01-27 (TASK-12)
 - [x] **v1.2.0 Phase 1-5 Complete**: 2026-01-14 (F-004, F-005, F-006, F-008)
 - [x] **v1.2.0 Phase 6 Complete**: 2026-01-14 (F-009)
-- [ ] **v1.2.0 Phase 7 Complete**: TBD (F-010)
+- [x] **v1.2.0 Phase 7 Complete**: 2026-01-14 (F-010)
+- [ ] **v1.2.0 Phase 8 Complete**: TBD (F-011)
 
 ## 4. Feature F-001: Service Layer Expansion
 
@@ -668,4 +682,193 @@ Add shared React Context to coordinate database refresh between sidebar and main
 - [ ] Bundle size impact acceptable (< 5KB)
 - [ ] Feature spec updated
 - [ ] LLD updated with implementation status
-- [ ] Status board updated
+- [ ] Status board updated with completion evidence
+
+## 8. Feature F-011: ESLint Integration
+
+### Overview
+
+**Feature ID**: F-011 (Discovery)
+**Status**: Design Complete - Ready for Implementation
+**Priority**: High (P1) - Code Quality
+**Target**: Complete during Phase 8 (Day 13)
+
+### Objective
+
+Add ESLint 9 with flat config format, TypeScript support, React rules, and Prettier integration to maintain code quality and consistency across the project. This provides automated linting during development and catches bugs before runtime.
+
+### Task Breakdown: TASK-307
+
+**Implementation Phases** (7 phases, 2-4 hours total):
+
+#### Phase 1: Package Installation (0.5 hour)
+
+**Milestone**: ESLint packages installed
+
+- [ ] Install ESLint 9 core: `npm install --save-dev eslint@^9`
+- [ ] Install base config: `npm install --save-dev @eslint/js@^9`
+- [ ] Install TypeScript packages: `npm install --save-dev @typescript-eslint/eslint-plugin@^8 @typescript-eslint/parser@^8`
+- [ ] Install React packages: `npm install --save-dev eslint-plugin-react@^7.34 eslint-plugin-react-hooks@^5.0`
+- [ ] Install Prettier integration: `npm install --save-dev eslint-plugin-prettier@^5`
+- [ ] Verify package.json contains all 7 packages
+- [ ] Run `npm install` to ensure dependencies resolve
+
+#### Phase 2: Configuration File Creation (0.5 hour)
+
+**Milestone**: eslint.config.js created with flat config
+
+- [ ] Create `eslint.config.js` in project root
+- [ ] Add ignore patterns (build/, dist/, node_modules/, \*.config.js/ts)
+- [ ] Import all required packages (js, tseslint, tsparser, react, reactHooks, prettier)
+- [ ] Configure Layer 1: Base JS (@eslint/js with ES2021 + browser)
+- [ ] Configure Layer 2: TypeScript (parser, plugin, type-aware linting)
+- [ ] Configure Layer 3: React (settings, plugins, rules, React 17+ JSX)
+- [ ] Configure Layer 4: Prettier (plugin, disable conflicting rules)
+- [ ] Configure Layer 5: Airbnb-style overrides (consistent-return, curly, console)
+- [ ] Export configuration array with all layers
+
+#### Phase 3: VSCode Integration (0.25 hour)
+
+**Milestone**: VSCode ESLint settings configured
+
+- [ ] Create `.vscode/settings.json` (if not exists)
+- [ ] Enable ESLint for TS/TSX/JS/JSX files
+- [ ] Enable format-on-save
+- [ ] Enable fix-on-save (source.fixAll.eslint)
+- [ ] Configure working directories
+- [ ] Test VSCode integration by opening a file
+
+#### Phase 4: NPM Scripts (0.25 hour)
+
+**Milestone**: Lint scripts added to package.json
+
+- [ ] Add `lint` script: `eslint . --ext .ts,.tsx,.js,.jsx`
+- [ ] Add `lint:fix` script: `eslint . --ext .ts,.tsx,.js,.jsx --fix`
+- [ ] Verify scripts don't conflict with existing scripts
+- [ ] Test `npm run lint` runs without errors
+- [ ] Test `npm run lint:fix` runs and auto-fixes issues
+
+#### Phase 5: Initial Lint Run (0.5 hour)
+
+**Milestone**: Configuration validated and baseline established
+
+- [ ] Run `npm run lint` to see all existing issues
+- [ ] Categorize issues: auto-fixable, legitimate, false positives
+- [ ] Run `npm run lint:fix` to fix auto-fixable issues
+- [ ] Review remaining issues and categorize
+- [ ] Configure rule overrides for false positives (if any)
+- [ ] Document known issues (if any)
+
+#### Phase 6: Testing & Validation (0.75 hour)
+
+**Milestone**: All scenarios tested and working
+
+1. **Configuration Testing**
+   - [ ] Verify ESLint loads without errors
+   - [ ] Test TypeScript linting works on .ts files
+   - [ ] Test React linting works on .tsx files
+   - [ ] Test Prettier integration works
+   - [ ] Test ignore patterns work correctly
+
+2. **IDE Integration Testing**
+   - [ ] Open TSX file in VSCode
+   - [ ] Verify real-time lint errors appear in Problems panel
+   - [ ] Verify red squiggly lines for errors
+   - [ ] Test save triggers Prettier format + ESLint fix
+   - [ ] Test fix-on-save via command palette
+
+3. **NPM Script Testing**
+   - [ ] Run `npm run lint` - see all issues
+   - [ ] Run `npm run lint:fix` - auto-fix issues
+   - [ ] Run `npm run typecheck` - still works
+   - [ ] Run `npm run build` - still works
+
+#### Phase 7: Documentation (0.25 hour)
+
+**Milestone**: All documentation updated
+
+- [ ] Update README with ESLint instructions
+- [ ] Document known issues/exceptions (if any)
+- [ ] Update feature spec status
+- [ ] Update LLD implementation status
+- [ ] Update status board
+
+### Success Criteria
+
+1. **Installation**
+   - [ ] All 7 ESLint packages installed
+   - [ ] Package.json updated with devDependencies
+   - [ ] No install errors or warnings
+
+2. **Configuration**
+   - [ ] eslint.config.js created with flat config format
+   - [ ] All 5 configuration layers working
+   - [ ] TypeScript parser configured
+   - [ ] React plugins configured
+   - [ ] Prettier integration configured
+
+3. **NPM Scripts**
+   - [ ] `npm run lint` works
+   - [ ] `npm run lint:fix` works
+   - [ ] Scripts don't conflict with existing scripts
+   - [ ] Exit codes correct (0 for pass, 1 for errors)
+
+4. **IDE Integration**
+   - [ ] VSCode shows ESLint errors in real-time
+   - [ ] Fix-on-save works via command palette
+   - [ ] Format-on-save integrates with ESLint
+   - [ ] No console errors from ESLint server
+
+5. **Build Compatibility**
+   - [ ] `npm run build` still works
+   - [ ] `npm run dev` still works
+   - [ ] `npm run typecheck` still works
+   - [ ] No new build errors introduced
+
+6. **Code Quality**
+   - [ ] Lint passes on existing code (or only minor issues)
+   - [ ] No breaking changes to existing code style
+   - [ ] Prettier and ESLint don't conflict
+   - [ ] At least 80% of issues auto-fixable
+
+### Risk Mitigation
+
+- **Complexity**: Low (well-established pattern, good tooling)
+- **Files Modified**: 3 files (1 new, 2 existing)
+- **Breaking Changes**: None (additive only)
+- **Migration Path**: Run `npm run lint:fix` to auto-fix
+- **Rollback**: Simple (remove eslint.config.js, uninstall packages, revert scripts)
+- **Performance**: Minimal impact (ESLint is fast, incremental in IDE)
+
+### Timeline
+
+- **30 minutes**: Package installation and verification
+- **30 minutes**: Create eslint.config.js with all layers
+- **15 minutes**: Create .vscode/settings.json
+- **15 minutes**: Add NPM scripts and test
+- **30 minutes**: Initial lint run and issue categorization
+- **45 minutes**: Testing and validation (config, IDE, scripts)
+- **15 minutes**: Documentation and final verification
+
+**Total**: 3 hours
+
+### Definition of Done
+
+- [ ] All 7 ESLint packages installed
+- [ ] eslint.config.js created with flat config
+- [ ] .vscode/settings.json created/updated
+- [ ] NPM scripts (lint, lint:fix) added and working
+- [ ] TypeScript linting configured and working
+- [ ] React linting configured and working
+- [ ] Prettier integration configured and working
+- [ ] Airbnb-style rules applied
+- [ ] Ignore patterns configured
+- [ ] `npm run lint` runs without crashing
+- [ ] `npm run lint:fix` auto-fixes issues
+- [ ] VSCode shows real-time lint errors
+- [ ] Fix-on-save works in VSCode
+- [ ] Build scripts still work (build, dev, typecheck)
+- [ ] Known issues documented (if any)
+- [ ] Feature spec marked complete
+- [ ] LLD marked implementation complete
+- [ ] Status board updated with completion evidence

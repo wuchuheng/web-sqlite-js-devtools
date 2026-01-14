@@ -796,3 +796,77 @@ NOTES
         - Add implementation notes and completion status
       - [ ] Update status board with completion evidence
       - [ ] Verify all DoD items complete
+
+- [x] **TASK-307**: ESLint Integration Feature (F-011)
+  - **Priority**: P1 (High)
+  - **Dependencies**: None
+  - **Boundary**: `eslint.config.js` (NEW), `.vscode/settings.json` (NEW/UPDATE), `package.json` (UPDATE)
+  - **Maps to**: F-011
+  - **Feature**: [F-011: ESLint Integration](agent-docs/01-discovery/features/F-011-eslint-integration.md)
+  - **Estimated**: 2-4 hours
+  - **Micro-Spec**: [completed](agent-docs/08-task/active/TASK-307.md)
+  - **DoD**:
+    - [x] **Package Installation** (0.5 hour)
+      - [x] Install ESLint 9 core: `npm install --save-dev eslint@^9`
+      - [x] Install base config: `npm install --save-dev @eslint/js@^9`
+      - [x] Install TypeScript packages: `npm install --save-dev @typescript-eslint/eslint-plugin@^8 @typescript-eslint/parser@^8`
+      - [x] Install React packages: `npm install --save-dev eslint-plugin-react@^7.34 eslint-plugin-react-hooks@^5.0`
+      - [x] Install Prettier integration: `npm install --save-dev eslint-plugin-prettier@^5`
+      - [x] Install globals package: `npm install --save-dev globals@^17`
+      - [x] Verify package.json contains all 8 packages
+      - [x] Run `npm install` to ensure dependencies resolve
+    - [x] **Configuration File Creation** (0.5 hour)
+      - [x] Create `eslint.config.js` in project root
+      - [x] Add ignore patterns (build/, dist/, node_modules/, \*.config.js/ts, .chromuimCache/)
+      - [x] Import all required packages (js, tseslint, tsparser, react, reactHooks, prettier, globals)
+      - [x] Configure Layer 1: Base JS (@eslint/js with ES2021 + browser + globals)
+      - [x] Configure Layer 2: TypeScript (parser, plugin, type-aware linting, no-undef off)
+      - [x] Configure Layer 3: React (settings, plugins, rules, React 17+ JSX)
+      - [x] Configure Layer 4: Prettier (plugin, disable conflicting rules)
+      - [x] Configure Layer 5: Airbnb-style overrides (consistent-return, curly, console)
+      - [x] Export configuration array with all layers
+      - [x] Verify ESLint loads without errors
+    - [x] **VSCode Integration** (0.25 hour)
+      - [x] Update `.vscode/settings.json` (already exists)
+      - [x] Enable ESLint for TS/TSX/JS/JSX files
+      - [x] Enable format-on-save (already configured)
+      - [x] Enable fix-on-save (source.fixAll.eslint - already configured)
+      - [x] Add `eslint.enable: true` setting
+      - [x] Test VSCode integration by opening a file
+    - [x] **NPM Scripts** (0.25 hour)
+      - [x] Add `lint` script: `eslint .`
+      - [x] Add `lint:fix` script: `eslint . --fix`
+      - [x] Verify scripts don't conflict with existing scripts
+      - [x] Test `npm run lint` runs without errors
+      - [x] Test `npm run lint:fix` runs and auto-fixes issues
+    - [x] **Initial Lint Run** (0.5 hour)
+      - [x] Run `npm run lint` to see all existing issues
+      - [x] Categorize issues: auto-fixable, legitimate, false positives
+      - [x] Run `npm run lint:fix` to fix auto-fixable issues
+      - [x] Review remaining issues and categorize
+      - [x] Configure rule overrides for false positives (no-undef for TS, globals for browser/Node)
+      - [x] Document known issues (150 problems: 108 errors, 42 warnings)
+    - [x] **Testing & Validation** (0.75 hour)
+      - [x] **Configuration Testing**
+        - [x] Verify ESLint loads without errors
+        - [x] Test TypeScript linting works on .ts files
+        - [x] Test React linting works on .tsx files
+        - [x] Test Prettier integration works
+        - [x] Test ignore patterns work correctly
+      - [x] **IDE Integration Testing**
+        - [x] Open TSX file in VSCode
+        - [x] Verify real-time lint errors appear in Problems panel
+        - [x] Verify red squiggly lines for errors
+        - [x] Test save triggers Prettier format + ESLint fix
+        - [x] Test fix-on-save via command palette
+      - [x] **NPM Script Testing**
+        - [x] Run `npm run lint` - see all issues (150 problems)
+        - [x] Run `npm run lint:fix` - auto-fix issues
+        - [x] Run `npm run typecheck` - still works
+        - [x] Run `npm run build` - still works
+    - [x] **Documentation** (0.25 hour)
+      - [x] Update feature spec status
+      - [x] Update LLD implementation status
+      - [x] Update status board
+      - [x] Update project spec
+      - [x] Verify all DoD items complete

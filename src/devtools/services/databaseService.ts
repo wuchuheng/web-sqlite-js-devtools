@@ -221,7 +221,7 @@ export const getDatabases = async (): Promise<
  * @returns Table list response
  */
 export const getTableList = async (
-  dbname: string,
+  db_name: string,
 ): Promise<ServiceResponse<string[]>> => {
   return inspectedWindowBridge.execute({
     func: async (databaseName: string) => {
@@ -252,7 +252,9 @@ export const getTableList = async (
 
           for (const row of rows) {
             const nameValue = row.name ?? row.tbl_name;
-            if (!nameValue) continue;
+            if (!nameValue) {
+              continue;
+            }
 
             const typeValue = row.type;
             if (
@@ -307,7 +309,7 @@ export const getTableList = async (
  * @returns Table schema with columns and DDL
  */
 export const getTableSchema = async (
-  dbname: string,
+  db_name: string,
   tableName: string,
 ): Promise<ServiceResponse<TableSchema>> => {
   return inspectedWindowBridge.execute({
@@ -417,7 +419,7 @@ export const getTableSchema = async (
  * @returns Query result with rows, total count, and column names
  */
 export const queryTableData = async (
-  dbname: string,
+  db_name: string,
   sql: string,
   limit: number,
   offset: number,
@@ -499,7 +501,7 @@ export const queryTableData = async (
  * @returns Execution result with lastInsertRowid and changes
  */
 export const execSQL = async (
-  dbname: string,
+  db_name: string,
   sql: string,
   params?: SQLParams,
 ): Promise<ServiceResponse<ExecResult>> => {
@@ -566,7 +568,7 @@ export const execSQL = async (
  * @returns Subscribe result with subscription ID
  */
 export const subscribeLogs = async (
-  dbname: string,
+  db_name: string,
   callback: (entry: DBLogEntry) => void,
 ): Promise<ServiceResponse<SubscribeResult>> => {
   // Generate subscription ID upfront
@@ -705,7 +707,7 @@ export const unsubscribeLogs = async (
  * @returns Dev release result with dev version identifier
  */
 export const devRelease = async (
-  dbname: string,
+  db_name: string,
   version: string,
   migrationSQL?: string,
   seedSQL?: string,
@@ -779,7 +781,7 @@ export const devRelease = async (
  * @returns Rollback result with current version
  */
 export const devRollback = async (
-  dbname: string,
+  db_name: string,
   toVersion: string,
 ): Promise<ServiceResponse<RollbackResult>> => {
   return inspectedWindowBridge.execute({
@@ -835,7 +837,7 @@ export const devRollback = async (
  * @returns Database version result
  */
 export const getDbVersion = async (
-  dbname: string,
+  db_name: string,
 ): Promise<ServiceResponse<DbVersionResult>> => {
   return inspectedWindowBridge.execute({
     func: async (databaseName: string) => {

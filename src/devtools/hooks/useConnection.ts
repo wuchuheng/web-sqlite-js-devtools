@@ -83,7 +83,9 @@ export const useConnection = (): UseConnectionReturn => {
    * to communicate with the inspected page.
    */
   const sendHeartbeat = () => {
-    if (!isMounted.current) return;
+    if (!isMounted.current) {
+      return;
+    }
 
     /**
      * 1. Check if web-sqlite-js API is available
@@ -108,7 +110,9 @@ export const useConnection = (): UseConnectionReturn => {
     chrome.devtools.inspectedWindow.eval(
       checkScript,
       (result: InspectWindowResult, exceptionInfo: EvaluationExceptionInfo) => {
-        if (!isMounted.current) return;
+        if (!isMounted.current) {
+          return;
+        }
 
         if (exceptionInfo?.isException || !result || !result.success) {
           handleConnectionLost();
@@ -137,7 +141,9 @@ export const useConnection = (): UseConnectionReturn => {
    * If heartbeat doesn't receive response within 15s, triggers reconnection.
    */
   const scheduleNextHeartbeat = () => {
-    if (!isMounted.current) return;
+    if (!isMounted.current) {
+      return;
+    }
 
     clearTimeout(heartbeatTimer.current);
     clearTimeout(timeoutTimer.current);
@@ -170,7 +176,9 @@ export const useConnection = (): UseConnectionReturn => {
    * After 5 failed retries, shows error state with manual retry button.
    */
   const handleConnectionLost = () => {
-    if (!isMounted.current) return;
+    if (!isMounted.current) {
+      return;
+    }
 
     clearTimeout(heartbeatTimer.current);
     clearTimeout(timeoutTimer.current);
@@ -211,7 +219,9 @@ export const useConnection = (): UseConnectionReturn => {
    * Resets exponential backoff and immediately attempts connection.
    */
   const retry = () => {
-    if (!isMounted.current) return;
+    if (!isMounted.current) {
+      return;
+    }
 
     console.log("[useConnection] Manual retry triggered");
     retryCount.current = 0;

@@ -1802,5 +1802,356 @@ getDatabases(): Promise<ServiceResponse<DatabaseSummary[]>>
   - **Modified**: `src/devtools/components/Sidebar/DatabaseList.tsx` (add button, consume context)
   - **Modified**: `src/devtools/components/OpenedDBList/OpenedDBList.tsx` (consume context)
 - **Complexity**: Low (standard React Context pattern)
+
+## 16) ESLint Integration (Feature F-011)
+
+**Purpose**: Add automated code linting with ESLint 9, TypeScript support, React rules, and Prettier integration to maintain code quality and consistency.
+
+**Problem Solved**:
+
+- **Current Issue**: Project has no automated linting, leading to inconsistent code style, potential bugs, and manual code review effort for style issues.
+- **Solution**: Configure ESLint 9 with flat config format, TypeScript linting, React rules, and Prettier integration for automated code quality enforcement.
+
+**Linting Architecture**:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Developer Workflow                        │
+│  ┌─────────────────────────────────────────────────────────┐ │
+│  │  1. Write Code                                         │ │
+│  │     ├── IDE shows real-time lint errors (VSCode)       │ │
+│  │     ├── Prettier formats on save                       │ │
+│  │     └── ESLint auto-fixes where possible               │ │
+│  └─────────────────────────────────────────────────────────┘ │
+│  ┌─────────────────────────────────────────────────────────┐ │
+│  │  2. Pre-commit Check (Optional - future)              │ │
+│  │     ├── npm run lint (all files)                       │ │
+│  │     └── npm run lint:fix (auto-fixable issues)        │ │
+│  └─────────────────────────────────────────────────────────┘ │
+│  ┌─────────────────────────────────────────────────────────┐ │
+│  │  3. Build Check                                       │ │
+│  │     ├── npm run build (includes tsc typecheck)         │ │
+│  │     └── ESLint can be added to build (future)         │ │
+│  └─────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**ESLint Configuration Stack** (Flat Config):
+
+```
+┌────────────────────────────────────────────────────────────────┐
+│                    eslint.config.js (Flat Config)              │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │  Layer 1: Base JS Configuration                         │  │
+│  │  ├── @eslint/js (recommended rules)                    │  │
+│  │  ├── ES2021 globals + browser environment              │  │
+│  │  └── Ignore patterns (build/, node_modules/, etc.)     │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │  Layer 2: TypeScript Configuration                     │  │
+│  │  ├── @typescript-eslint/parser (TS parser)             │  │
+│  │  ├── @typescript-eslint/eslint-plugin (TS rules)       │  │
+│  │  ├── Type-aware linting (uses tsconfig.json)           │  │
+│  │  └── Files: **/*.ts, **/*.tsx                          │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │  Layer 3: React Configuration                          │  │
+│  │  ├── eslint-plugin-react (React rules)                 │  │
+│  │  ├── eslint-plugin-react-hooks (Hooks rules)           │  │
+│  │  ├── React version: auto-detect from package.json      │  │
+│  │  └── Files: **/*.tsx, **/*.jsx                          │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │  Layer 4: Prettier Integration                          │  │
+│  │  ├── eslint-plugin-prettier (Prettier as ESLint rule)   │  │
+│  │  ├── Disabled formatting rules (avoid conflicts)        │  │
+│  │  └── Must be last layer (overrides all formatting)     │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │  Layer 5: Airbnb-Style Overrides                        │  │
+│  │  ├── Consistent return: error                          │  │
+│  │  ├── Curly braces: error, all branches                │  │
+│  │  ├── Console: warn (allow warn/error)                  │  │
+│  │  ├── Underscore dangle: off (allow _prefix)            │  │
+│  │  └── Plusplus: off (allow ++ operator)                 │  │
+│  └──────────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────────┘
+```
+
+**Flat Config Structure**:
+
+```javascript
+// eslint.config.js (ESLint 9 flat config format)
+import js from "@eslint/js";
+import tseslint from "@typescript-eslint/eslint-plugin";
+import tsparser from "@typescript-eslint/parser";
+import react from "eslint-plugin-react";
+import reactHooks from "eslint-plugin-react-hooks";
+import prettier from "eslint-plugin-prettier";
+
+export default [
+  // 1. Ignore patterns
+  {
+    ignores: [
+      "build/**",
+      "dist/**",
+      "node_modules/**",
+      "*.config.js",
+      "*.config.ts",
+    ],
+  },
+
+  // 2. Base JS rules (ES2021 + browser)
+  js.configs.recommended,
+
+  // 3. TypeScript configuration
+  {
+    files: ["**/*.ts", "**/*.tsx"],
+    languageOptions: {
+      parser: tsparser,
+      parserOptions: {
+        project: "./tsconfig.json",
+        ecmaVersion: 2021,
+        sourceType: "module",
+      },
+    },
+    plugins: {
+      "@typescript-eslint": tseslint,
+    },
+    rules: {
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        { argsIgnorePattern: "^_" },
+      ],
+      "@typescript-eslint/explicit-function-return-type": "off",
+      "@typescript-eslint/explicit-module-boundary-types": "off",
+      "@typescript-eslint/no-explicit-any": "warn",
+    },
+  },
+
+  // 4. React configuration
+  {
+    files: ["**/*.tsx", "**/*.jsx"],
+    settings: {
+      react: {
+        version: "detect",
+      },
+    },
+    plugins: {
+      react,
+      "react-hooks": reactHooks,
+    },
+    rules: {
+      ...react.configs.recommended.rules,
+      ...reactHooks.configs.recommended.rules,
+      "react/react-in-jsx-scope": "off", // Not needed with React 17+
+      "react/prop-types": "off", // Using TypeScript instead
+      "react-hooks/rules-of-hooks": "error",
+      "react-hooks/exhaustive-deps": "warn",
+    },
+  },
+
+  // 5. Prettier integration (must be last)
+  {
+    plugins: {
+      prettier,
+    },
+    rules: {
+      "prettier/prettier": "error",
+      // Disable formatting rules that conflict with Prettier
+      "arrow-body-style": "off",
+      "prefer-arrow-callback": "off",
+    },
+  },
+
+  // 6. Airbnb-inspired overrides
+  {
+    rules: {
+      "no-console": ["warn", { allow: ["warn", "error"] }],
+      "no-plusplus": "off",
+      "no-underscore-dangle": "off",
+      "consistent-return": "error",
+      curly: ["error", "all"],
+    },
+  },
+];
+```
+
+**TypeScript-Aware Linting** (F-011):
+
+- **Parser**: `@typescript-eslint/parser` for `.ts` and `.tsx` files
+- **Plugin**: `@typescript-eslint/eslint-plugin` for TypeScript-specific rules
+- **Type Awareness**: Uses `tsconfig.json` for enhanced type checking
+  - Catches type errors before running `tsc`
+  - Provides better autocomplete in IDE
+  - Enables rules like `no-unused-vars` to respect TypeScript types
+
+**React Linting Strategy** (F-011):
+
+| Rule Category        | Plugin                    | Key Rules                                            |
+| -------------------- | ------------------------- | ---------------------------------------------------- |
+| React Best Practices | eslint-plugin-react       | Detect missing keys, forbid dangerous props          |
+| React Hooks          | eslint-plugin-react-hooks | Enforce Rules of Hooks, exhaustive deps              |
+| JSX Transformation   | eslint-plugin-react       | React 17+ new JSX transform (no React import needed) |
+
+**Prettier Integration** (F-011):
+
+```typescript
+// Prettier runs as ESLint rule (must be last plugin)
+{
+  plugins: {
+    prettier: eslintPluginPrettier
+  },
+  rules: {
+    'prettier/prettier': 'error', // Prettier formatting errors appear as ESLint errors
+    // Disable ESLint formatting rules that conflict
+    'arrow-body-style': 'off',
+    'prefer-arrow-callback': 'off',
+  }
+}
+```
+
+**NPM Scripts** (F-011):
+
+```json
+{
+  "scripts": {
+    "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
+    "lint:fix": "eslint . --ext .ts,.tsx,.js,.jsx --fix",
+    "format": "prettier --write '**/*.{tsx,ts,json,css,scss,md}'",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc && vite build"
+  }
+}
+```
+
+**VSCode Integration** (F-011):
+
+```json
+// .vscode/settings.json
+{
+  "eslint.enable": true,
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact"
+  ],
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  },
+  "eslint.workingDirectories": [{ "directory": ".", "changeProcessCWD": true }]
+}
+```
+
+**Development Workflow** (F-011):
+
+```
+┌──────────────────┐
+│  Developer opens │
+│  file in VSCode  │
+└────────┬─────────┘
+         │
+         ▼
+┌──────────────────┐
+│  ESLint Server   │ → Real-time lint errors in Problems panel
+│  (runs in IDE)   │ → Red squiggly lines for errors/warnings
+└────────┬─────────┘
+         │
+         ▼
+┌──────────────────┐
+│  Developer saves │ → Prettier formats on save
+│  file (Cmd+S)    │ → ESLint auto-fixes where possible
+└────────┬─────────┘
+         │
+         ▼
+┌──────────────────┐
+│  Developer runs  │ → Full project lint check
+│  npm run lint    │ → CI would run this before merge
+└──────────────────┘
+```
+
+**File Structure** (F-011):
+
+```
+/
+├── eslint.config.js         # NEW - ESLint 9 flat config
+├── .vscode/
+│   └── settings.json         # NEW/UPDATED - VSCode ESLint integration
+├── .prettierrc              # EXISTING - Keep unchanged
+├── .prettierignore           # EXISTING - Keep unchanged
+├── package.json              # MODIFIED - Add scripts + devDependencies
+└── tsconfig.json             # EXISTING - Used by TypeScript-aware linting
+```
+
+**Package Dependencies** (F-011):
+
+```json
+{
+  "devDependencies": {
+    // Existing
+    "typescript": "^5.2.2",
+    "prettier": "^3.0.3",
+    "vite": "^5.4.10",
+
+    // NEW - ESLint 9 + plugins
+    "eslint": "^9.x",
+    "@eslint/js": "^9.x",
+    "@typescript-eslint/eslint-plugin": "^8.x",
+    "@typescript-eslint/parser": "^8.x",
+    "eslint-plugin-react": "^7.34",
+    "eslint-plugin-react-hooks": "^5.0",
+    "eslint-plugin-prettier": "^5.x"
+  }
+}
+```
+
+**Rule Configuration Strategy** (F-011):
+
+| Rule Category          | Severity | Rationale                       |
+| ---------------------- | -------- | ------------------------------- |
+| TypeScript type errors | Error    | Enforced by tsc anyway          |
+| React Hooks violations | Error    | Prevent runtime bugs            |
+| Unused variables       | Error    | Dead code indicates issues      |
+| Console statements     | Warn     | Allow for debugging             |
+| Any types              | Warn     | Gradual migration, not blocking |
+| Formatting conflicts   | Off      | Prettier handles formatting     |
+
+**Performance Considerations** (F-011):
+
+- **Type-Aware Linting**: Caches TypeScript compiler results
+- **Incremental Linting**: Only checks changed files (IDE default)
+- **Flat Config**: Faster than legacy `.eslintrc` format
+- **Ignore Patterns**: Skips `build/`, `node_modules/` for speed
+
+**Benefits** (F-011):
+
+- **Code Quality**: Catches bugs and anti-patterns automatically
+- **Consistency**: Enforces consistent style across team
+- **Faster Reviews**: Less time spent on style issues in PRs
+- **Better UX**: Real-time feedback in IDE during development
+- **Type Safety**: TypeScript-aware linting catches type errors early
+- **React Best Practices**: Hooks rules prevent common mistakes
+
+**Implementation Notes** (F-011):
+
+- **Files Modified**: 3 files (1 new, 2 existing)
+  - **New**: `eslint.config.js`
+  - **New**: `.vscode/settings.json` (if not exists)
+  - **Modified**: `package.json` (add devDependencies + scripts)
+- **Breaking Changes**: None (additive only)
+- **Migration Path**: Run `npm run lint:fix` to auto-fix existing code
+- **Known Issues**: Document any rule exceptions for existing code
+
+**Integration with Existing Tools** (F-011):
+
+| Tool                 | Relationship  | Integration Point                                              |
+| -------------------- | ------------- | -------------------------------------------------------------- |
+| **TypeScript (tsc)** | Complementary | ESLint catches some issues before tsc, tsc catches type errors |
+| **Prettier**         | Integrated    | Prettier runs as ESLint rule, avoids conflicts                 |
+| **Vite**             | Separate      | ESLint doesn't run during Vite dev server (can add as plugin)  |
+| **VSCode**           | Integrated    | ESLint extension shows errors in real-time                     |
+
 - **Estimated Time**: 1-2 hours
 - **Risk**: Low (well-established pattern, isolated changes)

@@ -38,7 +38,9 @@ export const SeedTab = () => {
   );
 
   const handleTestSeed = async () => {
-    if (!dbname) return;
+    if (!dbname) {
+      return;
+    }
 
     setIsTesting(true);
     setError(null);

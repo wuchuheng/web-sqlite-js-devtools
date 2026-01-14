@@ -27,7 +27,9 @@ agent-docs/05-design/
     opfs-browser.md
     database-service.md      (Feature F-001)
     opened-db-list.md        (Feature F-008)
-    log-tab-integration.md   (Feature F-009 - NEW)
+    log-tab-integration.md   (Feature F-009)
+    database-refresh.md      (Feature F-010)
+    eslint-integration.md    (Feature F-011 - NEW)
 ```
 
 ### Module Index
@@ -42,6 +44,7 @@ agent-docs/05-design/
 | Opened DB List       | `agent-docs/05-design/03-modules/opened-db-list.md`       | `### Module: Database Discovery`   | Database navigation |
 | Log Tab Integration  | `agent-docs/05-design/03-modules/log-tab-integration.md`  | `### Module: Log Streaming`        | UI Integration      |
 | Database Refresh     | `agent-docs/05-design/03-modules/database-refresh.md`     | `### Module: Database Refresh`     | React Context       |
+| ESLint Integration   | `agent-docs/05-design/03-modules/eslint-integration.md`   | `### Module: ESLint Integration`   | NPM Scripts         |
 
 ## 1) Standards
 
@@ -501,3 +504,211 @@ type SqlValue =
 // SQL Parameters
 type SQLParams = SqlValue[] | Record<string, SqlValue>;
 ```
+
+## 3) Runtime Messaging (Icon State Only)
+
+> **Note**: Channel-based messaging is deprecated for data access. Use service layer functions above.
+> Remaining channels are for icon state updates only.
+
+### Module: Connection & Health
+
+#### Channel: `HEARTBEAT`
+
+- **Summary**: Connection health check (via `chrome.devtools.inspectedWindow.eval`)
+- **Request**: `{ timestamp: number }`
+- **Response**: `{ success: true, timestamp: number }`
+- **Usage**: Direct `inspectedWindow.eval`, not messaging
+
+#### Channel: `ICON_STATE`
+
+- **Summary**: Update popup icon based on database availability
+- **Direction**: Content Script → Background
+- **Request**: `{ hasDatabase: boolean }`
+- **Response**: `{ success: true }`
+- **Usage**: Runtime messaging only (content script detects `window.__web_sqlite`)
+
+## 4) Error Codes
+
+| Code                     | Message                       | Meaning                                |
+| ------------------------ | ----------------------------- | -------------------------------------- |
+| `ERR_NO_API`             | web-sqlite-js not available   | `window.__web_sqlite` not found        |
+| `ERR_DB_NOT_FOUND`       | Database not found            | Requested dbname not in databases Map  |
+| `ERR_SQL_ERROR`          | SQL execution error           | Query/exec failed, check error details |
+| `ERR_CONNECTION_TIMEOUT` | Content script not responding | Heartbeat timeout (15s)                |
+| `ERR_INVALID_REQUEST`    | Invalid message format        | Request doesn't match schema           |
+| `ERR_OPFS_ACCESS`        | OPFS access denied            | Browser doesn't support OPFS           |
+| `ERR_VERSION_LOCKED`     | Cannot rollback below release | Dev version at or below latest release |
+
+## 5) Type Definitions
+
+```typescript
+// Service Response Envelope
+type ServiceResponse<T> = {
+  success: boolean;
+  data?: T;
+  error?: string;
+};
+
+// Database Summary
+type DatabaseSummary = {
+  name: string;
+};
+
+// Table Schema
+type TableSchema = {
+  columns: Array<{
+    cid: number;
+    name: string;
+    type: string;
+    notnull: number;
+    dflt_value: any;
+    pk: number;
+  }>;
+  ddl: string;
+};
+
+// Query Result
+type QueryResult = {
+  rows: Array<Record<string, any>>;
+  total: number;
+  columns: string[];
+};
+
+// Execution Result
+type ExecResult = {
+  lastInsertRowid: number | bigint;
+  changes: number | bigint;
+};
+
+// OPFS File Entry
+type OpfsFileEntry = {
+  name: string;
+  kind: "file" | "directory";
+  size?: string;
+};
+
+// SQL Value Types
+type SqlValue =
+  | null
+  | number
+  | string
+  | boolean
+  | bigint
+  | Uint8Array
+  | ArrayBuffer;
+
+// SQL Parameters
+type SQLParams = SqlValue[] | Record<string, SqlValue>;
+```
+
+## 6) NPM Scripts (Feature F-011)
+
+> **Module**: ESLint Integration
+> **LLD**: `agent-docs/05-design/03-modules/eslint-integration.md`
+
+### Script: `lint`
+
+- **Summary**: Run ESLint on all TypeScript/JavaScript files
+- **Command**:
+  ```bash
+  eslint . --ext .ts,.tsx,.js,.jsx
+  ```
+- **Exit Codes**:
+  - `0`: No errors (or only warnings)
+  - `1`: Errors found
+- **Usage**: Manual lint check, CI/CD integration
+
+### Script: `lint:fix`
+
+- **Summary**: Run ESLint with auto-fix on all TypeScript/JavaScript files
+- **Command**:
+  ```bash
+  eslint . --ext .ts,.tsx,.js,.jsx --fix
+  ```
+- **Behavior**:
+  - Automatically fixes all fixable issues
+  - Reports remaining issues that require manual fixes
+- **Usage**: Fix code style issues before committing
+
+### Script: `format`
+
+- **Summary**: Format all files using Prettier (existing, unchanged)
+- **Command**:
+  ```bash
+  prettier --write '**/*.{tsx,ts,json,css,scss,md}'
+  ```
+- **Relationship to ESLint**: Prettier runs as ESLint rule via eslint-plugin-prettier
+
+### Script: `typecheck`
+
+- **Summary**: Run TypeScript compiler without emitting files
+- **Command**:
+  ```bash
+  tsc --noEmit
+  ```
+- **Relationship to ESLint**: Complementary - tsc catches type errors, ESLint catches code quality issues
+
+### Script: `build`
+
+- **Summary**: Type-check and bundle for production
+- **Command**:
+  ```bash
+  tsc && vite build
+  ```
+- **Relationship to ESLint**: ESLint can be added to build process in future
+
+## 7) ESLint Configuration (Feature F-011)
+
+### Module: ESLint Integration
+
+- **Config File**: `eslint.config.js` (ESLint 9 flat config format)
+- **Target Files**: All `.ts`, `.tsx`, `.js`, `.jsx` files
+- **Environments**: ES2021 + Browser
+
+### Configuration Layers
+
+1. **Base JS Configuration** (`@eslint/js`)
+   - Recommended JavaScript rules
+   - ES2021 globals
+   - Browser environment
+
+2. **TypeScript Configuration** (`@typescript-eslint`)
+   - Parser: `@typescript-eslint/parser`
+   - Plugin: `@typescript-eslint/eslint-plugin`
+   - Type-aware linting (uses `tsconfig.json`)
+   - Files: `**/*.ts`, `**/*.tsx`
+
+3. **React Configuration** (`eslint-plugin-react`, `eslint-plugin-react-hooks`)
+   - React version: auto-detect
+   - Files: `**/*.tsx`, `**/*.jsx`
+   - React 17+ JSX transform (no `React` import needed)
+
+4. **Prettier Integration** (`eslint-plugin-prettier`)
+   - Runs Prettier as ESLint rule
+   - Must be last configuration layer
+   - Disables conflicting formatting rules
+
+5. **Airbnb-Style Overrides**
+   - Manual rule selection (not full eslint-plugin-airbnb)
+   - Key rules: consistent-return, curly, console warnings
+
+### Ignore Patterns
+
+```
+build/**      # Build output
+dist/**       # Distribution output
+node_modules/** # Dependencies
+*.config.js   # Config files
+*.config.ts   # Config files
+```
+
+### Rule Severity Levels
+
+| Category               | Severity | Examples                                   |
+| ---------------------- | -------- | ------------------------------------------ |
+| TypeScript type errors | Error    | `no-unused-vars`, `no-explicit-any` (warn) |
+| React Hooks violations | Error    | `rules-of-hooks`, `exhaustive-deps`        |
+| Code quality           | Error    | `consistent-return`, `curly`               |
+| Debugging              | Warn     | `no-console` (allow warn/error)            |
+| Style preferences      | Off      | `no-plusplus`, `no-underscore-dangle`      |
+| Formatting             | Off      | Handled by Prettier                        |

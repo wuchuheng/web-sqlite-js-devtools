@@ -73,9 +73,15 @@ export const TableContent = ({ dbname, tableName }: TableContentProps) => {
 
   // Render cell value
   const renderCellValue = useCallback((value: unknown): string => {
-    if (value === null) return "NULL";
-    if (value === undefined) return "";
-    if (typeof value === "object") return JSON.stringify(value);
+    if (value === null) {
+      return "NULL";
+    }
+    if (value === undefined) {
+      return "";
+    }
+    if (typeof value === "object") {
+      return JSON.stringify(value);
+    }
     return String(value);
   }, []);
 

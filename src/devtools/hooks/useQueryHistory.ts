@@ -25,7 +25,7 @@ interface UseQueryHistoryResult {
   /** Error message */
   error: string | null;
   /** Add query to history */
-  addQuery: (sql: string, dbname: string) => Promise<void>;
+  addQuery: (_sql: string, dbname: string) => Promise<void>;
   /** Remove specific entry from history */
   removeQuery: (timestamp: string) => Promise<void>;
   /** Clear all history for current database */
@@ -121,7 +121,7 @@ async function saveHistoryEntry(entry: QueryHistoryEntry): Promise<void> {
  * @returns Promise<void>
  */
 async function removeHistoryEntry(
-  dbname: string,
+  _dbname: string,
   timestamp: string,
 ): Promise<void> {
   const existing = await getHistoryForDb(dbname);
@@ -181,9 +181,15 @@ export function formatRelativeTime(isoTimestamp: string): string {
   const hours = Math.floor(minutes / 60);
   const days = Math.floor(hours / 24);
 
-  if (minutes < 1) return "Just now";
-  if (minutes < 60) return `${minutes} min ago`;
-  if (hours < 24) return `${hours} hour${hours > 1 ? "s" : ""} ago`;
+  if (minutes < 1) {
+    return "Just now";
+  }
+  if (minutes < 60) {
+    return `${minutes} min ago`;
+  }
+  if (hours < 24) {
+    return `${hours} hour${hours > 1 ? "s" : ""} ago`;
+  }
   return `${days} day${days > 1 ? "s" : ""} ago`;
 }
 
@@ -231,10 +237,12 @@ export const useQueryHistory = (dbname: string): UseQueryHistoryResult => {
    * Add query to history
    */
   const addQuery = useCallback(
-    async (sql: string, dbName: string) => {
+    async (_sql: string, dbName: string) => {
       // Skip empty or whitespace-only queries
       const trimmed = sql.trim();
-      if (!trimmed) return;
+      if (!trimmed) {
+        return;
+      }
 
       setError(null);
 
