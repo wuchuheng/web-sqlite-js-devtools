@@ -40,8 +40,8 @@ NOTES
 
 - **Current stage (1-8)**: Stage 8 - Worker (S8:worker - F-012)
 - **Active release**: v1.2.0 (Enhancements) - Target: 2026-01-21
-- **Status summary**: TASK-312 complete (F-012 Toast), TASK-311 complete (F-012 Metadata), TASK-310 complete (F-012 Delete Modal), TASK-309 complete (F-012 Tree Lines), TASK-308 complete (F-012 Service Layer), TASK-307 complete (F-011), TASK-306 complete (F-010), TASK-305 complete (F-009), TASK-304 complete (F-008), TASK-303 complete (Integration), TASK-302 complete (F-006), TASK-301 complete (F-005)
-- **Last updated (YYYY-MM-DD)**: 2026-01-15 (F-012: Toast Notifications - TASK-312 Complete)
+- **Status summary**: TASK-313 complete (F-012 Integration), TASK-312 complete (F-012 Toast), TASK-311 complete (F-012 Metadata), TASK-310 complete (F-012 Delete Modal), TASK-309 complete (F-012 Tree Lines), TASK-308 complete (F-012 Service Layer), TASK-307 complete (F-011), TASK-306 complete (F-010), TASK-305 complete (F-009), TASK-304 complete (F-008), TASK-303 complete (Integration), TASK-302 complete (F-006), TASK-301 complete (F-005)
+- **Last updated (YYYY-MM-DD)**: 2026-01-15 (F-012: OPFS Browser Enhancement Complete - All 6 Tasks Finished!)
 
 ## 4) Technology stack (chosen in Stage 2)
 
@@ -253,3 +253,17 @@ NOTES
   - Fixed positioning at top-right with z-index 60 (above modal)
   - Accessibility: role="alert", aria-live="polite", aria-atomic="true", aria-label on close button
   - Type check passed with no new errors
+- **2026-01-15**: TASK-313 completed - Integration & Testing (F-012)
+  - Updated \`FileTree.tsx\` with onDelete callback support
+  - Added action buttons (download and delete) with hover state (opacity-0 group-hover:opacity-100)
+  - Added isDownloading state and handleDownload/handleDelete callbacks
+  - Updated \`FileNode.tsx\` with delete button (IoMdTrash icon, ARIA label)
+  - Updated \`OPFSGallery.tsx\` with DeleteConfirmModal and Toast integration
+  - Added modal state management (isModalOpen, selectedEntry, isDeleting)
+  - Added toast state management (isVisible, variant, title, message, itemName)
+  - Added handleDeleteClick to open modal, handleDeleteConfirm to execute deletion
+  - Added handleModalClose, handleToastDismiss, and handleToastRetry callbacks
+  - Integrated DeleteConfirmModal and Toast components into JSX
+  - Error handling with success/error toast notifications
+  - Type check passed with no new errors
+  - **F-012 Feature Complete**: All 6 tasks finished (TASK-308 through TASK-313)

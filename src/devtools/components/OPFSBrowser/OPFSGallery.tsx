@@ -1,7 +1,10 @@
-import { useState } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { FaFile, FaExclamationTriangle } from "react-icons/fa";
 import { FileTree } from "./FileTree";
+import { DeleteConfirmModal } from "./DeleteConfirmModal";
+import { Toast, type ToastProps } from "./Toast";
 import { databaseService } from "@/devtools/services/databaseService";
+import type { OpfsFileEntry } from "@/devtools/services/databaseService";
 
 /**
  * OPFSGallery component
@@ -9,12 +12,16 @@ import { databaseService } from "@/devtools/services/databaseService";
  * @remarks
  * - Main component for OPFS file browser
  * - Handles file downloads with proper cleanup
+ * - Handles file and directory deletion with confirmation modal
+ * - Displays toast notifications for success/error feedback
  * - Displays file tree with lazy-loading
  * - Shows helper notice about OPFS
+ * - TASK-313: Integrated DeleteConfirmModal and Toast components
  *
  * @returns JSX.Element - OPFS file browser layout
  */
 export const OPFSGallery = () => {
+  // Download state
   const [downloadStatus, setDownloadStatus] = useState<{
     isDownloading: boolean;
     filename: string | null;
@@ -25,7 +32,26 @@ export const OPFSGallery = () => {
     error: null,
   });
 
-  const handleDownload = async (path: string, name: string) => {
+  // Modal state (TASK-313)
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedEntry, setSelectedEntry] = useState<OpfsFileEntry | null>(
+    null,
+  );
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Toast state (TASK-313)
+  const [toast, setToast] = useState<Omit<ToastProps, "onDismiss" | "onRetry">>(
+    {
+      isVisible: false,
+      variant: "success",
+      title: "",
+      message: "",
+      itemName: undefined,
+    },
+  );
+
+  // 1. Handle download with error handling
+  const handleDownload = useCallback(async (path: string, name: string) => {
     setDownloadStatus({ isDownloading: true, filename: name, error: null });
 
     try {
@@ -66,7 +92,94 @@ export const OPFSGallery = () => {
         error: err instanceof Error ? err.message : String(err),
       });
     }
-  };
+  }, []);
+
+  // 2. Handle delete click - open modal (TASK-313)
+  const handleDeleteClick = useCallback((entry: OpfsFileEntry) => {
+    setSelectedEntry(entry);
+    setIsModalOpen(true);
+  }, []);
+
+  // 3. Handle delete confirmation (TASK-313)
+  const handleDeleteConfirm = useCallback(async () => {
+    if (!selectedEntry) {
+      return;
+    }
+
+    setIsDeleting(true);
+
+    try {
+      // Call appropriate delete function based on entry type
+      if (selectedEntry.type === "file") {
+        const result = await databaseService.deleteOpfsFile(selectedEntry.path);
+        if (!result.success) {
+          throw new Error(result.error ?? "Failed to delete file");
+        }
+      } else {
+        const result = await databaseService.deleteOpfsDirectory(
+          selectedEntry.path,
+        );
+        if (!result.success) {
+          throw new Error(result.error ?? "Failed to delete directory");
+        }
+      }
+
+      // Show success toast
+      setToast({
+        isVisible: true,
+        variant: "success",
+        title: "Deleted successfully",
+        message: `${selectedEntry.name} has been deleted.`,
+        itemName: selectedEntry.name,
+      });
+
+      // Close modal
+      setIsModalOpen(false);
+      setSelectedEntry(null);
+    } catch (err) {
+      // Show error toast
+      setToast({
+        isVisible: true,
+        variant: "error",
+        title: "Delete failed",
+        message: err instanceof Error ? err.message : "An error occurred",
+        itemName: selectedEntry?.name,
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  }, [selectedEntry]);
+
+  // 4. Handle modal close (TASK-313)
+  const handleModalClose = useCallback(() => {
+    if (!isDeleting) {
+      setIsModalOpen(false);
+      setSelectedEntry(null);
+    }
+  }, [isDeleting]);
+
+  // 5. Handle toast dismiss (TASK-313)
+  const handleToastDismiss = useCallback(() => {
+    setToast({ ...toast, isVisible: false });
+  }, [toast]);
+
+  // 6. Handle toast retry (TASK-313)
+  const handleToastRetry = useCallback(() => {
+    if (toast.variant === "error") {
+      handleDeleteConfirm();
+    }
+  }, [toast.variant, handleDeleteConfirm]);
+
+  // 7. Clear download status on mount
+  useEffect(() => {
+    return () => {
+      setDownloadStatus({
+        isDownloading: false,
+        filename: null,
+        error: null,
+      });
+    };
+  }, []);
 
   return (
     <div className="flex flex-col h-full">
@@ -86,7 +199,7 @@ export const OPFSGallery = () => {
           Origin Private File System
         </h3>
         <p className="text-xs text-blue-600">
-          Browse and download SQLite database files stored in the Origin Private
+          Browse and manage SQLite database files stored in the Origin Private
           File System. Files are organized in a tree structure with lazy-loaded
           directories.
         </p>
@@ -124,16 +237,37 @@ export const OPFSGallery = () => {
 
       {/* File Tree */}
       <div className="flex-1 overflow-auto bg-white">
-        <FileTree onDownload={handleDownload} />
+        <FileTree onDownload={handleDownload} onDelete={handleDeleteClick} />
       </div>
 
       {/* Footer Info */}
       <div className="px-4 py-2 bg-gray-50 border-t border-gray-200">
         <p className="text-xs text-gray-500">
           <strong>Tip:</strong> Click on directories to expand them. Click the
-          download icon next to files to save them to your computer.
+          download icon next to files to save them to your computer. Click the
+          delete icon to remove files.
         </p>
       </div>
+
+      {/* Delete Confirmation Modal (TASK-313) */}
+      <DeleteConfirmModal
+        isOpen={isModalOpen}
+        entry={selectedEntry}
+        onConfirm={handleDeleteConfirm}
+        onCancel={handleModalClose}
+        isDeleting={isDeleting}
+      />
+
+      {/* Toast Notification (TASK-313) */}
+      <Toast
+        isVisible={toast.isVisible}
+        variant={toast.variant}
+        title={toast.title}
+        message={toast.message}
+        itemName={toast.itemName}
+        onDismiss={handleToastDismiss}
+        onRetry={toast.variant === "error" ? handleToastRetry : undefined}
+      />
     </div>
   );
 };

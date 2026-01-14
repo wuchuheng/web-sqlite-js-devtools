@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { FaFolder, FaFolderOpen, FaFile, FaDownload } from "react-icons/fa";
+import { IoMdTrash } from "react-icons/io";
 import type { OpfsFileEntry } from "@/devtools/services/databaseService";
 import { MetadataPanel } from "./MetadataPanel";
 
@@ -10,6 +11,7 @@ interface FileNodeProps {
   entry: OpfsFileEntry;
   level?: number;
   onDownload: (_path: string, name: string) => Promise<void>;
+  onDelete?: (entry: OpfsFileEntry) => void;
 }
 
 /**
@@ -18,17 +20,24 @@ interface FileNodeProps {
  * @remarks
  * - Renders a single file or directory entry in the OPFS file tree
  * - Supports expand/collapse for directories
- * - Shows file size and download button for files
+ * - Shows file size, download button, and delete button for files
  * - Shows metadata on hover (file type badge, timestamp)
+ * - Delete button appears on hover (group-hover)
  * - Indented based on level in the tree hierarchy
  *
  * @param props.entry - The OPFS file entry to display
  * @param props.level - Nesting level for indentation (default: 0)
  * @param props.onDownload - Callback for downloading files
+ * @param props.onDelete - Callback for delete button click
  *
  * @returns JSX.Element - File node display
  */
-export const FileNode = ({ entry, level = 0, onDownload }: FileNodeProps) => {
+export const FileNode = ({
+  entry,
+  level = 0,
+  onDownload,
+  onDelete,
+}: FileNodeProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -58,6 +67,16 @@ export const FileNode = ({ entry, level = 0, onDownload }: FileNodeProps) => {
       setIsDownloading(false);
     }
   }, [entry, isDirectory, isDownloading, onDownload]);
+
+  const handleDelete = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (onDelete) {
+        onDelete(entry);
+      }
+    },
+    [entry, onDelete],
+  );
 
   return (
     <div className="select-none">
@@ -93,24 +112,40 @@ export const FileNode = ({ entry, level = 0, onDownload }: FileNodeProps) => {
             <span className="text-xs text-gray-500">{entry.sizeFormatted}</span>
           )}
 
-          {/* Download Button (only for files) */}
+          {/* Action Buttons (only for files) */}
           {!isDirectory && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDownload();
-              }}
-              disabled={isDownloading}
-              className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded disabled:opacity-50 disabled:cursor-not-allowed"
-              title={`Download ${entry.name}`}
-              type="button"
-            >
-              {isDownloading ? (
-                <div className="animate-spin h-3 w-3 border-2 border-blue-600 border-t-transparent rounded-full" />
-              ) : (
-                <FaDownload size={12} />
+            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+              {/* Download Button */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDownload();
+                }}
+                disabled={isDownloading}
+                className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                title={`Download ${entry.name}`}
+                type="button"
+              >
+                {isDownloading ? (
+                  <div className="animate-spin h-3 w-3 border-2 border-blue-600 border-t-transparent rounded-full" />
+                ) : (
+                  <FaDownload size={12} />
+                )}
+              </button>
+
+              {/* Delete Button */}
+              {onDelete && (
+                <button
+                  onClick={handleDelete}
+                  className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded"
+                  aria-label={`Delete ${entry.name}`}
+                  title={`Delete ${entry.name}`}
+                  type="button"
+                >
+                  <IoMdTrash size={14} />
+                </button>
               )}
-            </button>
+            </div>
           )}
         </div>
 

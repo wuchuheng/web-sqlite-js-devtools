@@ -1,4 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
+import { FaFile, FaDownload } from "react-icons/fa";
+import { IoMdTrash } from "react-icons/io";
 import { databaseService } from "@/devtools/services/databaseService";
 import { useInspectedWindowRequest } from "@/devtools/hooks/useInspectedWindowRequest";
 import type { OpfsFileEntry } from "@/devtools/services/databaseService";
@@ -9,6 +11,7 @@ import { TreeLines } from "./TreeLines";
  */
 interface FileTreeProps {
   onDownload: (_path: string, name: string) => Promise<void>;
+  onDelete?: (entry: OpfsFileEntry) => void;
 }
 
 /**
@@ -18,23 +21,26 @@ interface FileTreeItemProps {
   entry: OpfsFileEntry;
   level: number;
   onDownload: (_path: string, name: string) => Promise<void>;
+  onDelete?: (entry: OpfsFileEntry) => void;
   keyPrefix: string;
-  showLines: boolean; // NEW: F-012
-  isLast?: boolean; // NEW: F-012
+  showLines: boolean;
+  isLast?: boolean;
 }
 
 /**
- * FileTreeItem - Internal component for tree items with lazy-loading (F-012 enhanced)
+ * FileTreeItem - Internal component for tree items with lazy-loading (F-012 enhanced, TASK-313 delete button)
  */
 const FileTreeItem = ({
   entry,
   level,
   onDownload,
+  onDelete,
   keyPrefix,
   showLines,
   isLast = false,
 }: FileTreeItemProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const [children, setChildren] = useState<OpfsFileEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasLoaded, setHasLoaded] = useState(false);
@@ -78,13 +84,40 @@ const FileTreeItem = ({
     }
   }, [isDirectory, hasLoaded, loadChildren]);
 
+  const handleDownload = useCallback(async () => {
+    if (isDirectory || isDownloading) {
+      return;
+    }
+
+    setIsDownloading(true);
+    setError(null);
+
+    try {
+      await onDownload(entry.path, entry.name);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setIsDownloading(false);
+    }
+  }, [entry, isDirectory, isDownloading, onDownload]);
+
+  const handleDelete = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (onDelete) {
+        onDelete(entry);
+      }
+    },
+    [entry, onDelete],
+  );
+
   const paddingLeft = level * 16;
 
   return (
     <div>
       {/* Parent Node with horizontal connector (F-012) */}
       <div
-        className={`flex items-center gap-2 py-1 px-2 hover:bg-gray-100 cursor-pointer select-none relative`}
+        className={`group flex items-center gap-2 py-1 px-2 hover:bg-gray-100 cursor-pointer select-none relative`}
         style={{ paddingLeft: `${paddingLeft + 16}px` }}
         onClick={handleClick}
       >
@@ -124,17 +157,7 @@ const FileTreeItem = ({
             </svg>
           )
         ) : (
-          <svg
-            className="w-3 h-3 text-gray-500"
-            fill="currentColor"
-            viewBox="0 0 20 20"
-          >
-            <path
-              fillRule="evenodd"
-              d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"
-              clipRule="evenodd"
-            />
-          </svg>
+          <FaFile className="text-gray-500" size={12} />
         )}
 
         {/* Name */}
@@ -147,9 +170,43 @@ const FileTreeItem = ({
 
         {/* Size (only for files) */}
         {!isDirectory && (
-          <span className="text-xs text-gray-500 mr-2">
-            {entry.sizeFormatted}
-          </span>
+          <span className="text-xs text-gray-500">{entry.sizeFormatted}</span>
+        )}
+
+        {/* Action Buttons (files only, TASK-313) */}
+        {!isDirectory && (
+          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+            {/* Download Button */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDownload();
+              }}
+              disabled={isDownloading}
+              className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+              title={`Download ${entry.name}`}
+              type="button"
+            >
+              {isDownloading ? (
+                <div className="animate-spin h-3 w-3 border-2 border-blue-600 border-t-transparent rounded-full" />
+              ) : (
+                <FaDownload size={12} />
+              )}
+            </button>
+
+            {/* Delete Button (TASK-313) */}
+            {onDelete && (
+              <button
+                onClick={handleDelete}
+                className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded"
+                aria-label={`Delete ${entry.name}`}
+                title={`Delete ${entry.name}`}
+                type="button"
+              >
+                <IoMdTrash size={14} />
+              </button>
+            )}
+          </div>
         )}
 
         {/* Chevron for directories */}
@@ -178,7 +235,7 @@ const FileTreeItem = ({
         </div>
       )}
 
-      {/* Children (when expanded) - F-012 enhanced with TreeLines */}
+      {/* Children (when expanded) - F-012 enhanced with TreeLines, TASK-313 pass onDelete */}
       {isExpanded && hasLoaded && children.length > 0 && (
         <TreeLines depth={level + 1} isLast={isLast} isCollapsed={!showLines}>
           {children.map((child, index) => (
@@ -187,6 +244,7 @@ const FileTreeItem = ({
               entry={child}
               level={level + 1}
               onDownload={onDownload}
+              onDelete={onDelete}
               keyPrefix={`${keyPrefix}/${child.name}`}
               showLines={showLines}
               isLast={index === children.length - 1}
@@ -209,7 +267,7 @@ const FileTreeItem = ({
 };
 
 /**
- * FileTree component (F-012 enhanced with responsive tree lines)
+ * FileTree component (F-012 enhanced with responsive tree lines, TASK-313 delete functionality)
  *
  * @remarks
  * - Displays OPFS file tree with lazy-loaded directories
@@ -217,12 +275,14 @@ const FileTreeItem = ({
  * - Directories are loaded on-demand when expanded
  * - Supports file download via callback
  * - VSCode-style tree lines with responsive hiding (F-012)
+ * - Delete button for files (TASK-313)
  *
  * @param props.onDownload - Callback for downloading files
+ * @param props.onDelete - Callback for delete button click (TASK-313)
  *
  * @returns JSX.Element - File tree display
  */
-export const FileTree = ({ onDownload }: FileTreeProps) => {
+export const FileTree = ({ onDownload, onDelete }: FileTreeProps) => {
   // F-012: Track container width for responsive tree lines
   const containerRef = useRef<HTMLDivElement>(null);
   const [showLines, setShowLines] = useState(true);
@@ -298,9 +358,10 @@ export const FileTree = ({ onDownload }: FileTreeProps) => {
           entry={entry}
           level={0}
           onDownload={onDownload}
+          onDelete={onDelete}
           keyPrefix={entry.name}
-          showLines={showLines} // F-012: Pass to all items
-          isLast={index === entries.length - 1} // F-012: Track last child
+          showLines={showLines}
+          isLast={index === entries.length - 1}
         />
       ))}
     </div>
