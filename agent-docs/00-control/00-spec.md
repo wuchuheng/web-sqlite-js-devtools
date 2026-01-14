@@ -40,8 +40,8 @@ NOTES
 
 - **Current stage (1-8)**: Stage 8 - Worker (S8:worker - F-012)
 - **Active release**: v1.2.0 (Enhancements) - Target: 2026-01-21
-- **Status summary**: TASK-310 complete (F-012 Delete Modal), TASK-309 complete (F-012 Tree Lines), TASK-308 complete (F-012 Service Layer), TASK-307 complete (F-011), TASK-306 complete (F-010), TASK-305 complete (F-009), TASK-304 complete (F-008), TASK-303 complete (Integration), TASK-302 complete (F-006), TASK-301 complete (F-005)
-- **Last updated (YYYY-MM-DD)**: 2026-01-15 (F-012: Delete Confirmation Modal - TASK-310 Complete)
+- **Status summary**: TASK-311 complete (F-012 Metadata), TASK-310 complete (F-012 Delete Modal), TASK-309 complete (F-012 Tree Lines), TASK-308 complete (F-012 Service Layer), TASK-307 complete (F-011), TASK-306 complete (F-010), TASK-305 complete (F-009), TASK-304 complete (F-008), TASK-303 complete (Integration), TASK-302 complete (F-006), TASK-301 complete (F-005)
+- **Last updated (YYYY-MM-DD)**: 2026-01-15 (F-012: Enhanced Metadata Display - TASK-311 Complete)
 
 ## 4) Technology stack (chosen in Stage 2)
 
@@ -229,4 +229,16 @@ NOTES
   - Implemented loading state with spinner during deletion operation
   - Disabled close actions during deletion (isDeleting state)
   - Accessibility: `role="dialog"`, `aria-modal="true"`, `aria-labelledby="delete-modal-title"`
+  - Type check passed with no new errors
+- **2026-01-15**: TASK-311 completed - Enhanced Metadata Display (F-012)
+  - Created `fileTypeDetection.ts` utility module (detectFileType, getBadgeColor, getBadgeColorClasses)
+  - Implemented 30+ file type mappings (SQLite, JSON, XML, CSV, Text, Markdown, Log, Image, SVG, Audio, Video)
+  - Added color-coded badges (blue for databases, yellow for data, gray for text, purple for images, green for audio, red for video)
+  - Created `timestampFormatting.ts` utility module (formatTimestamp, getRelativeTime)
+  - Implemented YYYY-MM-DD HH:mm timestamp formatting with local time
+  - Implemented relative time strings ("just now", "2 minutes ago", "3 hours ago", "4 days ago")
+  - Created `MetadataPanel.tsx` component with inline/expanded view modes
+  - Inline view: compact metadata row with type badge and timestamp (150ms fade-in on hover)
+  - Expanded view: detailed list with type, modified date, item count, full path
+  - Updated `FileNode.tsx` to integrate MetadataPanel with hover state
   - Type check passed with no new errors

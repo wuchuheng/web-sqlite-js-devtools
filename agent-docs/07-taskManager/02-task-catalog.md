@@ -944,25 +944,26 @@ NOTES
     - [x] TSDoc comments added
     - [x] Type check passed with no new errors
 
-- [ ] **TASK-311**: Enhanced Metadata Display (F-012)
+- [x] **TASK-311**: Enhanced Metadata Display (F-012)
   - **Priority**: P1 (High)
   - **Dependencies**: TASK-308 (Service Layer - Delete Operations)
-  - **Boundary**: `src/devtools/components/OPFSBrowser/MetadataPanel.tsx` (NEW), `src/devtools/components/OPFSBrowser/FileNode.tsx`
+  - **Boundary**: `src/devtools/components/OPFSBrowser/MetadataPanel.tsx` (NEW), `src/devtools/components/OPFSBrowser/FileNode.tsx`, `src/devtools/utils/fileTypeDetection.ts` (NEW), `src/devtools/utils/timestampFormatting.ts` (NEW)
   - **Maps to**: F-012, FR-OPFS-004, FR-OPFS-005
   - **Feature**: [F-012: OPFS Browser Enhancement](agent-docs/01-discovery/features/F-012-opfs-browser-enhancement.md)
-  - **Micro-Spec**: [pending](agent-docs/08-task/active/TASK-311.md)
+  - **Micro-Spec**: [complete](agent-docs/08-task/active/TASK-311.md)
   - **Estimated**: 2 hours
+  - **Completed**: 2026-01-15
   - **DoD**:
-    - [ ] Create `MetadataPanel.tsx` component
-    - [ ] Implement file type detection (SQLite, JSON, Text, Image, Unknown)
-    - [ ] Color-coded badges (blue, yellow, gray, purple, default gray)
-    - [ ] Implement timestamp formatting (YYYY-MM-DD HH:mm, gray-500)
-    - [ ] Utility function: `formatTimestamp(date)`
-    - [ ] Implement inline metadata display (default: name + size, hover: type badge + timestamp)
-    - [ ] Smooth fade-in/out transition (150ms)
-    - [ ] Implement directory metadata (item count, visible when expanded, updated on lazy load)
-    - [ ] Full path on hover/click (monospace)
-    - [ ] Export component and utility functions
+    - [x] Create `MetadataPanel.tsx` component
+    - [x] Implement file type detection (SQLite, JSON, Text, Image, Unknown)
+    - [x] Color-coded badges (blue, yellow, gray, purple, default gray)
+    - [x] Implement timestamp formatting (YYYY-MM-DD HH:mm, gray-500)
+    - [x] Utility function: `formatTimestamp(date)`
+    - [x] Implement inline metadata display (default: name + size, hover: type badge + timestamp)
+    - [x] Smooth fade-in/out transition (150ms)
+    - [x] Implement directory metadata (item count, visible when expanded, updated on lazy load)
+    - [x] Full path on hover/click (monospace)
+    - [x] Export component and utility functions
 
 - [ ] **TASK-312**: Toast Notifications (F-012)
   - **Priority**: P1 (High)
