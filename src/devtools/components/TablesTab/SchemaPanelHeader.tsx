@@ -20,7 +20,6 @@ interface SchemaPanelHeaderProps {
 }
 
 export const SchemaPanelHeader = ({
-  visible,
   activeTab,
   onTabChange,
 }: SchemaPanelHeaderProps) => {

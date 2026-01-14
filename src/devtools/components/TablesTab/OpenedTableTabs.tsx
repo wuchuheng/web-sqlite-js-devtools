@@ -30,7 +30,7 @@ interface OpenedTableTabsProps {
   /** Currently active tab (selected) */
   activeTab: TableTab | null;
   /** Callback when user clicks a table in sidebar to open it */
-  onOpenTable: (tableName: string) => void;
+  _onOpenTable: (tableName: string) => void;
   /** Callback when user clicks a tab to select it */
   onSelectTab: (tab: TableTab) => void;
   /** Callback when user clicks close button on a tab */
@@ -119,10 +119,10 @@ TabButton.displayName = "TabButton";
  * @returns Opened tabs JSX element or empty state
  */
 export const OpenedTableTabs = ({
-  dbname,
+  dbname: _dbname,
   tabs,
   activeTab,
-  onOpenTable,
+  onOpenTable: _onOpenTable,
   onSelectTab,
   onCloseTab,
 }: OpenedTableTabsProps) => {

@@ -38,10 +38,10 @@ NOTES
 
 ## 3) Current stage
 
-- **Current stage (1-8)**: Stage 8 - Implementation (S8:worker - TASK-306)
+- **Current stage (1-8)**: Stage 8 - Worker (S8:worker - F-012)
 - **Active release**: v1.2.0 (Enhancements) - Target: 2026-01-21
-- **Status summary**: TASK-306 complete (F-010), TASK-305 complete (F-009), TASK-304 complete (F-008), TASK-303 complete (Integration), TASK-302 complete (F-006), TASK-301 complete (F-005)
-- **Last updated (YYYY-MM-DD)**: 2026-01-14 (F-010: Database Refresh Coordination - Implementation Complete)
+- **Status summary**: TASK-308 complete (F-012 Service Layer), TASK-307 complete (F-011), TASK-306 complete (F-010), TASK-305 complete (F-009), TASK-304 complete (F-008), TASK-303 complete (Integration), TASK-302 complete (F-006), TASK-301 complete (F-005)
+- **Last updated (YYYY-MM-DD)**: 2026-01-15 (F-012: OPFS Service Layer - TASK-308 Complete)
 
 ## 4) Technology stack (chosen in Stage 2)
 
@@ -75,6 +75,8 @@ NOTES
 - `agent-docs/01-discovery/features/F-008-opened-database-list-route.md` (NEW - Feature F-008)
 - `agent-docs/01-discovery/features/F-009-log-tab.md` (COMPLETED - Feature F-009)
 - `agent-docs/01-discovery/features/F-010-database-refresh-coordination.md` (NEW - Feature F-010)
+- `agent-docs/01-discovery/features/F-011-eslint-integration.md` (NEW - Feature F-011)
+- `agent-docs/01-discovery/features/F-012-opfs-browser-enhancement.md` (NEW - Feature F-012)
 - `agent-docs/02-feasibility/01-options.md`
 - `agent-docs/02-feasibility/02-risk-assessment.md`
 - `agent-docs/02-feasibility/03-spike-plan.md`
@@ -186,3 +188,23 @@ NOTES
   - Edge case testing: Min/max constraints enforced correctly
   - Marked F-005 and F-006 as completed in feature docs
   - Build passed with no errors (3.90s)
+- **2026-01-14**: Feature F-011 completed - ESLint Integration (TASK-307)
+  - Installed 8 ESLint packages (eslint, @eslint/js, @typescript-eslint/_, eslint-plugin-react_, eslint-plugin-prettier, globals)
+  - Created `eslint.config.js` with flat config format (6 layers)
+  - Configured TypeScript linting (no-undef off for TS files)
+  - Configured React linting (React 17+ JSX, hooks rules)
+  - Configured Prettier integration (eslint-plugin-prettier as last layer)
+  - Configured Airbnb-style overrides (consistent-return, curly, console)
+  - Updated `.vscode/settings.json` with eslint.enable: true
+  - Added NPM scripts: lint, lint:fix
+  - Initial lint run: 150 problems (108 errors, 42 warnings) - mostly unused vars, console statements, consistent-return issues
+  - All build scripts verified working: typecheck, build, dev
+  - Feature spec marked complete, status board updated
+- **2026-01-15**: TASK-308 completed - Service Layer Delete Operations (F-012)
+  - Added `deleteOpfsFile(path)` function for deleting files from OPFS
+  - Added `deleteOpfsDirectory(path)` function for recursive directory deletion with item count
+  - Updated `OpfsFileEntry` type with `fileType` and `itemCount` fields
+  - Enhanced `getOpfsFiles()` to fetch file type (SQLite Database, JSON Data, etc.) and directory item counts
+  - Added `detectFileType()` helper function for file type detection based on extension
+  - Exported new functions via `databaseService` object
+  - TypeScript compliance: Fixed `FileSystemDirectoryHandle.values()` type errors with `eslint-disable-next-line` comments

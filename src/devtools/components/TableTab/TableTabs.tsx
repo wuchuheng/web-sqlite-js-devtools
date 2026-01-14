@@ -12,7 +12,9 @@ export interface TableTab {
  * Equality check for TableTab
  */
 const isSameTab = (a: TableTab | null, b: TableTab | null): boolean => {
-  if (!a || !b) return false;
+  if (!a || !b) {
+    return false;
+  }
   return a.dbname === b.dbname && a.tableName === b.tableName;
 };
 

@@ -125,7 +125,7 @@ C4Container
       /bridge           # Bridge Layer (Chrome API wrapper)
         inspectedWindow.ts    # chrome.scripting.executeScript wrapper
       /services         # Service Layer (Business Logic)
-        databaseService.ts    # All database operations (10 functions)
+        databaseService.ts    # All database operations (12 functions)
       /components       # React components
         /Shared         # Shared components (F-006)
           ResizeHandle.tsx    # Reusable resize handle
@@ -155,6 +155,12 @@ C4Container
         /SeedTab        # Seed playground
         /AboutTab       # Database info
         /OPFSBrowser    # OPFS file tree
+          FileTree.tsx         # File tree with guided lines (F-012 MODIFIED)
+          FileNode.tsx         # File/directory node (F-012 MODIFIED)
+          DeleteConfirmModal.tsx # Delete confirmation (F-012 NEW)
+          MetadataPanel.tsx    # Metadata display (F-012 NEW)
+          TreeLines.tsx        # Guide line connectors (F-012 NEW)
+          Toast.tsx            # Toast notifications (F-012 NEW)
       /hooks            # Custom React hooks
       /utils            # Utilities
       inspectedWindow.ts # Public API re-exports
@@ -212,6 +218,8 @@ C4Container
 8. **Version Control**: `devRollback(dbname, toVersion)` - Rollback to previous version
 9. **Version Query**: `getDbVersion(dbname)` - Get current database version
 10. **OPFS Access**: `getOpfsFiles(path?, dbname?)` / `downloadOpfsFile(path)` - File system operations
+11. **OPFS Delete**: `deleteOpfsFile(path)` - Delete file from OPFS (F-012 NEW)
+12. **OPFS Delete**: `deleteOpfsDirectory(path)` - Delete directory recursively (F-012 NEW)
 
 ## 7) Component Hierarchy (DevTools Panel)
 
@@ -286,8 +294,13 @@ DevTools (Root)
 │           └── DatabaseMetadata
 │       └── OPFSView (/opfs)
 │           └── FileTree
+│               ├── TreeLines (F-012 NEW - guided connectors)
 │               ├── FileNode (Lazy-loaded)
-│               └── DownloadButton
+│               │   ├── MetadataPanel (F-012 NEW - hover display)
+│               │   ├── Delete Button (F-012 NEW - with confirmation)
+│               │   └── Download Button
+│               └── DeleteConfirmModal (F-012 NEW)
+│               └── Toast (F-012 NEW - success/error notifications)
 ```
 
 ## 8) Service Layer Architecture (Feature F-001)
@@ -345,9 +358,11 @@ DevTools (Root)
    - `devRollback(dbname, toVersion)` - Rollback version
    - `getDbVersion(dbname)` - Query current version
 
-5. **OPFS** (2 functions):
+5. **OPFS** (4 functions):
    - `getOpfsFiles(path?, dbname?)` - List OPFS files
    - `downloadOpfsFile(path)` - Download file
+   - `deleteOpfsFile(path)` - Delete file (F-012 NEW)
+   - `deleteOpfsDirectory(path)` - Delete directory recursively (F-012 NEW)
 
 **Benefits**:
 
@@ -1802,5 +1817,815 @@ getDatabases(): Promise<ServiceResponse<DatabaseSummary[]>>
   - **Modified**: `src/devtools/components/Sidebar/DatabaseList.tsx` (add button, consume context)
   - **Modified**: `src/devtools/components/OpenedDBList/OpenedDBList.tsx` (consume context)
 - **Complexity**: Low (standard React Context pattern)
+
+## 16) ESLint Integration (Feature F-011)
+
+**Purpose**: Add automated code linting with ESLint 9, TypeScript support, React rules, and Prettier integration to maintain code quality and consistency.
+
+**Problem Solved**:
+
+- **Current Issue**: Project has no automated linting, leading to inconsistent code style, potential bugs, and manual code review effort for style issues.
+- **Solution**: Configure ESLint 9 with flat config format, TypeScript linting, React rules, and Prettier integration for automated code quality enforcement.
+
+**Linting Architecture**:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Developer Workflow                        │
+│  ┌─────────────────────────────────────────────────────────┐ │
+│  │  1. Write Code                                         │ │
+│  │     ├── IDE shows real-time lint errors (VSCode)       │ │
+│  │     ├── Prettier formats on save                       │ │
+│  │     └── ESLint auto-fixes where possible               │ │
+│  └─────────────────────────────────────────────────────────┘ │
+│  ┌─────────────────────────────────────────────────────────┐ │
+│  │  2. Pre-commit Check (Optional - future)              │ │
+│  │     ├── npm run lint (all files)                       │ │
+│  │     └── npm run lint:fix (auto-fixable issues)        │ │
+│  └─────────────────────────────────────────────────────────┘ │
+│  ┌─────────────────────────────────────────────────────────┐ │
+│  │  3. Build Check                                       │ │
+│  │     ├── npm run build (includes tsc typecheck)         │ │
+│  │     └── ESLint can be added to build (future)         │ │
+│  └─────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**ESLint Configuration Stack** (Flat Config):
+
+```
+┌────────────────────────────────────────────────────────────────┐
+│                    eslint.config.js (Flat Config)              │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │  Layer 1: Base JS Configuration                         │  │
+│  │  ├── @eslint/js (recommended rules)                    │  │
+│  │  ├── ES2021 globals + browser environment              │  │
+│  │  └── Ignore patterns (build/, node_modules/, etc.)     │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │  Layer 2: TypeScript Configuration                     │  │
+│  │  ├── @typescript-eslint/parser (TS parser)             │  │
+│  │  ├── @typescript-eslint/eslint-plugin (TS rules)       │  │
+│  │  ├── Type-aware linting (uses tsconfig.json)           │  │
+│  │  └── Files: **/*.ts, **/*.tsx                          │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │  Layer 3: React Configuration                          │  │
+│  │  ├── eslint-plugin-react (React rules)                 │  │
+│  │  ├── eslint-plugin-react-hooks (Hooks rules)           │  │
+│  │  ├── React version: auto-detect from package.json      │  │
+│  │  └── Files: **/*.tsx, **/*.jsx                          │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │  Layer 4: Prettier Integration                          │  │
+│  │  ├── eslint-plugin-prettier (Prettier as ESLint rule)   │  │
+│  │  ├── Disabled formatting rules (avoid conflicts)        │  │
+│  │  └── Must be last layer (overrides all formatting)     │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │  Layer 5: Airbnb-Style Overrides                        │  │
+│  │  ├── Consistent return: error                          │  │
+│  │  ├── Curly braces: error, all branches                │  │
+│  │  ├── Console: warn (allow warn/error)                  │  │
+│  │  ├── Underscore dangle: off (allow _prefix)            │  │
+│  │  └── Plusplus: off (allow ++ operator)                 │  │
+│  └──────────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────────┘
+```
+
+**Flat Config Structure**:
+
+```javascript
+// eslint.config.js (ESLint 9 flat config format)
+import js from "@eslint/js";
+import tseslint from "@typescript-eslint/eslint-plugin";
+import tsparser from "@typescript-eslint/parser";
+import react from "eslint-plugin-react";
+import reactHooks from "eslint-plugin-react-hooks";
+import prettier from "eslint-plugin-prettier";
+
+export default [
+  // 1. Ignore patterns
+  {
+    ignores: [
+      "build/**",
+      "dist/**",
+      "node_modules/**",
+      "*.config.js",
+      "*.config.ts",
+    ],
+  },
+
+  // 2. Base JS rules (ES2021 + browser)
+  js.configs.recommended,
+
+  // 3. TypeScript configuration
+  {
+    files: ["**/*.ts", "**/*.tsx"],
+    languageOptions: {
+      parser: tsparser,
+      parserOptions: {
+        project: "./tsconfig.json",
+        ecmaVersion: 2021,
+        sourceType: "module",
+      },
+    },
+    plugins: {
+      "@typescript-eslint": tseslint,
+    },
+    rules: {
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        { argsIgnorePattern: "^_" },
+      ],
+      "@typescript-eslint/explicit-function-return-type": "off",
+      "@typescript-eslint/explicit-module-boundary-types": "off",
+      "@typescript-eslint/no-explicit-any": "warn",
+    },
+  },
+
+  // 4. React configuration
+  {
+    files: ["**/*.tsx", "**/*.jsx"],
+    settings: {
+      react: {
+        version: "detect",
+      },
+    },
+    plugins: {
+      react,
+      "react-hooks": reactHooks,
+    },
+    rules: {
+      ...react.configs.recommended.rules,
+      ...reactHooks.configs.recommended.rules,
+      "react/react-in-jsx-scope": "off", // Not needed with React 17+
+      "react/prop-types": "off", // Using TypeScript instead
+      "react-hooks/rules-of-hooks": "error",
+      "react-hooks/exhaustive-deps": "warn",
+    },
+  },
+
+  // 5. Prettier integration (must be last)
+  {
+    plugins: {
+      prettier,
+    },
+    rules: {
+      "prettier/prettier": "error",
+      // Disable formatting rules that conflict with Prettier
+      "arrow-body-style": "off",
+      "prefer-arrow-callback": "off",
+    },
+  },
+
+  // 6. Airbnb-inspired overrides
+  {
+    rules: {
+      "no-console": ["warn", { allow: ["warn", "error"] }],
+      "no-plusplus": "off",
+      "no-underscore-dangle": "off",
+      "consistent-return": "error",
+      curly: ["error", "all"],
+    },
+  },
+];
+```
+
+**TypeScript-Aware Linting** (F-011):
+
+- **Parser**: `@typescript-eslint/parser` for `.ts` and `.tsx` files
+- **Plugin**: `@typescript-eslint/eslint-plugin` for TypeScript-specific rules
+- **Type Awareness**: Uses `tsconfig.json` for enhanced type checking
+  - Catches type errors before running `tsc`
+  - Provides better autocomplete in IDE
+  - Enables rules like `no-unused-vars` to respect TypeScript types
+
+**React Linting Strategy** (F-011):
+
+| Rule Category        | Plugin                    | Key Rules                                            |
+| -------------------- | ------------------------- | ---------------------------------------------------- |
+| React Best Practices | eslint-plugin-react       | Detect missing keys, forbid dangerous props          |
+| React Hooks          | eslint-plugin-react-hooks | Enforce Rules of Hooks, exhaustive deps              |
+| JSX Transformation   | eslint-plugin-react       | React 17+ new JSX transform (no React import needed) |
+
+**Prettier Integration** (F-011):
+
+```typescript
+// Prettier runs as ESLint rule (must be last plugin)
+{
+  plugins: {
+    prettier: eslintPluginPrettier
+  },
+  rules: {
+    'prettier/prettier': 'error', // Prettier formatting errors appear as ESLint errors
+    // Disable ESLint formatting rules that conflict
+    'arrow-body-style': 'off',
+    'prefer-arrow-callback': 'off',
+  }
+}
+```
+
+**NPM Scripts** (F-011):
+
+```json
+{
+  "scripts": {
+    "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
+    "lint:fix": "eslint . --ext .ts,.tsx,.js,.jsx --fix",
+    "format": "prettier --write '**/*.{tsx,ts,json,css,scss,md}'",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc && vite build"
+  }
+}
+```
+
+**VSCode Integration** (F-011):
+
+```json
+// .vscode/settings.json
+{
+  "eslint.enable": true,
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact"
+  ],
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  },
+  "eslint.workingDirectories": [{ "directory": ".", "changeProcessCWD": true }]
+}
+```
+
+**Development Workflow** (F-011):
+
+```
+┌──────────────────┐
+│  Developer opens │
+│  file in VSCode  │
+└────────┬─────────┘
+         │
+         ▼
+┌──────────────────┐
+│  ESLint Server   │ → Real-time lint errors in Problems panel
+│  (runs in IDE)   │ → Red squiggly lines for errors/warnings
+└────────┬─────────┘
+         │
+         ▼
+┌──────────────────┐
+│  Developer saves │ → Prettier formats on save
+│  file (Cmd+S)    │ → ESLint auto-fixes where possible
+└────────┬─────────┘
+         │
+         ▼
+┌──────────────────┐
+│  Developer runs  │ → Full project lint check
+│  npm run lint    │ → CI would run this before merge
+└──────────────────┘
+```
+
+**File Structure** (F-011):
+
+```
+/
+├── eslint.config.js         # NEW - ESLint 9 flat config
+├── .vscode/
+│   └── settings.json         # NEW/UPDATED - VSCode ESLint integration
+├── .prettierrc              # EXISTING - Keep unchanged
+├── .prettierignore           # EXISTING - Keep unchanged
+├── package.json              # MODIFIED - Add scripts + devDependencies
+└── tsconfig.json             # EXISTING - Used by TypeScript-aware linting
+```
+
+**Package Dependencies** (F-011):
+
+```json
+{
+  "devDependencies": {
+    // Existing
+    "typescript": "^5.2.2",
+    "prettier": "^3.0.3",
+    "vite": "^5.4.10",
+
+    // NEW - ESLint 9 + plugins
+    "eslint": "^9.x",
+    "@eslint/js": "^9.x",
+    "@typescript-eslint/eslint-plugin": "^8.x",
+    "@typescript-eslint/parser": "^8.x",
+    "eslint-plugin-react": "^7.34",
+    "eslint-plugin-react-hooks": "^5.0",
+    "eslint-plugin-prettier": "^5.x"
+  }
+}
+```
+
+**Rule Configuration Strategy** (F-011):
+
+| Rule Category          | Severity | Rationale                       |
+| ---------------------- | -------- | ------------------------------- |
+| TypeScript type errors | Error    | Enforced by tsc anyway          |
+| React Hooks violations | Error    | Prevent runtime bugs            |
+| Unused variables       | Error    | Dead code indicates issues      |
+| Console statements     | Warn     | Allow for debugging             |
+| Any types              | Warn     | Gradual migration, not blocking |
+| Formatting conflicts   | Off      | Prettier handles formatting     |
+
+**Performance Considerations** (F-011):
+
+- **Type-Aware Linting**: Caches TypeScript compiler results
+- **Incremental Linting**: Only checks changed files (IDE default)
+- **Flat Config**: Faster than legacy `.eslintrc` format
+- **Ignore Patterns**: Skips `build/`, `node_modules/` for speed
+
+**Benefits** (F-011):
+
+- **Code Quality**: Catches bugs and anti-patterns automatically
+- **Consistency**: Enforces consistent style across team
+- **Faster Reviews**: Less time spent on style issues in PRs
+- **Better UX**: Real-time feedback in IDE during development
+- **Type Safety**: TypeScript-aware linting catches type errors early
+- **React Best Practices**: Hooks rules prevent common mistakes
+
+**Implementation Notes** (F-011):
+
+- **Files Modified**: 3 files (1 new, 2 existing)
+  - **New**: `eslint.config.js`
+  - **New**: `.vscode/settings.json` (if not exists)
+  - **Modified**: `package.json` (add devDependencies + scripts)
+- **Breaking Changes**: None (additive only)
+- **Migration Path**: Run `npm run lint:fix` to auto-fix existing code
+- **Known Issues**: Document any rule exceptions for existing code
+
+**Integration with Existing Tools** (F-011):
+
+| Tool                 | Relationship  | Integration Point                                              |
+| -------------------- | ------------- | -------------------------------------------------------------- |
+| **TypeScript (tsc)** | Complementary | ESLint catches some issues before tsc, tsc catches type errors |
+| **Prettier**         | Integrated    | Prettier runs as ESLint rule, avoids conflicts                 |
+| **Vite**             | Separate      | ESLint doesn't run during Vite dev server (can add as plugin)  |
+| **VSCode**           | Integrated    | ESLint extension shows errors in real-time                     |
+
 - **Estimated Time**: 1-2 hours
 - **Risk**: Low (well-established pattern, isolated changes)
+
+## 17) OPFS File Browser Enhancement Architecture (Feature F-012)
+
+**Purpose**: Enhance the OPFS File Browser with guided tree lines, delete operations, and enhanced metadata display to improve visual clarity, workflow efficiency, and information discovery.
+
+**Problem Solved**:
+
+- **Current Issue**: OPFS browser has basic functionality with simple indentation, no delete operations, and limited metadata display. Users cannot clean up OPFS without switching to browser DevTools or console.
+- **Solution**: Add VSCode-style guided tree lines, delete operations with confirmation, and enhanced metadata display (file type badges, timestamps, item counts).
+
+**Architecture Overview**:
+
+```mermaid
+C4Component
+  title OPFS Browser Enhancement Architecture
+  Container_Boundary(opfsBrowser, "OPFS Browser Components") {
+    Component(fileTree, "FileTree", "Main tree container", "Manages tree state and operations")
+    Component(treeLines, "TreeLines", "Visual connectors", "CSS-based guide lines")
+    Component(fileNode, "FileNode", "File/directory node", "Displays item with metadata")
+    Component(metadataPanel, "MetadataPanel", "Metadata display", "Hover/click metadata panel")
+    Component(deleteModal, "DeleteConfirmModal", "Delete confirmation", "Modal with item details")
+    Component(toast, "Toast", "Notification system", "Success/error toasts")
+  }
+  Container_Boundary(serviceLayer, "Service Layer") {
+    Component(deleteFile, "deleteOpfsFile", "File deletion", "Delete single file from OPFS")
+    Component(deleteDir, "deleteOpfsDirectory", "Directory deletion", "Recursive directory delete")
+    Component(getFiles, "getOpfsFiles", "File listing", "Enhanced with metadata")
+  }
+  Rel(fileTree, treeLines, "Renders")
+  Rel(fileTree, fileNode, "Renders (lazy)")
+  Rel(fileNode, metadataPanel, "Shows on hover")
+  Rel(fileNode, deleteModal, "Triggers on delete click")
+  Rel(deleteModal, deleteFile, "Calls (file)")
+  Rel(deleteModal, deleteDir, "Calls (directory)")
+  Rel(deleteModal, toast, "Shows result")
+  Rel(fileTree, getFiles, "Fetches")
+```
+
+**Component Hierarchy** (F-012):
+
+```
+OPFSView (/opfs)
+├── FileTree (MODIFIED - F-012)
+│   ├── TreeLines (NEW - F-012)
+│   │   ├── Vertical guide lines (CSS)
+│   │   ├── Horizontal connectors (CSS ::before)
+│   │   └── Responsive visibility toggle
+│   └── FileNode (MODIFIED - F-012)
+│       ├── Icon (folder/file)
+│       ├── Name
+│       ├── MetadataPanel (NEW - F-012)
+│       │   ├── File type badge (SQLite, JSON, etc.)
+│       │   ├── Last modified timestamp
+│       │   ├── Size (files) / Item count (directories)
+│       │   └── Full path
+│       ├── Actions
+│       │   ├── Chevron (expand/collapse - directories)
+│       │   ├── Download button (existing)
+│       │   └── Delete button (NEW - F-012)
+│       └── Children (lazy-loaded)
+│           └── FileNode (recursive)
+├── DeleteConfirmModal (NEW - F-012)
+│   ├── Header
+│   │   ├── Title: "Delete {item.name}?"
+│   │   └── Close button
+│   ├── Metadata Grid
+│   │   ├── Type badge (File/Directory)
+│   │   ├── Size
+│   │   ├── Last modified
+│   │   └── Full path
+│   ├── Warning Text (red)
+│   │   └── "This action cannot be undone."
+│   └── Actions
+│       ├── Cancel button (secondary)
+│       └── Delete button (danger, red)
+└── Toast (NEW - F-012)
+    ├── Success toast (green checkmark)
+    ├── Error toast (red error icon)
+    └── Auto-dismiss (3-5 seconds)
+```
+
+**Guided Tree Lines Design** (F-012):
+
+**Visual Pattern** (VSCode-style):
+
+```
+┌── Root Directory/
+│   ├── Subdirectory 1/
+│   │   ├── File 1.txt
+│   │   └── File 2.txt
+│   ├── Subdirectory 2/
+│   │   └── Nested/
+│   │       └── Deep File.db
+│   └── File 3.txt
+```
+
+**CSS Implementation**:
+
+```css
+/* Vertical line container */
+.tree-node-children {
+  position: relative;
+}
+
+/* Vertical guide line */
+.tree-node-children::before {
+  content: "";
+  position: absolute;
+  left: 12px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: #e5e7eb; /* gray-200 */
+}
+
+/* Horizontal connector */
+.tree-node-item::before {
+  content: "";
+  position: absolute;
+  left: -12px;
+  top: 50%;
+  width: 12px;
+  height: 1px;
+  background: #e5e7eb;
+}
+
+/* Last child adjustment */
+.tree-node-item:last-child::before {
+  /* Extend horizontal line from vertical */
+}
+```
+
+**Responsive Behavior**:
+
+- Tree lines visible when sidebar width >= 200px
+- Tree lines hidden when sidebar collapsed (< 200px)
+- Adjust line position based on indentation level (16px per level)
+
+**Delete Operation Flow** (F-012):
+
+```
+┌──────────────────┐
+│  User clicks     │
+│  delete icon     │ → IoMdTrash icon on hover
+└────────┬─────────┘
+         │
+         ▼
+┌──────────────────┐
+│  Show confirm    │ → Modal dialog with:
+│  dialog          │ → • "Delete {name}?"
+│  (DeleteConfirm- │ → • Type badge (File/Directory)
+│   Modal)         │ → • Metadata grid (size, type, modified, path)
+└────────┬─────────┘ → • Warning: "This action cannot be undone."
+         │             → • Confirm / Cancel buttons
+         ▼
+┌──────────────────┐
+│  User confirms   │ → Delete button (red, loading state)
+└────────┬─────────┘
+         │
+         ▼
+┌──────────────────┐     ┌──────────────────┐
+│  Delete success  │     │  Delete failed   │
+│  • Remove from   │     │  • Show error    │
+│    tree state    │     │    toast         │
+│  • Show success  │     │  • Keep item in  │
+│    toast         │     │    tree          │
+└──────────────────┘     └──────────────────┘
+```
+
+**Delete Confirmation Modal** (F-012):
+
+**Props**:
+
+```typescript
+interface DeleteConfirmModalProps {
+  item: OpfsFileEntry;
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => Promise<void>;
+}
+```
+
+**Content**:
+
+- **Title**: "Delete {item.name}?"
+- **Type Badge**: File / Directory (color-coded)
+- **Metadata Grid**:
+  - Size: {size_formatted}
+  - Type: {file_type}
+  - Modified: {last_modified}
+  - Path: {full_path}
+- **Warning Text** (red): "This action cannot be undone."
+- **Buttons**:
+  - Cancel: Gray secondary button
+  - Delete: Red danger button with trash icon
+
+**Behavior**:
+
+- Modal backdrop: `bg-gray-900 bg-opacity-50`
+- Close on: Cancel button, backdrop click, Escape key
+- Delete button: Loading state during deletion
+- Focus trap: Tab cycles within modal
+
+**Enhanced Metadata Display** (F-012):
+
+**File Metadata**:
+| Field | Display Format | Example |
+| --------------- | ----------------------- | ---------------- |
+| Name | Bold, primary text | `database.sqlite` |
+| Type | Badge, color-coded | `SQLite Database` |
+| Size | Secondary text, right | `1.2 MB` |
+| Modified | Tertiary text | `2025-01-15 14:30` |
+| Full Path | Monospace, small | `/data/databases/database.sqlite` |
+
+**Directory Metadata**:
+| Field | Display Format | Example |
+| --------------- | ----------------------- | ---------------- |
+| Name | Bold, primary text | `databases` |
+| Type | Badge | `Directory` |
+| Item Count | Secondary text | `3 files, 2 dirs` |
+| Modified | Tertiary text | `2025-01-15 14:30` |
+| Full Path | Monospace, small | `/data/databases` |
+
+**File Type Badges** (F-012):
+
+- **SQLite Database**: `.sqlite`, `.db`, `.sqlite3` → `bg-blue-100 text-blue-700`
+- **JSON Data**: `.json` → `bg-yellow-100 text-yellow-700`
+- **Text File**: `.txt`, `.md` → `bg-gray-100 text-gray-700`
+- **Image File**: `.png`, `.jpg`, `.svg` → `bg-purple-100 text-purple-700`
+- **Unknown**: Use extension or "File" → Default gray badge
+
+**Toast Notifications** (F-012):
+
+**Success Toast**:
+
+- **Title**: "Deleted successfully"
+- **Message**: "{item_name} has been deleted."
+- **Icon**: Green checkmark (`FaCheck`)
+- **Duration**: 3 seconds (auto-dismiss)
+- **Style**: `bg-green-50 border-green-200 text-green-700`
+
+**Error Toast**:
+
+- **Title**: "Delete failed"
+- **Message**: {error_message}
+- **Icon**: Red error icon (`FaExclamationCircle`)
+- **Duration**: 5 seconds (auto-dismiss)
+- **Action**: "Retry" button (reopens modal)
+- **Style**: `bg-red-50 border-red-200 text-red-700`
+
+**Position**: Top-right corner (fixed)
+
+**Service Layer Functions** (F-012 NEW):
+
+```typescript
+// databaseService.ts - NEW FUNCTIONS
+
+/**
+ * Delete a file from OPFS
+ * @param path - Full path to the file
+ * @returns ServiceResponse<void>
+ */
+deleteOpfsFile: async (path: string): Promise<ServiceResponse<void>> => {
+  try {
+    const script = `
+      (async () => {
+        const root = await navigator.storage.getDirectory();
+        const pathParts = '${path}'.split('/').filter(Boolean);
+        let dir = root;
+
+        for (let i = 0; i < pathParts.length - 1; i++) {
+          dir = await dir.getDirectoryHandle(pathParts[i]);
+        }
+
+        const filename = pathParts[pathParts.length - 1];
+        await dir.removeEntry(filename);
+
+        return { success: true };
+      })()
+    `;
+
+    return await inspectedWindowBridge.execute(script);
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+};
+
+/**
+ * Delete a directory and all contents from OPFS
+ * @param path - Full path to the directory
+ * @returns ServiceResponse<{ itemCount: number }>
+ */
+deleteOpfsDirectory: async (
+  path: string,
+): Promise<ServiceResponse<{ itemCount: number }>> => {
+  try {
+    const script = `
+      (async () => {
+        const root = await navigator.storage.getDirectory();
+        const pathParts = '${path}'.split('/').filter(Boolean);
+        let dir = root;
+
+        for (let i = 0; i < pathParts.length - 1; i++) {
+          dir = await dir.getDirectoryHandle(pathParts[i]);
+        }
+
+        const dirname = pathParts[pathParts.length - 1];
+        const targetDir = await dir.getDirectoryHandle(dirname);
+
+        // Count items before delete
+        let itemCount = 0;
+        for await (const _ of targetDir.values()) {
+          itemCount++;
+        }
+
+        // Delete recursively
+        await dir.removeEntry(dirname, { recursive: true });
+
+        return { success: true, data: { itemCount } };
+      })()
+    `;
+
+    return await inspectedWindowBridge.execute(script);
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+};
+```
+
+**Enhanced OpfsFileEntry Type** (F-012):
+
+```typescript
+// Enhanced OpfsFileEntry type
+interface OpfsFileEntry {
+  name: string;
+  path: string;
+  type: "file" | "directory";
+  size: number; // bytes
+  sizeFormatted: string; // e.g., "1.2 MB"
+  lastModified?: Date; // NEW
+  fileType?: string; // NEW: "SQLite Database", "JSON Data", etc.
+  itemCount?: {
+    files: number; // NEW: for directories
+    directories: number; // NEW: for directories
+  };
+}
+```
+
+**Icon Integration** (F-012):
+
+- **Delete**: `IoMdTrash` (react-icons/io) - Delete button
+- **Warning**: `FaExclamationTriangle` (react-icons/fa) - Modal warning
+- **Success**: `FaCheck` (react-icons/fa) - Toast success
+- **Error**: `FaExclamationCircle` (react-icons/fa) - Toast error
+
+**Theme Colors** (F-012):
+
+- **Tree Lines**: `border-gray-200` (#e5e7eb)
+- **Delete Button**: `text-red-500 hover:text-red-600`
+- **Danger Button**: `bg-red-600 hover:bg-red-700 text-white`
+- **Success Toast**: `bg-green-50 border-green-200 text-green-700`
+- **Error Toast**: `bg-red-50 border-red-200 text-red-700`
+- **Type Badges**:
+  - SQLite Database: `bg-blue-100 text-blue-700`
+  - JSON Data: `bg-yellow-100 text-yellow-700`
+  - Text File: `bg-gray-100 text-gray-700`
+  - Image File: `bg-purple-100 text-purple-700`
+
+**File Structure** (F-012):
+
+```
+/src/devtools
+  /components
+    /OPFSBrowser
+      FileTree.tsx                  # MODIFIED - Add tree lines, delete buttons
+      FileNode.tsx                  # MODIFIED - Add metadata display, delete button
+      DeleteConfirmModal.tsx        # NEW - Delete confirmation modal
+      MetadataPanel.tsx             # NEW - Metadata display component
+      TreeLines.tsx                 # NEW - Guide line connectors
+      Toast.tsx                     # NEW - Toast notification component
+  /services
+    databaseService.ts              # MODIFIED - Add deleteOpfsFile, deleteOpfsDirectory
+```
+
+**Accessibility** (F-012):
+
+- **Delete Buttons**: `aria-label="Delete {filename}"`
+- **Modal**: `role="dialog"` and `aria-modal="true"`
+- **Focus Trap**: Tab cycles within modal
+- **Escape Key**: Closes modal
+- **Keyboard Navigation**: Tree items navigable with arrow keys
+- **Tree Lines**: Decorative only, no ARIA attributes needed
+
+**Performance Optimizations** (F-012):
+
+- **Tree Line Rendering**: CSS-only (no JS layout calculations)
+- **Lazy Loading**: Unchanged (loads on expand)
+- **Metadata Fetching**: On-demand (when directory expanded)
+- **Toast Auto-dismiss**: Timer-based cleanup (no memory leaks)
+
+**Error Handling** (F-012):
+
+```typescript
+// Delete operation error handling
+const handleDelete = async () => {
+  const response =
+    item.type === "file"
+      ? await databaseService.deleteOpfsFile(item.path)
+      : await databaseService.deleteOpfsDirectory(item.path);
+
+  if (response.success) {
+    // Remove from tree state
+    // Show success toast
+  } else {
+    // Show error toast with response.error
+    // Keep item in tree
+  }
+};
+```
+
+**Edge Cases** (F-012):
+
+1. **Directory with many files**: Enhanced warning with item count
+2. **Delete during load**: Disable delete button during operation
+3. **OPFS not supported**: Graceful degradation, show error
+4. **File locked by another process**: Show error toast, keep item in tree
+5. **Network error**: Show error toast with retry button
+6. **Sidebar collapsed**: Tree lines hidden, delete buttons visible on hover
+
+**Benefits** (F-012):
+
+- **Visual Clarity**: VSCode-style tree lines improve navigation
+- **Workflow Efficiency**: Delete operations without leaving DevTools
+- **Information Discovery**: Enhanced metadata at a glance
+- **User Confidence**: Confirmation dialogs prevent accidental deletion
+- **Feedback**: Toast notifications confirm actions
+
+**Implementation Notes** (F-012):
+
+- **Files Created**: 4 new components (DeleteConfirmModal, MetadataPanel, TreeLines, Toast)
+- **Files Modified**: 3 existing files (FileTree, FileNode, databaseService)
+- **Service Functions**: 2 new functions (deleteOpfsFile, deleteOpfsDirectory)
+- **Estimated Time**: 8-12 hours
+- **Risk**: Medium (delete operations are destructive)
+- **Dependencies**: F-001 (Service Layer), existing OPFS browser
+
+**Integration Points** (F-012):
+
+- **Service Layer**: Extends existing databaseService.ts
+- **Type System**: Enhanced OpfsFileEntry type
+- **Routing**: No changes to `/opfs` route
+- **State Management**: Local component state (no global state)
+- **Styling**: Tailwind CSS with existing theme tokens

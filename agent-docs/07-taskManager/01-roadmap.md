@@ -164,12 +164,71 @@ NOTES
 
 **Milestone**: F-010 Complete - Coordinated refresh between sidebar and main page
 
-- [ ] **TASK-306**: Database Refresh Coordination Feature (F-010)
+- [x] **TASK-306**: Database Refresh Coordination Feature (F-010) (Completed 2026-01-14)
   - Create DatabaseRefreshContext with Provider and hook
   - Add refresh button to sidebar "Opened DB" header (left side)
   - Integrate context with DatabaseList and OpenedDBList
   - Test bidirectional refresh synchronization
   - Testing and documentation
+
+#### Phase 8: ESLint Integration (Day 13)
+
+**Milestone**: F-011 Complete - Automated code linting with ESLint 9
+
+- [x] **TASK-307**: ESLint Integration Feature (F-011) (Completed 2026-01-15)
+  - Install ESLint packages (7 packages: eslint, @eslint/js, @typescript-eslint/\*, eslint-plugin-react, eslint-plugin-react-hooks, eslint-plugin-prettier)
+  - Create eslint.config.js (flat config format with 5 layers)
+  - Create .vscode/settings.json (ESLint integration)
+  - Add NPM scripts (lint, lint:fix)
+  - Test configuration and IDE integration
+  - Run lint:fix on existing codebase
+  - Documentation updates
+
+#### Phase 9: OPFS Browser Enhancement (Days 14-17)
+
+**Milestone**: F-012 Complete - Tree lines, delete operations, enhanced metadata
+
+- [ ] **TASK-308**: Service Layer - Delete Operations (F-012)
+  - Implement `deleteOpfsFile(path)` in databaseService.ts
+  - Implement `deleteOpfsDirectory(path)` in databaseService.ts
+  - Update `OpfsFileEntry` type with metadata fields
+  - Add metadata fetching to `getOpfsFiles()`
+  - Error handling and testing
+
+- [ ] **TASK-309**: Guided Tree Lines Component (F-012)
+  - Create `TreeLines.tsx` component
+  - CSS styling for vertical/horizontal connectors
+  - Responsive hiding for collapsed sidebar
+  - Integration with FileTree.tsx
+
+- [ ] **TASK-310**: Delete Confirmation Modal (F-012)
+  - Create `DeleteConfirmModal.tsx` component
+  - Metadata display grid layout
+  - Confirm/cancel button logic
+  - Loading state handling
+  - Accessibility (focus trap, ARIA)
+
+- [ ] **TASK-311**: Enhanced Metadata Display (F-012)
+  - Create `MetadataPanel.tsx` component
+  - File type detection and badges
+  - Timestamp formatting utilities
+  - Hover/click interaction
+  - Directory item counting
+
+- [ ] **TASK-312**: Toast Notifications (F-012)
+  - Create `Toast.tsx` component
+  - Success and error variants
+  - Auto-dismiss logic
+  - Position styling (top-right)
+  - Integration with delete operations
+
+- [ ] **TASK-313**: Integration & Testing (F-012)
+  - Integrate all components with FileTree.tsx
+  - Update OPFSGallery.tsx for toast handling
+  - Test delete operations (files and directories)
+  - Test metadata display for all file types
+  - Test tree line rendering at various depths
+  - ESLint and build verification
 
 ### Release v1.3.0 (Future Enhancements)
 
@@ -194,7 +253,9 @@ NOTES
 - [ ] **v1.0.0 MVP Released**: 2026-01-27 (TASK-12)
 - [x] **v1.2.0 Phase 1-5 Complete**: 2026-01-14 (F-004, F-005, F-006, F-008)
 - [x] **v1.2.0 Phase 6 Complete**: 2026-01-14 (F-009)
-- [ ] **v1.2.0 Phase 7 Complete**: TBD (F-010)
+- [x] **v1.2.0 Phase 7 Complete**: 2026-01-14 (F-010)
+- [x] **v1.2.0 Phase 8 Complete**: 2026-01-15 (F-011)
+- [ ] **v1.2.0 Phase 9 Complete**: TBD (F-012)
 
 ## 4. Feature F-001: Service Layer Expansion
 
@@ -652,20 +713,517 @@ Add shared React Context to coordinate database refresh between sidebar and main
 
 ### Definition of Done
 
-- [ ] DatabaseRefreshContext created with proper TypeScript types
-- [ ] DatabaseRefreshProvider wraps DevTools content
-- [ ] useDatabaseRefresh hook exported and documented
-- [ ] Sidebar refresh button added (left side, IoMdRefresh icon)
-- [ ] Sidebar refresh button styling matches F-007 tokens
-- [ ] OpenedDBList consumes DatabaseRefreshContext
-- [ ] Main page refresh button uses shared trigger
-- [ ] Bidirectional refresh working (both directions)
-- [ ] Data consistency verified (both locations show same data)
-- [ ] Debounce working (rapid clicks = single refresh)
-- [ ] Edge cases handled (collapsed, error, empty states)
+- [x] DatabaseRefreshContext created with proper TypeScript types
+- [x] DatabaseRefreshProvider wraps DevTools content
+- [x] useDatabaseRefresh hook exported and documented
+- [x] Sidebar refresh button added (left side, IoMdRefresh icon)
+- [x] Sidebar refresh button styling matches F-007 tokens
+- [x] OpenedDBList consumes DatabaseRefreshContext
+- [x] Main page refresh button uses shared trigger
+- [x] Bidirectional refresh working (both directions)
+- [x] Data consistency verified (both locations show same data)
+- [x] Debounce working (rapid clicks = single refresh)
+- [x] Edge cases handled (collapsed, error, empty states)
+- [x] Build passed with no errors
+- [x] Type check passed with no errors
+- [x] Bundle size impact acceptable (< 5KB)
+- [x] Feature spec updated
+- [x] LLD updated with implementation status
+- [x] Status board updated with completion evidence
+
+## 8. Feature F-011: ESLint Integration
+
+### Overview
+
+**Feature ID**: F-011 (Discovery)
+**Status**: Design Complete - Ready for Implementation
+**Priority**: High (P1) - Code Quality
+**Target**: Complete during Phase 8 (Day 13)
+
+### Objective
+
+Add ESLint 9 with flat config format, TypeScript support, React rules, and Prettier integration to maintain code quality and consistency across the project. This provides automated linting during development and catches bugs before runtime.
+
+### Task Breakdown: TASK-307
+
+**Implementation Phases** (7 phases, 2-4 hours total):
+
+#### Phase 1: Package Installation (0.5 hour)
+
+**Milestone**: ESLint packages installed
+
+- [ ] Install ESLint 9 core: `npm install --save-dev eslint@^9`
+- [ ] Install base config: `npm install --save-dev @eslint/js@^9`
+- [ ] Install TypeScript packages: `npm install --save-dev @typescript-eslint/eslint-plugin@^8 @typescript-eslint/parser@^8`
+- [ ] Install React packages: `npm install --save-dev eslint-plugin-react@^7.34 eslint-plugin-react-hooks@^5.0`
+- [ ] Install Prettier integration: `npm install --save-dev eslint-plugin-prettier@^5`
+- [ ] Verify package.json contains all 7 packages
+- [ ] Run `npm install` to ensure dependencies resolve
+
+#### Phase 2: Configuration File Creation (0.5 hour)
+
+**Milestone**: eslint.config.js created with flat config
+
+- [ ] Create `eslint.config.js` in project root
+- [ ] Add ignore patterns (build/, dist/, node_modules/, \*.config.js/ts)
+- [ ] Import all required packages (js, tseslint, tsparser, react, reactHooks, prettier)
+- [ ] Configure Layer 1: Base JS (@eslint/js with ES2021 + browser)
+- [ ] Configure Layer 2: TypeScript (parser, plugin, type-aware linting)
+- [ ] Configure Layer 3: React (settings, plugins, rules, React 17+ JSX)
+- [ ] Configure Layer 4: Prettier (plugin, disable conflicting rules)
+- [ ] Configure Layer 5: Airbnb-style overrides (consistent-return, curly, console)
+- [ ] Export configuration array with all layers
+
+#### Phase 3: VSCode Integration (0.25 hour)
+
+**Milestone**: VSCode ESLint settings configured
+
+- [ ] Create `.vscode/settings.json` (if not exists)
+- [ ] Enable ESLint for TS/TSX/JS/JSX files
+- [ ] Enable format-on-save
+- [ ] Enable fix-on-save (source.fixAll.eslint)
+- [ ] Configure working directories
+- [ ] Test VSCode integration by opening a file
+
+#### Phase 4: NPM Scripts (0.25 hour)
+
+**Milestone**: Lint scripts added to package.json
+
+- [ ] Add `lint` script: `eslint . --ext .ts,.tsx,.js,.jsx`
+- [ ] Add `lint:fix` script: `eslint . --ext .ts,.tsx,.js,.jsx --fix`
+- [ ] Verify scripts don't conflict with existing scripts
+- [ ] Test `npm run lint` runs without errors
+- [ ] Test `npm run lint:fix` runs and auto-fixes issues
+
+#### Phase 5: Initial Lint Run (0.5 hour)
+
+**Milestone**: Configuration validated and baseline established
+
+- [ ] Run `npm run lint` to see all existing issues
+- [ ] Categorize issues: auto-fixable, legitimate, false positives
+- [ ] Run `npm run lint:fix` to fix auto-fixable issues
+- [ ] Review remaining issues and categorize
+- [ ] Configure rule overrides for false positives (if any)
+- [ ] Document known issues (if any)
+
+#### Phase 6: Testing & Validation (0.75 hour)
+
+**Milestone**: All scenarios tested and working
+
+1. **Configuration Testing**
+   - [ ] Verify ESLint loads without errors
+   - [ ] Test TypeScript linting works on .ts files
+   - [ ] Test React linting works on .tsx files
+   - [ ] Test Prettier integration works
+   - [ ] Test ignore patterns work correctly
+
+2. **IDE Integration Testing**
+   - [ ] Open TSX file in VSCode
+   - [ ] Verify real-time lint errors appear in Problems panel
+   - [ ] Verify red squiggly lines for errors
+   - [ ] Test save triggers Prettier format + ESLint fix
+   - [ ] Test fix-on-save via command palette
+
+3. **NPM Script Testing**
+   - [ ] Run `npm run lint` - see all issues
+   - [ ] Run `npm run lint:fix` - auto-fix issues
+   - [ ] Run `npm run typecheck` - still works
+   - [ ] Run `npm run build` - still works
+
+#### Phase 7: Documentation (0.25 hour)
+
+**Milestone**: All documentation updated
+
+- [ ] Update README with ESLint instructions
+- [ ] Document known issues/exceptions (if any)
+- [ ] Update feature spec status
+- [ ] Update LLD implementation status
+- [ ] Update status board
+
+### Success Criteria
+
+1. **Installation**
+   - [x] All 7 ESLint packages installed
+   - [x] Package.json updated with devDependencies
+   - [x] No install errors or warnings
+
+2. **Configuration**
+   - [x] eslint.config.js created with flat config format
+   - [x] All 5 configuration layers working
+   - [x] TypeScript parser configured
+   - [x] React plugins configured
+   - [x] Prettier integration configured
+
+3. **NPM Scripts**
+   - [x] `npm run lint` works
+   - [x] `npm run lint:fix` works
+   - [x] Scripts don't conflict with existing scripts
+   - [x] Exit codes correct (0 for pass, 1 for errors)
+
+4. **IDE Integration**
+   - [x] VSCode shows ESLint errors in real-time
+   - [x] Fix-on-save works via command palette
+   - [x] Format-on-save integrates with ESLint
+   - [x] No console errors from ESLint server
+
+5. **Build Compatibility**
+   - [x] `npm run build` still works
+   - [x] `npm run dev` still works
+   - [x] `npm run typecheck` still works
+   - [x] No new build errors introduced
+
+6. **Code Quality**
+   - [x] Lint passes on existing code (or only minor issues)
+   - [x] No breaking changes to existing code style
+   - [x] Prettier and ESLint don't conflict
+   - [x] At least 80% of issues auto-fixable
+
+### Risk Mitigation
+
+- **Complexity**: Low (well-established pattern, good tooling)
+- **Files Modified**: 3 files (1 new, 2 existing)
+- **Breaking Changes**: None (additive only)
+- **Migration Path**: Run `npm run lint:fix` to auto-fix
+- **Rollback**: Simple (remove eslint.config.js, uninstall packages, revert scripts)
+- **Performance**: Minimal impact (ESLint is fast, incremental in IDE)
+
+### Timeline
+
+- **30 minutes**: Package installation and verification
+- **30 minutes**: Create eslint.config.js with all layers
+- **15 minutes**: Create .vscode/settings.json
+- **15 minutes**: Add NPM scripts and test
+- **30 minutes**: Initial lint run and issue categorization
+- **45 minutes**: Testing and validation (config, IDE, scripts)
+- **15 minutes**: Documentation and final verification
+
+**Total**: 3 hours
+
+### Definition of Done
+
+- [x] All 7 ESLint packages installed
+- [x] eslint.config.js created with flat config
+- [x] .vscode/settings.json created/updated
+- [x] NPM scripts (lint, lint:fix) added and working
+- [x] TypeScript linting configured and working
+- [x] React linting configured and working
+- [x] Prettier integration configured and working
+- [x] Airbnb-style rules applied
+- [x] Ignore patterns configured
+- [x] `npm run lint` runs without crashing
+- [x] `npm run lint:fix` auto-fixes issues
+- [x] VSCode shows real-time lint errors
+- [x] Fix-on-save works in VSCode
+- [x] Build scripts still work (build, dev, typecheck)
+- [x] Known issues documented (if any)
+- [x] Feature spec marked complete
+- [x] LLD marked implementation complete
+- [x] Status board updated with completion evidence
+
+## 9. Feature F-012: OPFS Browser Enhancement
+
+### Overview
+
+**Feature ID**: F-012 (Discovery)
+**Status**: Design Complete - Ready for Implementation
+**Priority**: High (P1) - Core Feature Completion
+**Target**: Complete during v1.2.0 Phase 9 (Days 14-17 from 2026-01-14)
+
+### Objective
+
+Enhance the OPFS File Browser with guided tree lines for visual hierarchy, delete operations for files and directories with confirmation modals, and enhanced metadata display including file types, last modified dates, and full paths. This completes the OPFS browser feature set for better file management and user experience.
+
+### Task Breakdown
+
+**Implementation Phases** (6 tasks, 8-12 hours total):
+
+#### TASK-308: Service Layer - Delete Operations (1.5 hours)
+
+**Milestone**: Delete functions implemented in databaseService.ts
+
+- [ ] Implement `deleteOpfsFile(path)` service function
+  - Navigate to file path in OPFS
+  - Delete file using `removeEntry(filename)`
+  - Return `ServiceResponse<void>`
+  - Handle file not found errors
+- [ ] Implement `deleteOpfsDirectory(path)` service function
+  - Navigate to directory path in OPFS
+  - Count items before delete
+  - Delete recursively using `removeEntry(dirname, { recursive: true })`
+  - Return `ServiceResponse<{ itemCount: number }>`
+  - Handle directory not found errors
+- [ ] Update `OpfsFileEntry` type with metadata fields
+  - Add `lastModified?: Date`
+  - Add `fileType?: string`
+  - Add `itemCount?: { files: number; directories: number }`
+- [ ] Update `getOpfsFiles()` to fetch metadata
+  - Fetch last modified timestamp from file handles
+  - Detect file types based on extension
+  - Count items in directories
+- [ ] Add JSDoc comments to all functions
+- [ ] TypeScript strict mode compliance
+
+#### TASK-309: Guided Tree Lines Component (2 hours)
+
+**Milestone**: TreeLines component created and integrated
+
+- [ ] Create `src/devtools/components/OPFSBrowser/TreeLines.tsx`
+- [ ] Implement vertical line connector
+  - CSS `::before` pseudo-element
+  - Position: absolute, left: 12px, top: 0, bottom: 0
+  - Width: 1px, background: gray-200 (#e5e7eb)
+- [ ] Implement horizontal line connector
+  - CSS `::before` pseudo-element on tree-node-item
+  - Position: absolute, left: -12px, top: 50%
+  - Width: 12px, height: 1px, background: gray-200
+- [ ] Implement last child adjustment
+  - Extend horizontal line from vertical
+  - No vertical line after last child
+- [ ] Add responsive hiding
+  - Hide lines when sidebar collapsed (< 200px)
+  - Use CSS media query or state-based class
+- [ ] Integrate with FileTree.tsx
+  - Wrap children containers with TreeLines
+  - Pass depth prop for line positioning
+  - Conditional rendering for root items (depth = 0)
+- [ ] Test with various nesting depths
+- [ ] Verify VSCode-style appearance
+
+#### TASK-310: Delete Confirmation Modal (2 hours)
+
+**Milestone**: DeleteConfirmModal component created and integrated
+
+- [ ] Create `src/devtools/components/OPFSBrowser/DeleteConfirmModal.tsx`
+- [ ] Implement modal structure
+  - Backdrop: `bg-gray-900 bg-opacity-50`
+  - Modal container: centered, max-w-md
+  - Close on: Cancel button, backdrop click, Escape key
+- [ ] Implement metadata display grid
+  - Title: "Delete {item_name}?"
+  - Type badge: File / Directory (color-coded)
+  - Size: {size_formatted}
+  - Type: {file_type}
+  - Modified: {last_modified}
+  - Path: {full_path} (monospace)
+- [ ] Implement warning text
+  - Red text: "This action cannot be undone."
+  - Enhanced warning for directories: "Delete directory and all contents?"
+  - Show item count for directories
+- [ ] Implement buttons
+  - Cancel: Gray secondary button
+  - Delete: Red danger button with IoMdTrash icon
+  - Loading state on Delete button during deletion
+- [ ] Add accessibility features
+  - `role="dialog"`
+  - `aria-modal="true"`
+  - `aria-label="Delete confirmation"`
+  - Focus trap (Tab cycles within modal)
+  - Escape key closes modal
+- [ ] Export component and types
+
+#### TASK-311: Enhanced Metadata Display (2 hours)
+
+**Milestone**: MetadataPanel component created and integrated
+
+- [ ] Create `src/devtools/components/OPFSBrowser/MetadataPanel.tsx`
+- [ ] Implement file type detection
+  - SQLite databases: `.sqlite`, `.db`, `.sqlite3` → "SQLite Database" (blue badge)
+  - JSON files: `.json` → "JSON Data" (yellow badge)
+  - Text files: `.txt`, `.md` → "Text File" (gray badge)
+  - Images: `.png`, `.jpg`, `.svg` → "Image File" (purple badge)
+  - Unknown: Use extension or "File" (default gray badge)
+- [ ] Implement timestamp formatting
+  - Format: `YYYY-MM-DD HH:mm` (local time)
+  - Color: gray-500 (secondary text)
+  - Utility function: `formatTimestamp(date)`
+- [ ] Implement inline metadata display
+  - Default: Name + size (existing)
+  - Hover: Show type badge and modified timestamp
+  - Transition: smooth fade-in/out (150ms)
+- [ ] Implement directory metadata
+  - Item count: `{file_count} files, {dir_count} dirs`
+  - Visible when expanded
+  - Updated on lazy load
+  - Full path on hover/click (monospace)
+- [ ] Export component and utility functions
+
+#### TASK-312: Toast Notifications (1 hour)
+
+**Milestone**: Toast component created and integrated
+
+- [ ] Create `src/devtools/components/OPFSBrowser/Toast.tsx`
+- [ ] Implement toast container
+  - Position: fixed, top-right
+  - Z-index: high (above modal)
+  - Animation: slide-in from right
+- [ ] Implement success toast
+  - Icon: FaCheck (green)
+  - Title: "Deleted successfully"
+  - Message: "{item_name} has been deleted."
+  - Duration: 3 seconds (auto-dismiss)
+  - Background: bg-green-50 border-green-200 text-green-700
+- [ ] Implement error toast
+  - Icon: FaExclamationCircle (red)
+  - Title: "Delete failed"
+  - Message: {error_message}
+  - Duration: 5 seconds (auto-dismiss)
+  - Action: "Retry" button (reopens modal)
+  - Background: bg-red-50 border-red-200 text-red-700
+- [ ] Implement auto-dismiss logic
+  - setTimeout with duration
+  - Cleanup on unmount
+  - Pause on hover (optional)
+- [ ] Export component and types
+
+#### TASK-313: Integration & Testing (1.5 hours)
+
+**Milestone**: All components integrated and tested
+
+- [ ] Update FileTree.tsx with tree lines
+  - Import TreeLines component
+  - Wrap children containers
+  - Pass depth prop
+  - Test various nesting depths
+- [ ] Update FileNode.tsx with delete button
+  - Import IoMdTrash icon
+  - Add delete button (right side, group-hover)
+  - Add onClick handler to open modal
+  - Add ARIA label
+- [ ] Update FileNode.tsx with metadata display
+  - Import MetadataPanel component
+  - Add hover state for metadata
+  - Display type badge and timestamp
+  - Show item count for directories
+- [ ] Update OPFSGallery.tsx for toast handling
+  - Import Toast component
+  - Add toast container
+  - Handle delete confirmations
+  - Show success/error toasts
+  - Refresh tree after successful delete
+- [ ] Test delete operations (files)
+  - Click delete icon → modal opens
+  - Verify metadata displayed correctly
+  - Confirm delete → file removed from tree
+  - Success toast shown
+  - Error handling tested
+- [ ] Test delete operations (directories)
+  - Click delete icon → modal opens
+  - Verify item count shown
+  - Confirm delete → directory removed from tree
+  - Success toast shown
+  - Error handling tested
+- [ ] Test metadata display
+  - File type badges correct for all types
+  - Timestamps formatted correctly
+  - Directory item counts accurate
+  - Full path displays on hover
+- [ ] Test tree lines
+  - Lines render correctly for nested items
+  - Lines hide when sidebar collapsed
+  - Lines match VSCode style
+- [ ] ESLint verification
+  - Run `npm run lint`
+  - Fix any issues
+- [ ] Build verification
+  - Run `npm run build`
+  - Run `npm run typecheck`
+  - Verify no errors
+
+### Dependencies
+
+- **Upstream**: TASK-10 (OPFS File Browser - provides base FileTree, FileNode, OPFSGallery components)
+- **Downstream**: None (can proceed independently)
+
+### Success Criteria
+
+1. **Tree Lines Display**
+   - [ ] Vertical lines connect parent to all children
+   - [ ] Horizontal lines connect each child to vertical line
+   - [ ] Lines render correctly for nested directories (depth > 0)
+   - [ ] Lines hide when sidebar collapsed (< 200px)
+   - [ ] Lines match VSCode file tree style
+
+2. **Delete Operation - Files**
+   - [ ] Delete icon visible on file row hover
+   - [ ] Clicking delete opens confirmation modal
+   - [ ] Modal shows file metadata (name, size, type, path)
+   - [ ] Confirming delete removes file from tree
+   - [ ] Success toast shown after deletion
+   - [ ] Error toast shown on failure
+
+3. **Delete Operation - Directories**
+   - [ ] Delete icon visible on directory row hover
+   - [ ] Confirmation shows item count (files, subdirectories)
+   - [ ] Recursive delete removes directory and contents
+   - [ ] Success toast shown after deletion
+   - [ ] Error toast shown on failure
+
+4. **Enhanced Metadata - Files**
+   - [ ] File type badge shown on hover (SQLite, JSON, etc.)
+   - [ ] Last modified timestamp shown on hover
+   - [ ] File extension shown in type badge
+   - [ ] Metadata displays correctly for all file types
+
+5. **Enhanced Metadata - Directories**
+   - [ ] Item count shown when directory expanded
+   - [ ] Last modified timestamp shown on hover
+   - [ ] Full path shown on hover/click
+
+6. **Delete Confirmation Modal**
+   - [ ] Modal opens on delete button click
+   - [ ] Modal shows all item metadata
+   - [ ] Warning text displayed clearly
+   - [ ] Cancel button closes modal
+   - [ ] Delete button shows loading state
+   - [ ] Modal closes on backdrop click or Escape key
+
+7. **Service Layer Functions**
+   - [ ] `deleteOpfsFile(path)` implemented in databaseService.ts
+   - [ ] `deleteOpfsDirectory(path)` implemented in databaseService.ts
+   - [ ] Both functions return `ServiceResponse<void>` or with data
+   - [ ] Error handling for OPFS API failures
+   - [ ] Recursive delete for directories
+
+8. **Integration**
+   - [ ] OPFS browser route (`/opfs`) works with all enhancements
+   - [ ] No regression in existing download functionality
+   - [ ] No regression in existing lazy loading
+   - [ ] Build passes without errors
+   - [ ] ESLint passes without new warnings
+
+### Risk Mitigation
+
+- **Data Loss**: Confirmation modal with warning text prevents accidental deletion
+- **OPFS API Compatibility**: Graceful degradation if not supported, error messages
+- **Tree Line Performance**: CSS-only implementation, no JS layout calculations
+- **Metadata Fetching Delay**: Lazy load on-demand, show loading indicator
+- **Modal Accessibility**: Focus trap, ARIA attributes, keyboard support
+
+### Timeline
+
+- **Day 1** (1.5 hours): Service layer functions (deleteOpfsFile, deleteOpfsDirectory, metadata fetching)
+- **Day 2** (2 hours): Guided tree lines component
+- **Day 3** (2 hours): Delete confirmation modal
+- **Day 4** (2 hours): Enhanced metadata display
+- **Day 5** (1 hour): Toast notifications
+- **Day 5** (1.5 hours): Integration & testing
+
+**Total**: 10 hours (3-4 days)
+
+### Definition of Done
+
+- [ ] Service layer functions implemented and tested
+- [ ] TreeLines component created and integrated
+- [ ] DeleteConfirmModal component created and integrated
+- [ ] MetadataPanel component created and integrated
+- [ ] Toast component created and integrated
+- [ ] FileTree.tsx updated with tree lines
+- [ ] FileNode.tsx updated with delete button and metadata
+- [ ] OPFSGallery.tsx updated with toast handling
+- [ ] All acceptance criteria met (8 categories above)
+- [ ] Manual testing complete (all scenarios)
+- [ ] ESLint passed with no new warnings
 - [ ] Build passed with no errors
 - [ ] Type check passed with no errors
-- [ ] Bundle size impact acceptable (< 5KB)
-- [ ] Feature spec updated
-- [ ] LLD updated with implementation status
-- [ ] Status board updated
+- [ ] Feature spec marked complete
+- [ ] Documentation updated (HLD, LLD, status board)

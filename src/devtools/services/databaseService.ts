@@ -39,7 +39,7 @@ export type ColumnInfo = {
   name: string; // Column name
   type: string; // Declared type (INTEGER, TEXT, etc.)
   notnull: number; // 1 if NOT NULL, 0 otherwise
-  dflt_value: any; // Default value (null if none)
+  dflt_value: SqlValue | undefined; // Default value (null if none)
   pk: number; // 1 if PRIMARY KEY, 0 otherwise
 };
 
@@ -55,7 +55,7 @@ export type TableSchema = {
  * Query result with pagination metadata
  */
 export type QueryResult = {
-  rows: Array<Record<string, any>>; // Row data
+  rows: Array<Record<string, SqlValue>>; // Row data
   total: number; // Total row count (for pagination)
   columns: string[]; // Column names from first row
 };
@@ -84,15 +84,6 @@ export type ExecResult = {
   lastInsertRowid: number | bigint;
   changes: number | bigint;
 };
-
-// ============================================================================
-// TYPES FOR WINDOW.__WEB_SQLITE
-// ============================================================================
-
-type DatabaseStore = {
-  keys?: () => IterableIterator<string>;
-  get?: (name: string) => unknown;
-} & Record<string, unknown>;
 
 // ============================================================================
 // LOG STREAMING TYPES
@@ -151,7 +142,7 @@ export type DbVersionResult = {
 // ============================================================================
 
 /**
- * OPFS file entry with metadata
+ * OPFS file entry with metadata (F-012 enhanced)
  */
 export type OpfsFileEntry = {
   name: string; // File or directory name
@@ -160,6 +151,12 @@ export type OpfsFileEntry = {
   size: number; // File size in bytes (0 for directories)
   sizeFormatted: string; // Human-readable size (e.g., "1.5 KB")
   lastModified?: number; // Timestamp (optional, browser support varies)
+  fileType?: string; // NEW: "SQLite Database", "JSON Data", etc. (F-012)
+  itemCount?: {
+    // NEW: Child counts for directories (F-012)
+    files: number;
+    directories: number;
+  };
 };
 
 /**
@@ -221,7 +218,7 @@ export const getDatabases = async (): Promise<
  * @returns Table list response
  */
 export const getTableList = async (
-  dbname: string,
+  _db_name: string,
 ): Promise<ServiceResponse<string[]>> => {
   return inspectedWindowBridge.execute({
     func: async (databaseName: string) => {
@@ -252,7 +249,9 @@ export const getTableList = async (
 
           for (const row of rows) {
             const nameValue = row.name ?? row.tbl_name;
-            if (!nameValue) continue;
+            if (!nameValue) {
+              continue;
+            }
 
             const typeValue = row.type;
             if (
@@ -290,7 +289,7 @@ export const getTableList = async (
         return { success: false as const, error: String(error) };
       }
     },
-    args: [dbname],
+    args: [_db_name],
   });
 };
 
@@ -307,7 +306,7 @@ export const getTableList = async (
  * @returns Table schema with columns and DDL
  */
 export const getTableSchema = async (
-  dbname: string,
+  db_name: string,
   tableName: string,
 ): Promise<ServiceResponse<TableSchema>> => {
   return inspectedWindowBridge.execute({
@@ -352,11 +351,11 @@ export const getTableSchema = async (
         // Normalize to ColumnInfo format
         const columns: ColumnInfo[] = columnRows.map(
           (row: Record<string, unknown>) => ({
-            cid: Number(row.cid) ?? 0,
+            cid: Number(row.cid ?? 0),
             name: String(row.name ?? ""),
             type: String(row.type ?? ""),
             notnull: Number(row.notnull ?? 0),
-            dflt_value: row.dflt_value,
+            dflt_value: row.dflt_value as SqlValue | undefined,
             pk: Number(row.pk ?? 0),
           }),
         );
@@ -398,7 +397,7 @@ export const getTableSchema = async (
         return { success: false as const, error: String(error) };
       }
     },
-    args: [dbname, tableName],
+    args: [db_name, tableName],
   });
 };
 
@@ -417,7 +416,7 @@ export const getTableSchema = async (
  * @returns Query result with rows, total count, and column names
  */
 export const queryTableData = async (
-  dbname: string,
+  db_name: string,
   sql: string,
   limit: number,
   offset: number,
@@ -476,12 +475,16 @@ export const queryTableData = async (
         }
 
         // Phase 3: Return response
-        return ok({ rows, total, columns });
+        return ok({
+          rows: rows as Record<string, SqlValue>[],
+          total,
+          columns,
+        });
       } catch (error) {
         return { success: false as const, error: String(error) };
       }
     },
-    args: [dbname, sql, limit, offset],
+    args: [db_name, sql, limit, offset],
   });
 };
 
@@ -499,7 +502,7 @@ export const queryTableData = async (
  * @returns Execution result with lastInsertRowid and changes
  */
 export const execSQL = async (
-  dbname: string,
+  db_name: string,
   sql: string,
   params?: SQLParams,
 ): Promise<ServiceResponse<ExecResult>> => {
@@ -549,7 +552,7 @@ export const execSQL = async (
         return { success: false as const, error: String(error) };
       }
     },
-    args: [dbname, sql, params],
+    args: [db_name, sql, params],
   });
 };
 
@@ -566,7 +569,7 @@ export const execSQL = async (
  * @returns Subscribe result with subscription ID
  */
 export const subscribeLogs = async (
-  dbname: string,
+  db_name: string,
   callback: (entry: DBLogEntry) => void,
 ): Promise<ServiceResponse<SubscribeResult>> => {
   // Generate subscription ID upfront
@@ -620,7 +623,7 @@ export const subscribeLogs = async (
           return { success: false as const, error: String(error) };
         }
       },
-      args: [dbname, subscriptionId],
+      args: [db_name, subscriptionId],
     })
     .then((response) => {
       // If subscription was successful, store it in the Map
@@ -629,7 +632,7 @@ export const subscribeLogs = async (
         // So we'll store a placeholder that will call back to the inspected page
         const subscription: LogSubscription = {
           subscriptionId: response.data.subscriptionId,
-          dbname,
+          dbname: db_name,
           callback,
           unsubscribe: () => {
             // This will be replaced in unsubscribeLogs with actual cleanup
@@ -705,7 +708,7 @@ export const unsubscribeLogs = async (
  * @returns Dev release result with dev version identifier
  */
 export const devRelease = async (
-  dbname: string,
+  db_name: string,
   version: string,
   migrationSQL?: string,
   seedSQL?: string,
@@ -762,7 +765,7 @@ export const devRelease = async (
         return { success: false as const, error: String(error) };
       }
     },
-    args: [dbname, version, migrationSQL, seedSQL],
+    args: [db_name, version, migrationSQL, seedSQL],
   });
 };
 
@@ -779,7 +782,7 @@ export const devRelease = async (
  * @returns Rollback result with current version
  */
 export const devRollback = async (
-  dbname: string,
+  db_name: string,
   toVersion: string,
 ): Promise<ServiceResponse<RollbackResult>> => {
   return inspectedWindowBridge.execute({
@@ -819,7 +822,7 @@ export const devRollback = async (
         return { success: false as const, error: String(error) };
       }
     },
-    args: [dbname, toVersion],
+    args: [db_name, toVersion],
   });
 };
 
@@ -835,7 +838,7 @@ export const devRollback = async (
  * @returns Database version result
  */
 export const getDbVersion = async (
-  dbname: string,
+  _db_name: string,
 ): Promise<ServiceResponse<DbVersionResult>> => {
   return inspectedWindowBridge.execute({
     func: async (databaseName: string) => {
@@ -903,7 +906,7 @@ export const getDbVersion = async (
         return { success: false as const, error: String(error) };
       }
     },
-    args: [dbname],
+    args: [_db_name],
   });
 };
 
@@ -976,10 +979,42 @@ export const getOpfsFiles = async (
           }
         }
 
+        // Helper function to detect file type (F-012)
+        const detectFileType = (filename: string): string | undefined => {
+          const ext = filename.toLowerCase();
+          if (
+            ext.endsWith(".sqlite")
+            || ext.endsWith(".db")
+            || ext.endsWith(".sqlite3")
+          ) {
+            return "SQLite Database";
+          }
+          if (ext.endsWith(".json")) {
+            return "JSON Data";
+          }
+          if (ext.endsWith(".txt") || ext.endsWith(".md")) {
+            return "Text File";
+          }
+          if (
+            ext.endsWith(".png")
+            || ext.endsWith(".jpg")
+            || ext.endsWith(".jpeg")
+            || ext.endsWith(".svg")
+          ) {
+            return "Image File";
+          }
+          // Use extension as type for unknown files
+          const dotIndex = ext.lastIndexOf(".");
+          return dotIndex >= 0
+            ? ext.slice(dotIndex + 1).toUpperCase()
+            : undefined;
+        };
+
         // Phase 2: List directory contents and filter
         const entries: OpfsFileEntry[] = [];
         const basePath = pathArg ? pathArg.replace(/^\/+|\/+$/g, "") : "";
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         for await (const entry of (currentDir as any).values()) {
           const entryName = entry.name;
           const entryPath = basePath ? `${basePath}/${entryName}` : entryName;
@@ -993,15 +1028,44 @@ export const getOpfsFiles = async (
           const kind = entry.kind;
           let size = 0;
           let lastModified: number | undefined = undefined;
+          let fileType: string | undefined = undefined;
+          let itemCount:
+            | {
+                files: number;
+                directories: number;
+              }
+            | undefined = undefined;
 
           if (kind === "file") {
+            // Phase 2a: File metadata (F-012 enhanced)
             try {
               const file = await entry.getFile();
               size = file.size;
               lastModified = file.lastModified;
+              fileType = detectFileType(entryName);
             } catch {
               // File might be inaccessible, skip
               continue;
+            }
+          } else {
+            // Phase 2b: Directory item counting (F-012 enhanced)
+            try {
+              const dirHandle = await currentDir.getDirectoryHandle(entryName, {
+                create: false,
+              });
+              let files = 0;
+              let directories = 0;
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              for await (const child of (dirHandle as any).values()) {
+                if (child.kind === "file") {
+                  files++;
+                } else if (child.kind === "directory") {
+                  directories++;
+                }
+              }
+              itemCount = { files, directories };
+            } catch {
+              // Cannot access directory contents, continue without item count
             }
           }
 
@@ -1012,6 +1076,8 @@ export const getOpfsFiles = async (
             size,
             sizeFormatted: formatFileSize(size),
             lastModified,
+            fileType, // NEW: F-012
+            itemCount, // NEW: F-012
           });
         }
 
@@ -1110,6 +1176,173 @@ export const downloadOpfsFile = async (
 };
 
 /**
+ * Delete OPFS file (F-012)
+ *
+ * @remarks
+ * 1. Navigate to file path in OPFS
+ * 2. Delete file using removeEntry()
+ * 3. Return success response
+ *
+ * @param path - Full path to the file to delete
+ * @returns Service response (void on success, error on failure)
+ *
+ * @example
+ * ```typescript
+ * const result = await databaseService.deleteOpfsFile("/data/test.db");
+ * if (result.success) {
+ *   console.log("File deleted successfully");
+ * } else {
+ *   console.error("Delete failed:", result.error);
+ * }
+ * ```
+ */
+export const deleteOpfsFile = async (
+  path: string,
+): Promise<ServiceResponse<void>> => {
+  return inspectedWindowBridge.execute({
+    func: async (filePath: string) => {
+      try {
+        const ok = <T>(data: T) => ({ success: true as const, data });
+        const fail = (message: string) => ({
+          success: false as const,
+          error: message,
+        });
+
+        // Phase 1: Validate and navigate to parent directory
+        if (typeof navigator === "undefined" || !navigator.storage) {
+          return fail("OPFS not supported in this browser");
+        }
+
+        const root = await navigator.storage.getDirectory();
+        const pathParts = filePath.split("/").filter(Boolean);
+
+        if (pathParts.length === 0) {
+          return fail("Invalid path: empty path");
+        }
+
+        // Navigate to parent directory (all but last segment)
+        let currentDir = root;
+        for (let i = 0; i < pathParts.length - 1; i++) {
+          try {
+            currentDir = await currentDir.getDirectoryHandle(pathParts[i], {
+              create: false,
+            });
+          } catch {
+            return fail(`Path not found: ${filePath}`);
+          }
+        }
+
+        // Phase 2: Delete file
+        const filename = pathParts[pathParts.length - 1];
+        try {
+          await currentDir.removeEntry(filename, { recursive: false });
+        } catch {
+          return fail(`File not found: ${filePath}`);
+        }
+
+        // Phase 3: Return success
+        return ok(undefined);
+      } catch (error) {
+        return { success: false as const, error: String(error) };
+      }
+    },
+    args: [path],
+  });
+};
+
+/**
+ * Delete OPFS directory recursively (F-012)
+ *
+ * @remarks
+ * 1. Navigate to directory path in OPFS
+ * 2. Count items before delete
+ * 3. Delete recursively using removeEntry()
+ *
+ * @param path - Full path to the directory to delete
+ * @returns Service response with item count on success, error on failure
+ *
+ * @example
+ * ```typescript
+ * const result = await databaseService.deleteOpfsDirectory("/data/old");
+ * if (result.success) {
+ *   console.log(`Deleted ${result.data.itemCount} items`);
+ * } else {
+ *   console.error("Delete failed:", result.error);
+ * }
+ * ```
+ */
+export const deleteOpfsDirectory = async (
+  path: string,
+): Promise<ServiceResponse<{ itemCount: number }>> => {
+  return inspectedWindowBridge.execute({
+    func: async (dirPath: string) => {
+      try {
+        const ok = <T>(data: T) => ({ success: true as const, data });
+        const fail = (message: string) => ({
+          success: false as const,
+          error: message,
+        });
+
+        // Phase 1: Validate and navigate to parent directory
+        if (typeof navigator === "undefined" || !navigator.storage) {
+          return fail("OPFS not supported in this browser");
+        }
+
+        const root = await navigator.storage.getDirectory();
+        const pathParts = dirPath.split("/").filter(Boolean);
+
+        if (pathParts.length === 0) {
+          return fail("Invalid path: empty path");
+        }
+
+        // Navigate to parent directory (all but last segment)
+        let currentDir = root;
+        for (let i = 0; i < pathParts.length - 1; i++) {
+          try {
+            currentDir = await currentDir.getDirectoryHandle(pathParts[i], {
+              create: false,
+            });
+          } catch {
+            return fail(`Path not found: ${dirPath}`);
+          }
+        }
+
+        // Phase 2: Count items and delete
+        const dirname = pathParts[pathParts.length - 1];
+        let targetDir: FileSystemDirectoryHandle;
+        try {
+          targetDir = await currentDir.getDirectoryHandle(dirname, {
+            create: false,
+          });
+        } catch {
+          return fail(`Directory not found: ${dirPath}`);
+        }
+
+        // Count items before delete
+        let itemCount = 0;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        for await (const _ of (targetDir as any).values()) {
+          itemCount++;
+        }
+
+        // Delete recursively
+        try {
+          await currentDir.removeEntry(dirname, { recursive: true });
+        } catch {
+          return fail(`Failed to delete directory: ${dirPath}`);
+        }
+
+        // Phase 3: Return success with item count
+        return ok({ itemCount });
+      } catch (error) {
+        return { success: false as const, error: String(error) };
+      }
+    },
+    args: [path],
+  });
+};
+
+/**
  * Database service API
  */
 export const databaseService = Object.freeze({
@@ -1125,4 +1358,6 @@ export const databaseService = Object.freeze({
   getDbVersion,
   getOpfsFiles,
   downloadOpfsFile,
+  deleteOpfsFile, // NEW: F-012
+  deleteOpfsDirectory, // NEW: F-012
 });

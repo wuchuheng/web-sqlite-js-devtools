@@ -1,5 +1,4 @@
 import { useParams } from "react-router-dom";
-import { useMemo } from "react";
 import { decodeDatabaseName } from "@/devtools/utils/databaseNames";
 import { databaseService } from "@/devtools/services/databaseService";
 import { useInspectedWindowRequest } from "@/devtools/hooks/useInspectedWindowRequest";

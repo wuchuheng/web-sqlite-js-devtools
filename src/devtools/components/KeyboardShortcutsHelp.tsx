@@ -48,7 +48,9 @@ export const KeyboardShortcutsHelp = ({
     }
   };
 
-  if (!isOpen) return null;
+  if (!isOpen) {
+    return null;
+  }
 
   return (
     <div
@@ -85,7 +87,9 @@ export const KeyboardShortcutsHelp = ({
               (s) => s.label !== "Escape", // Don't show Escape in list
             );
 
-            if (filteredShortcuts.length === 0) return null;
+            if (filteredShortcuts.length === 0) {
+              return null;
+            }
 
             return (
               <div key={category.name} className="mb-4 last:mb-0">

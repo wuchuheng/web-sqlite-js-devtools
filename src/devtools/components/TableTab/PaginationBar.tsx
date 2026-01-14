@@ -33,7 +33,7 @@ interface PaginationBarProps {
   onRefresh: () => void;
 }
 
-const LIMIT_OPTIONS = [10, 25, 50, 100, 500] as const;
+const _LIMIT_OPTIONS = [10, 25, 50, 100, 500] as const;
 
 export const PaginationBar = ({
   page,
@@ -41,7 +41,7 @@ export const PaginationBar = ({
   limit,
   loading = false,
   onPageChange,
-  onLimitChange,
+  onLimitChange: _onLimitChange,
   onRefresh,
 }: PaginationBarProps) => {
   const totalPages = Math.ceil(total / limit);

@@ -30,7 +30,9 @@ const OFFSCREEN_PATH = "offscreen.html";
  */
 async function setupOffscreen() {
   try {
-    if (await chrome.offscreen.hasDocument()) return;
+    if (await chrome.offscreen.hasDocument()) {
+      return;
+    }
 
     const url = chrome.runtime.getURL(OFFSCREEN_PATH);
     console.log("[Background] Creating offscreen document with URL:", url);

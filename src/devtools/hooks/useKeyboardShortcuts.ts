@@ -48,7 +48,7 @@ interface UseKeyboardShortcutsResult {
   /** Unregister shortcut by ID */
   unregisterShortcut: (id: string) => void;
   /** Set sidebar toggle callback */
-  setSidebarToggle: (callback: () => void) => void;
+  setSidebarToggle: (_callback: () => void) => void;
   /** Set query tab callbacks */
   setQueryCallbacks: (callbacks: {
     onExecute: () => void;
@@ -134,7 +134,9 @@ function eventMatchesCombo(event: KeyboardEvent, combo: string): boolean {
  * @returns True if element is editable
  */
 function isEditableElement(element: HTMLElement | null): boolean {
-  if (!element) return false;
+  if (!element) {
+    return false;
+  }
 
   const tagName = element.tagName.toLowerCase();
   const isContentEditable = element.isContentEditable;
@@ -287,8 +289,10 @@ export const useKeyboardShortcuts = (): UseKeyboardShortcutsResult => {
    * Register navigation shortcuts for database routes
    */
   useEffect(() => {
-    const dbnameMatch = location.pathname.match(/^\/openedDB\/([^\/]+)/);
-    if (!dbnameMatch) return;
+    const dbnameMatch = location.pathname.match(/^\/openedDB\/([^/]+)/);
+    if (!dbnameMatch) {
+      return undefined;
+    }
 
     const dbname = dbnameMatch[1];
 
@@ -356,7 +360,9 @@ export const useKeyboardShortcuts = (): UseKeyboardShortcutsResult => {
    * Register query tab shortcuts when callbacks are set
    */
   useEffect(() => {
-    if (!queryCallbacks) return;
+    if (!queryCallbacks) {
+      return undefined;
+    }
 
     const queryShortcuts: KeyboardShortcut[] = [
       {

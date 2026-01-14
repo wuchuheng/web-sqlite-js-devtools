@@ -1,10 +1,4 @@
-import {
-  Outlet,
-  useParams,
-  NavLink,
-  useNavigate,
-  useLocation,
-} from "react-router-dom";
+import { Outlet, useParams, useNavigate, useLocation } from "react-router-dom";
 import {
   useMemo,
   useState,
@@ -240,7 +234,7 @@ export const TablesTab = () => {
     location.pathname.match(/\/tables\/[^/]+$/) !== null;
 
   // Build table link
-  const getTableLink = (tableName: string) => {
+  const _getTableLink = (tableName: string) => {
     return `/openedDB/${rawDbname}/tables/${tableName}`;
   };
 

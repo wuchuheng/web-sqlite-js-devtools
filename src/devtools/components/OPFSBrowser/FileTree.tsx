@@ -1,5 +1,4 @@
-import { useState, useCallback, useEffect, useMemo } from "react";
-import { FileNode } from "./FileNode";
+import { useState, useCallback } from "react";
 import { databaseService } from "@/devtools/services/databaseService";
 import { useInspectedWindowRequest } from "@/devtools/hooks/useInspectedWindowRequest";
 import type { OpfsFileEntry } from "@/devtools/services/databaseService";
@@ -8,7 +7,7 @@ import type { OpfsFileEntry } from "@/devtools/services/databaseService";
  * FileTree component props
  */
 interface FileTreeProps {
-  onDownload: (path: string, name: string) => Promise<void>;
+  onDownload: (_path: string, name: string) => Promise<void>;
 }
 
 /**
@@ -17,7 +16,7 @@ interface FileTreeProps {
 interface FileTreeItemProps {
   entry: OpfsFileEntry;
   level: number;
-  onDownload: (path: string, name: string) => Promise<void>;
+  onDownload: (_path: string, name: string) => Promise<void>;
   keyPrefix: string;
 }
 
@@ -39,7 +38,9 @@ const FileTreeItem = ({
   const isDirectory = entry.type === "directory";
 
   const loadChildren = useCallback(async () => {
-    if (!isDirectory || hasLoaded || isLoading) return;
+    if (!isDirectory || hasLoaded || isLoading) {
+      return;
+    }
 
     setIsLoading(true);
     setError(null);
@@ -58,10 +59,12 @@ const FileTreeItem = ({
     } finally {
       setIsLoading(false);
     }
-  }, [entry.path, entry.type, hasLoaded, isLoading, isDirectory]);
+  }, [entry.path, hasLoaded, isLoading, isDirectory]);
 
   const handleClick = useCallback(() => {
-    if (!isDirectory) return;
+    if (!isDirectory) {
+      return;
+    }
 
     if (hasLoaded) {
       setIsExpanded((prev) => !prev);

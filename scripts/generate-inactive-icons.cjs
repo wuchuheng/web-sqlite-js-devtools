@@ -15,7 +15,7 @@ const sizes = [16, 32, 48, 128];
  * Convert an image buffer to grayscale using a simple algorithm
  * This is a basic implementation - for production, use sharp or jimp
  */
-function convertToGrayscale(pngBuffer) {
+function _convertToGrayscale(pngBuffer) {
   // For a proper implementation, we'd use sharp or jimp
   // Since those aren't available, we'll create a placeholder approach
   // In a real scenario, you'd:

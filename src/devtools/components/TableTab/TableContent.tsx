@@ -53,7 +53,7 @@ export const TableContent = ({ dbname, tableName }: TableContentProps) => {
     data: tableData,
     isLoading: dataLoading,
     error: dataError,
-    reload: reloadData,
+    reload: _reloadData,
   } = useInspectedWindowRequest(
     () => databaseService.queryTableData(dbname, sql, limit, page * limit),
     [dbname, sql, limit, page, refreshKey],
@@ -73,9 +73,15 @@ export const TableContent = ({ dbname, tableName }: TableContentProps) => {
 
   // Render cell value
   const renderCellValue = useCallback((value: unknown): string => {
-    if (value === null) return "NULL";
-    if (value === undefined) return "";
-    if (typeof value === "object") return JSON.stringify(value);
+    if (value === null) {
+      return "NULL";
+    }
+    if (value === undefined) {
+      return "";
+    }
+    if (typeof value === "object") {
+      return JSON.stringify(value);
+    }
     return String(value);
   }, []);
 
