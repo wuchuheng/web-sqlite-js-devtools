@@ -79,7 +79,7 @@ export const ResizeHandle = ({
   useEffect(() => {
     // Only attach listeners when dragging
     if (!isDragging) {
-      return;
+      return undefined;
     }
 
     /**

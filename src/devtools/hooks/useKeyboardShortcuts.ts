@@ -289,9 +289,9 @@ export const useKeyboardShortcuts = (): UseKeyboardShortcutsResult => {
    * Register navigation shortcuts for database routes
    */
   useEffect(() => {
-    const dbnameMatch = location.pathname.match(/^\/openedDB\/([^\/]+)/);
+    const dbnameMatch = location.pathname.match(/^\/openedDB\/([^/]+)/);
     if (!dbnameMatch) {
-      return;
+      return undefined;
     }
 
     const dbname = dbnameMatch[1];
@@ -361,7 +361,7 @@ export const useKeyboardShortcuts = (): UseKeyboardShortcutsResult => {
    */
   useEffect(() => {
     if (!queryCallbacks) {
-      return;
+      return undefined;
     }
 
     const queryShortcuts: KeyboardShortcut[] = [

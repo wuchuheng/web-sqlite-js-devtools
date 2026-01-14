@@ -1,5 +1,11 @@
 import { useParams } from "react-router-dom";
-import { useState, useImperativeHandle, useRef, useEffect } from "react";
+import {
+  useState,
+  useImperativeHandle,
+  useRef,
+  useEffect,
+  useCallback,
+} from "react";
 import { FiSidebar } from "react-icons/fi";
 import { decodeDatabaseName } from "@/devtools/utils/databaseNames";
 import { databaseService } from "@/devtools/services/databaseService";
@@ -70,7 +76,7 @@ export const QueryTab = ({
    * 3. Add to history on success
    * 4. Update results or error state
    */
-  const handleExecute = async () => {
+  const handleExecute = useCallback(async () => {
     if (!dbname) {
       return;
     }
@@ -96,21 +102,21 @@ export const QueryTab = ({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [dbname, sql, addQuery]);
 
   /**
    * Clear SQL editor
    */
-  const handleClear = () => {
+  const handleClear = useCallback(() => {
     setSql("");
-  };
+  }, []);
 
   /**
    * Toggle history sidebar
    */
-  const handleToggleHistory = () => {
+  const handleToggleHistory = useCallback(() => {
     setIsHistoryOpen((prev) => !prev);
-  };
+  }, []);
 
   /**
    * Load query from history into editor
@@ -124,7 +130,7 @@ export const QueryTab = ({
    * Expose functions via refs for global keyboard shortcuts
    */
   useImperativeHandle(onExecuteRef, () => handleExecute, [handleExecute]);
-  useImperativeHandle(onClearRef, () => handleClear, []);
+  useImperativeHandle(onClearRef, () => handleClear, [handleClear]);
   useImperativeHandle(onToggleHistoryRef, () => handleToggleHistory, [
     handleToggleHistory,
   ]);

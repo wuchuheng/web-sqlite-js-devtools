@@ -53,7 +53,7 @@ export const TableContent = ({ dbname, tableName }: TableContentProps) => {
     data: tableData,
     isLoading: dataLoading,
     error: dataError,
-    reload: reloadData,
+    reload: _reloadData,
   } = useInspectedWindowRequest(
     () => databaseService.queryTableData(dbname, sql, limit, page * limit),
     [dbname, sql, limit, page, refreshKey],

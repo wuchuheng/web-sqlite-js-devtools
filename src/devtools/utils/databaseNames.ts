@@ -13,7 +13,7 @@ export const decodeDatabaseName = (value: string): string => {
 
   try {
     return decodeURIComponent(value);
-  } catch (error) {
+  } catch {
     return value;
   }
 };

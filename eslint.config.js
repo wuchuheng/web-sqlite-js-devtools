@@ -5,6 +5,7 @@ import react from "eslint-plugin-react";
 import reactHooks from "eslint-plugin-react-hooks";
 import prettier from "eslint-plugin-prettier";
 import globals from "globals";
+import unusedImports from "eslint-plugin-unused-imports";
 
 export default [
   // 1. Ignore patterns
@@ -31,6 +32,16 @@ export default [
         chrome: "readonly",
       },
     },
+    rules: {
+      "no-unused-vars": [
+        "error",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          ignoreRestSiblings: true,
+        },
+      ],
+    },
   },
 
   // 2.1. Node.js/CommonJS files (.cjs)
@@ -42,6 +53,16 @@ export default [
       globals: {
         ...globals.node,
       },
+    },
+    rules: {
+      "no-unused-vars": [
+        "error",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          ignoreRestSiblings: true,
+        },
+      ],
     },
   },
 
@@ -62,13 +83,30 @@ export default [
     },
     plugins: {
       "@typescript-eslint": tseslint,
+      "unused-imports": unusedImports,
     },
     rules: {
       ...js.configs.recommended.rules,
       "no-undef": "off", // TypeScript compiler handles this
+      "no-unused-vars": "off", // Use @typescript-eslint/no-unused-vars instead
       "@typescript-eslint/no-unused-vars": [
         "error",
-        { argsIgnorePattern: "^_" },
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          ignoreRestSiblings: true,
+        },
+      ],
+      "unused-imports/no-unused-imports": "error", // Auto-fix unused imports
+      "unused-imports/no-unused-vars": [
+        "warn",
+        {
+          vars: "all",
+          varsIgnorePattern: "^_",
+          args: "after-used",
+          argsIgnorePattern: "^_",
+          ignoreRestSiblings: true,
+        },
       ],
       "@typescript-eslint/explicit-function-return-type": "off",
       "@typescript-eslint/explicit-module-boundary-types": "off",
@@ -113,7 +151,7 @@ export default [
   // 6. Airbnb-style overrides
   {
     rules: {
-      "no-console": ["warn", { allow: ["warn", "error"] }],
+      "no-console": ["warn", { allow: ["warn", "error", "log"] }],
       "no-plusplus": "off",
       "no-underscore-dangle": "off",
       "consistent-return": "error",

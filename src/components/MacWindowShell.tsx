@@ -332,7 +332,7 @@ export default function MacWindowShell({
 
   useEffect(() => {
     if (typeof window === "undefined") {
-      return;
+      return undefined;
     }
 
     const clampToViewport = () => {

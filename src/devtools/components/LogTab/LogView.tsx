@@ -42,7 +42,7 @@ export const LogView = () => {
     return () => {
       unsubscribe();
     };
-  }, [dbname]);
+  }, [dbname, subscribe, unsubscribe]);
 
   /**
    * Handle level filter change

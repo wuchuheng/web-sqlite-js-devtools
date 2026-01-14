@@ -30,7 +30,7 @@ export const TableDetail = () => {
     [params.dbname],
   );
   const tableName = params.tableName || "";
-  const rawDbname = params.dbname || "";
+  const _rawDbname = params.dbname || "";
 
   // Pagination state - properly sync with URL search params
   const [page, setPage] = useState(0);

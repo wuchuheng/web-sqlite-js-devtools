@@ -119,10 +119,10 @@ TabButton.displayName = "TabButton";
  * @returns Opened tabs JSX element or empty state
  */
 export const OpenedTableTabs = ({
-  dbname,
+  dbname: _dbname,
   tabs,
   activeTab,
-  onOpenTable,
+  onOpenTable: _onOpenTable,
   onSelectTab,
   onCloseTab,
 }: OpenedTableTabsProps) => {

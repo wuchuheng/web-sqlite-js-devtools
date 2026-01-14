@@ -1,4 +1,4 @@
-import { Link, useLocation, useNavigation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { IconType } from "react-icons";
 import { SidebarIcon } from "./SidebarIcon";
 

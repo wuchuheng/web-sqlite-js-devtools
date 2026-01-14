@@ -1,7 +1,6 @@
 import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Sidebar } from "./components/Sidebar/Sidebar";
-import { EmptyState } from "./components/EmptyState/EmptyState";
 import { DatabaseTabs } from "./components/DatabaseTabs";
 import { TablesTab, TableDetail } from "./components/TablesTab";
 import { QueryTab } from "./components/QueryTab";
@@ -48,7 +47,7 @@ const DevToolsContent = () => {
    */
   const {
     isHelpOpen,
-    openHelp,
+    openHelp: _openHelp,
     closeHelp,
     shortcutCategories,
     setSidebarToggle,

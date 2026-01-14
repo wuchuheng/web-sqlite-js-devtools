@@ -1,5 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
-import { FileNode } from "./FileNode";
+import { useState, useCallback } from "react";
 import { databaseService } from "@/devtools/services/databaseService";
 import { useInspectedWindowRequest } from "@/devtools/hooks/useInspectedWindowRequest";
 import type { OpfsFileEntry } from "@/devtools/services/databaseService";
@@ -60,7 +59,7 @@ const FileTreeItem = ({
     } finally {
       setIsLoading(false);
     }
-  }, [entry.path, entry.type, hasLoaded, isLoading, isDirectory]);
+  }, [entry.path, hasLoaded, isLoading, isDirectory]);
 
   const handleClick = useCallback(() => {
     if (!isDirectory) {

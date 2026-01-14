@@ -39,7 +39,7 @@ export type ColumnInfo = {
   name: string; // Column name
   type: string; // Declared type (INTEGER, TEXT, etc.)
   notnull: number; // 1 if NOT NULL, 0 otherwise
-  dflt_value: any; // Default value (null if none)
+  dflt_value: SqlValue | undefined; // Default value (null if none)
   pk: number; // 1 if PRIMARY KEY, 0 otherwise
 };
 
@@ -55,7 +55,7 @@ export type TableSchema = {
  * Query result with pagination metadata
  */
 export type QueryResult = {
-  rows: Array<Record<string, any>>; // Row data
+  rows: Array<Record<string, SqlValue>>; // Row data
   total: number; // Total row count (for pagination)
   columns: string[]; // Column names from first row
 };
@@ -84,15 +84,6 @@ export type ExecResult = {
   lastInsertRowid: number | bigint;
   changes: number | bigint;
 };
-
-// ============================================================================
-// TYPES FOR WINDOW.__WEB_SQLITE
-// ============================================================================
-
-type DatabaseStore = {
-  keys?: () => IterableIterator<string>;
-  get?: (name: string) => unknown;
-} & Record<string, unknown>;
 
 // ============================================================================
 // LOG STREAMING TYPES
@@ -221,7 +212,7 @@ export const getDatabases = async (): Promise<
  * @returns Table list response
  */
 export const getTableList = async (
-  db_name: string,
+  _db_name: string,
 ): Promise<ServiceResponse<string[]>> => {
   return inspectedWindowBridge.execute({
     func: async (databaseName: string) => {
@@ -354,7 +345,7 @@ export const getTableSchema = async (
         // Normalize to ColumnInfo format
         const columns: ColumnInfo[] = columnRows.map(
           (row: Record<string, unknown>) => ({
-            cid: Number(row.cid) ?? 0,
+            cid: Number(row.cid ?? 0),
             name: String(row.name ?? ""),
             type: String(row.type ?? ""),
             notnull: Number(row.notnull ?? 0),
@@ -837,7 +828,7 @@ export const devRollback = async (
  * @returns Database version result
  */
 export const getDbVersion = async (
-  db_name: string,
+  _db_name: string,
 ): Promise<ServiceResponse<DbVersionResult>> => {
   return inspectedWindowBridge.execute({
     func: async (databaseName: string) => {
@@ -982,6 +973,7 @@ export const getOpfsFiles = async (
         const entries: OpfsFileEntry[] = [];
         const basePath = pathArg ? pathArg.replace(/^\/+|\/+$/g, "") : "";
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         for await (const entry of (currentDir as any).values()) {
           const entryName = entry.name;
           const entryPath = basePath ? `${basePath}/${entryName}` : entryName;

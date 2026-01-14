@@ -35,7 +35,7 @@ export const SchemaDDLView = ({ ddl }: SchemaDDLViewProps) => {
           setError(null);
           return;
         }
-      } catch (err) {
+      } catch {
         // Fall through to fallback
       }
     }
@@ -59,7 +59,7 @@ export const SchemaDDLView = ({ ddl }: SchemaDDLViewProps) => {
         setError("Failed to copy");
         setCopied(false);
       }
-    } catch (err) {
+    } catch {
       setError("Failed to copy");
       setCopied(false);
     }
