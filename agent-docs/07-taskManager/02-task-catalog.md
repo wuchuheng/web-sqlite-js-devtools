@@ -965,22 +965,23 @@ NOTES
     - [x] Full path on hover/click (monospace)
     - [x] Export component and utility functions
 
-- [ ] **TASK-312**: Toast Notifications (F-012)
+- [x] **TASK-312**: Toast Notifications (F-012)
   - **Priority**: P1 (High)
   - **Dependencies**: None
   - **Boundary**: `src/devtools/components/OPFSBrowser/Toast.tsx` (NEW)
   - **Maps to**: F-012, FR-OPFS-007
   - **Feature**: [F-012: OPFS Browser Enhancement](agent-docs/01-discovery/features/F-012-opfs-browser-enhancement.md)
-  - **Micro-Spec**: [pending](agent-docs/08-task/active/TASK-312.md)
+  - **Micro-Spec**: [complete](agent-docs/08-task/active/TASK-312.md)
   - **Estimated**: 1 hour
+  - **Completed**: 2026-01-15
   - **DoD**:
-    - [ ] Create `Toast.tsx` component
-    - [ ] Implement toast container (fixed, top-right, high z-index, slide-in animation)
-    - [ ] Implement success toast (FaCheck icon, "Deleted successfully", 3 seconds, bg-green-50)
-    - [ ] Implement error toast (FaExclamationCircle icon, "Delete failed", 5 seconds, bg-red-50)
-    - [ ] Retry button on error toast (reopens modal)
-    - [ ] Implement auto-dismiss logic (setTimeout with duration, cleanup on unmount)
-    - [ ] Export component and types
+    - [x] Create `Toast.tsx` component
+    - [x] Implement toast container (fixed, top-right, high z-index, slide-in animation)
+    - [x] Implement success toast (FaCheck icon, "Deleted successfully", 3 seconds, bg-green-50)
+    - [x] Implement error toast (FaExclamationCircle icon, "Delete failed", 5 seconds, bg-red-50)
+    - [x] Retry button on error toast (reopens modal)
+    - [x] Implement auto-dismiss logic (setTimeout with duration, cleanup on unmount)
+    - [x] Export component and types
 
 - [ ] **TASK-313**: Integration & Testing (F-012)
   - **Priority**: P1 (High)

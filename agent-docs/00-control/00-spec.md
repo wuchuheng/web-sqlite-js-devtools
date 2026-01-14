@@ -40,8 +40,8 @@ NOTES
 
 - **Current stage (1-8)**: Stage 8 - Worker (S8:worker - F-012)
 - **Active release**: v1.2.0 (Enhancements) - Target: 2026-01-21
-- **Status summary**: TASK-311 complete (F-012 Metadata), TASK-310 complete (F-012 Delete Modal), TASK-309 complete (F-012 Tree Lines), TASK-308 complete (F-012 Service Layer), TASK-307 complete (F-011), TASK-306 complete (F-010), TASK-305 complete (F-009), TASK-304 complete (F-008), TASK-303 complete (Integration), TASK-302 complete (F-006), TASK-301 complete (F-005)
-- **Last updated (YYYY-MM-DD)**: 2026-01-15 (F-012: Enhanced Metadata Display - TASK-311 Complete)
+- **Status summary**: TASK-312 complete (F-012 Toast), TASK-311 complete (F-012 Metadata), TASK-310 complete (F-012 Delete Modal), TASK-309 complete (F-012 Tree Lines), TASK-308 complete (F-012 Service Layer), TASK-307 complete (F-011), TASK-306 complete (F-010), TASK-305 complete (F-009), TASK-304 complete (F-008), TASK-303 complete (Integration), TASK-302 complete (F-006), TASK-301 complete (F-005)
+- **Last updated (YYYY-MM-DD)**: 2026-01-15 (F-012: Toast Notifications - TASK-312 Complete)
 
 ## 4) Technology stack (chosen in Stage 2)
 
@@ -241,4 +241,15 @@ NOTES
   - Inline view: compact metadata row with type badge and timestamp (150ms fade-in on hover)
   - Expanded view: detailed list with type, modified date, item count, full path
   - Updated `FileNode.tsx` to integrate MetadataPanel with hover state
+  - Type check passed with no new errors
+- **2026-01-15**: TASK-312 completed - Toast Notifications (F-012)
+  - Created `Toast.tsx` component with success and error variants
+  - Success variant: green styling with FaCheck icon, 3 second auto-dismiss
+  - Error variant: red styling with FaExclamationCircle icon, 5 second auto-dismiss, retry button
+  - Implemented auto-dismiss logic with useEffect and setTimeout
+  - Added proper cleanup for timeout on unmount/visibility change
+  - Implemented close button with X icon
+  - Added slide-in animation using Tailwind arbitrary values (animate-[slide-in_0.3s_ease-out])
+  - Fixed positioning at top-right with z-index 60 (above modal)
+  - Accessibility: role="alert", aria-live="polite", aria-atomic="true", aria-label on close button
   - Type check passed with no new errors
