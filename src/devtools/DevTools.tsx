@@ -176,6 +176,9 @@ const DevToolsContent = () => {
               }
             />
 
+            {/* Log tab */}
+            <Route path="logs" element={<LogView />} />
+
             {/* Migration tab */}
             <Route path="migration" element={<MigrationTab />} />
 

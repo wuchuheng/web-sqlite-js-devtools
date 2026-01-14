@@ -136,6 +136,9 @@ C4Container
           EmptyDatabaseList.tsx # Empty state component
           LoadingSkeleton.tsx  # Loading state
           ErrorState.tsx       # Error state
+        /DatabaseTabs    # Database tab navigation (F-002)
+          DatabaseTabHeader.tsx # Tab header with 6 tabs
+          DatabaseTabs.tsx     # Layout wrapper
         /TablesTab      # Table browser (F-005, F-006)
           TableList.tsx         # Table list sidebar
           OpenedTableTabs.tsx   # Opened tabs with close buttons (F-005 NEW)
@@ -144,7 +147,10 @@ C4Container
           TableSchema.tsx       # Schema panel (F-003, F-006)
           PaginationBar.tsx     # Pagination controls
         /QueryTab       # SQL editor
-        /LogTab         # Log viewer
+        /LogTab         # Log viewer (TASK-09, F-009)
+          LogView.tsx          # Main log view component
+          LogList.tsx          # Log list with ring buffer
+          LogFilter.tsx        # Log filtering controls
         /MigrationTab   # Migration playground
         /SeedTab        # Seed playground
         /AboutTab       # Database info
@@ -235,7 +241,13 @@ DevTools (Root)
 │       │       ├── Instructions: "Open a page that uses web-sqlite-js..."
 │       │       └── Refresh Button (IoMdRefresh)
 │       ├── DatabaseTabs (/openedDB/:dbname) → redirects to /openedDB/:dbname/tables
-│       │   ├── DatabaseTabHeader (5 tabs: Tables, Query, Migration, Seed, About)
+│       │   ├── DatabaseTabHeader (6 tabs: Tables, Query, Log, Migration, Seed, About) (F-009 UPDATED)
+│       │   │   ├── Tables tab (CiViewTable icon)
+│       │   │   ├── Query tab (BsFiletypeSql icon)
+│       │   │   ├── Log tab (IoTimeOutline icon) (F-009 NEW)
+│       │   │   ├── Migration tab (MdOutlineQueryBuilder icon)
+│       │   │   ├── Seed tab (FaSeedling icon)
+│       │   │   └── About tab (FaInfoCircle icon)
 │       │   └── Outlet (Nested Routes)
 │       │       ├── TablesTab (/openedDB/:dbname/tables)
 │       │       │   ├── TableListSidebar (Resizable: 200-600px, default 300px)
@@ -259,6 +271,9 @@ DevTools (Root)
 │       │   ├── CodeMirrorEditor
 │       │   ├── QueryResults
 │       │   └── ExportButton
+│       ├── LogView (/openedDB/:dbname/logs) (F-009 UPDATED - moved from separate route)
+│       │   ├── LogFilter
+│       │   └── LogList (500 entry ring buffer)
 │       ├── MigrationTab (/openedDB/:dbname/migration)
 │       │   ├── HelperNotice
 │       │   ├── CodeMirrorEditor
@@ -269,9 +284,6 @@ DevTools (Root)
 │       │   └── TestControls (Release/Rollback)
 │       └── AboutTab (/openedDB/:dbname/about)
 │           └── DatabaseMetadata
-│       ├── LogView (/logs/:dbname) - Separate route (not under database tabs)
-│       │   ├── LogFilter
-│       │   └── LogList (500 entry ring buffer)
 │       └── OPFSView (/opfs)
 │           └── FileTree
 │               ├── FileNode (Lazy-loaded)
@@ -1267,3 +1279,190 @@ Sidebar "Opened DB" → /openedDB → OpenedDBList
 - **Manual Refresh**: Users can update database list on-demand
 - **Consistent UX**: Matches sidebar pattern (list items, hover effects)
 - **Accessibility**: Keyboard navigation and screen reader support
+
+## 14) Database Tab Navigation with Log Tab (Feature F-002, F-009)
+
+**Purpose**: Add Log tab to database tab navigation, integrating the existing LogView component into the database context.
+
+**Problem Solved**:
+
+- **Current Issue**: Log view is at separate route `/logs/:dbname`, outside the database tab context
+- **Solution**: Add Log tab between Query and Migration tabs, accessible from database navigation
+
+**Tab Structure** (F-009 Updated):
+
+```
+Before (F-002):
+Database Tabs (5 tabs):
+├── Tables → /openedDB/:dbname/tables
+├── Query → /openedDB/:dbname/query
+├── Migration → /openedDB/:dbname/migration
+├── Seed → /openedDB/:dbname/seed
+└── About → /openedDB/:dbname/about
+
+Separate Route:
+/logs/:dbname → LogView (outside database context)
+
+After (F-009):
+Database Tabs (6 tabs):
+├── Tables → /openedDB/:dbname/tables
+├── Query → /openedDB/:dbname/query
+├── Log → /openedDB/:dbname/logs (NEW)
+├── Migration → /openedDB/:dbname/migration
+├── Seed → /openedDB/:dbname/seed
+└── About → /openedDB/:dbname/about
+
+Existing /logs/:dbname route deprecated (redirects to new route)
+```
+
+**DATABASE_TABS Configuration**:
+
+```typescript
+// DatabaseTabHeader.tsx
+import { CiViewTable } from "react-icons/ci";
+import { BsFiletypeSql } from "react-icons/bs";
+import { IoTimeOutline } from "react-icons/io5";  // F-009 NEW
+import { MdOutlineQueryBuilder } from "react-icons/md";
+import { FaSeedling } from "react-icons/fa";
+import { FaInfoCircle } from "react-icons/fa";
+
+export const DATABASE_TABS: DatabaseTab[] = [
+  { path: "tables", label: "Tables", icon: <CiViewTable size={18} /> },
+  { path: "query", label: "Query", icon: <BsFiletypeSql size={16} /> },
+  { path: "logs", label: "Log", icon: <IoTimeOutline size={18} /> },   // F-009 NEW
+  { path: "migration", label: "Migration", icon: <MdOutlineQueryBuilder size={18} /> },
+  { path: "seed", label: "Seed", icon: <FaSeedling size={16} /> },
+  { path: "about", label: "About", icon: <FaInfoCircle size={16} /> },
+];
+```
+
+**Route Structure** (F-009 Updated):
+
+```tsx
+// DevTools.tsx - DatabaseTabs nested routes
+<Route path="/openedDB/:dbname" element={<DatabaseTabs />}>
+  <Route index element={<Navigate to="tables" replace />} />
+
+  <Route path="tables" element={<TablesTab />}>
+    <Route path=":tableName" element={<TableDetail />} />
+  </Route>
+
+  <Route path="query" element={<QueryTab ... />} />
+  <Route path="logs" element={<LogView />} />          {/* F-009 NEW */}
+  <Route path="migration" element={<MigrationTab />} />
+  <Route path="seed" element={<SeedTab />} />
+  <Route path="about" element={<AboutTab />} />
+</Route>
+```
+
+**Tab Order** (F-009):
+
+| Position | Tab       | Icon                  | Route                       | Description         |
+| -------- | --------- | --------------------- | --------------------------- | ------------------- |
+| 1        | Tables    | CiViewTable           | /openedDB/:dbname/tables    | Browse table data   |
+| 2        | Query     | BsFiletypeSql         | /openedDB/:dbname/query     | Execute SQL queries |
+| 3        | Log       | IoTimeOutline         | /openedDB/:dbname/logs      | View database logs  |
+| 4        | Migration | MdOutlineQueryBuilder | /openedDB/:dbname/migration | Test migrations     |
+| 5        | Seed      | FaSeedling            | /openedDB/:dbname/seed      | Test seed data      |
+| 6        | About     | FaInfoCircle          | /openedDB/:dbname/about     | Database metadata   |
+
+**LogView Integration** (F-009):
+
+- **Component**: Reuses existing `LogView` component from `@/devtools/components/LogTab/LogView`
+- **No Modifications**: LogView component unchanged, works with new route structure
+- **Database Context**: Gets dbname from route params via `useParams()` hook
+- **Log Subscription**: Uses existing `subscribeLogs()` service function
+- **Ring Buffer**: 500 entry log buffer maintained in content script
+
+**Navigation Behavior** (F-009):
+
+```
+User clicks "Log" tab:
+├─→ Navigate to /openedDB/:dbname/logs
+├─→ DatabaseTabHeader highlights "Log" tab (active state)
+├─→ LogView component renders
+│   ├─→ LogFilter (log level controls)
+│   └─→ LogList (scrollable log entries)
+└─→ URL updates in browser address bar
+```
+
+**Active State Styling** (F-009):
+
+- **Active Tab**: `border-b-2 border-primary-600 text-primary-600`
+- **Inactive Tab**: `border-b-2 border-transparent text-gray-600 hover:text-gray-800`
+- **Hover State**: `bg-gray-50` (light background)
+- **Theme Tokens**: Uses F-007 theme tokens (primary-600: #059669)
+
+**Icon Integration** (F-009):
+
+- **Log Tab**: `IoTimeOutline` (react-icons/io5) - Time/clock icon representing log history
+- **Icon Size**: `size={18}` for consistency with other tabs
+- **Visual Cue**: Clock icon intuitively represents time-based log entries
+
+**Backward Compatibility** (F-009):
+
+- **Old Route**: `/logs/:dbname` route kept for backward compatibility
+- **Optional Redirect**: Can add redirect from old route to new tab route
+- **No Breaking Changes**: Existing bookmarks/links to old route still work
+- **LogView Component**: No modifications required, works with both routes
+
+**Component Hierarchy** (F-009 Updated):
+
+```
+DatabaseTabs (/openedDB/:dbname)
+├── DatabaseTabHeader (6 tabs)
+│   ├── Tables tab (CiViewTable icon)
+│   ├── Query tab (BsFiletypeSql icon)
+│   ├── Log tab (IoTimeOutline icon) ← F-009 NEW
+│   ├── Migration tab (MdOutlineQueryBuilder icon)
+│   ├── Seed tab (FaSeedling icon)
+│   └── About tab (FaInfoCircle icon)
+└── Outlet (Nested Routes)
+    ├── TablesTab (/openedDB/:dbname/tables)
+    ├── QueryTab (/openedDB/:dbname/query)
+    ├── LogView (/openedDB/:dbname/logs) ← F-009 UPDATED (moved from separate route)
+    │   ├── LogFilter
+    │   └── LogList (500 entry ring buffer)
+    ├── MigrationTab (/openedDB/:dbname/migration)
+    ├── SeedTab (/openedDB/:dbname/seed)
+    └── AboutTab (/openedDB/:dbname/about)
+```
+
+**Route Implementation Details** (F-009):
+
+```typescript
+// LogView component (unchanged)
+const LogView: React.FC = () => {
+  const { dbname } = useParams<{ dbname: string }>();
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [filter, setFilter] = useState<LogLevel>("all");
+
+  // Component uses dbname from route params
+  // No changes required for F-009
+};
+```
+
+**Accessibility** (F-009):
+
+- **Tab Label**: "Log" - Clear, descriptive label
+- **ARIA Role**: `role="tab"` for tab button
+- **ARIA Selected**: `aria-selected="true"` when active
+- **Keyboard Navigation**: Tab key navigates between tabs, Enter activates
+- **Screen Reader**: Announces "Log tab, selected" when active
+
+**Benefits** (F-009):
+
+- **Unified Navigation**: All database-related features accessible from tab bar
+- **Consistent UX**: Log view follows same navigation pattern as other tabs
+- **Database Context**: Logs viewed within database context (not separate route)
+- **No Code Changes**: Reuses existing LogView component
+- **Visual Clarity**: Clock icon intuitively represents time-based logs
+
+**Implementation Notes** (F-009):
+
+- **Files Modified**: 2 files
+  - `DatabaseTabHeader.tsx`: Add IoTimeOutline icon and logs tab to DATABASE_TABS
+  - `DevTools.tsx`: Add logs route inside DatabaseTabs route
+- **Complexity**: Low (simple integration of existing component)
+- **Estimated Time**: 0.5-1 hour
+- **Risk**: Low (uses existing, tested LogView component)

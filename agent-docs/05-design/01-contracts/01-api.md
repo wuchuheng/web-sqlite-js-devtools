@@ -26,7 +26,8 @@ agent-docs/05-design/
     background-service.md
     opfs-browser.md
     database-service.md      (Feature F-001)
-    opened-db-list.md        (Feature F-008 - NEW)
+    opened-db-list.md        (Feature F-008)
+    log-tab-integration.md   (Feature F-009 - NEW)
 ```
 
 ### Module Index
@@ -39,6 +40,7 @@ agent-docs/05-design/
 | Background Service   | `agent-docs/05-design/03-modules/background-service.md`   | `### Module: Background Service`   | Icon state, routing |
 | OPFS Browser         | `agent-docs/05-design/03-modules/opfs-browser.md`         | `### Module: OPFS Browser`         | File operations     |
 | Opened DB List       | `agent-docs/05-design/03-modules/opened-db-list.md`       | `### Module: Database Discovery`   | Database navigation |
+| Log Tab Integration  | `agent-docs/05-design/03-modules/log-tab-integration.md`  | `### Module: Log Streaming`        | UI Integration      |
 
 ## 1) Standards
 
@@ -243,6 +245,7 @@ agent-docs/05-design/
   - Generates unique subscription ID
   - Stores subscription for later cleanup
   - Logs streamed via offscreen messaging channel (TBD)
+- **Used By**: LogView component (Feature F-009 - Log Tab Integration)
 
 #### Function: `unsubscribeLogs(subscriptionId)`
 
@@ -261,6 +264,7 @@ agent-docs/05-design/
   - Calls `window.__web_sqlite.unsubscribeLogs(subscriptionId)` in inspected page
   - Cleans up log listeners
   - Clears subscription tracking
+- **Used By**: LogView component (Feature F-009 - Log Tab Integration)
 
 ### Module: Migration & Versioning
 

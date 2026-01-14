@@ -45,7 +45,7 @@ NOTES
   - **Micro-Spec**: [completed](agent-docs/08-task/active/TASK-02.md)
   - **DoD**:
     - Sidebar with SiSqlite icon + "Web Sqlite" (20% width)
-    - SidebarHeader with collapse toggle (20% ↔ icon-only)
+    - SidebarHeader with collapse toggle (20% <-> icon-only)
     - EmptyState with helpful instructions
     - DatabaseList, OPFSLink navigation items
 
@@ -675,4 +675,53 @@ NOTES
       - [x] Refresh Functionality: Header and empty state buttons work, loading state shows
       - [x] Edge Cases: Loading, error, empty, single database, multiple databases all work
     - [x] Build passed with no errors (3.06s)
+    - [x] Feature spec marked complete
+
+- [x] **TASK-305**: Log Tab Integration Feature (F-009)
+  - **Priority**: P2 (Medium)
+  - **Dependencies**: F-002 (Database Tab Navigation), TASK-09 (Log Streaming - provides LogView component)
+  - **Boundary**: `src/devtools/components/DatabaseTabs/DatabaseTabHeader.tsx`, `src/devtools/DevTools.tsx`
+  - **Maps to**: F-009
+  - **Feature**: [F-009: Log Tab Integration](agent-docs/01-discovery/features/F-009-log-tab.md)
+  - **Estimated**: 0.5-1 hour
+  - **Completed**: 2026-01-14
+  - **Micro-Spec**: [completed](agent-docs/08-task/active/TASK-305.md)
+  - **DoD**:
+    - [x] **Tab Header Update** (0.25 hour)
+      - [x] Add import: `import { IoTimeOutline } from "react-icons/io5";` to DatabaseTabHeader.tsx
+      - [x] Add logs tab to DATABASE_TABS array after "query" tab
+        - [x] Position: 3rd tab (between Query and Migration)
+        - [x] Icon: `<IoTimeOutline size={18} />`
+        - [x] Label: "Log"
+        - [x] Path: "logs"
+      - [x] Export DATABASE_TABS array (unchanged)
+      - [x] Verify TypeScript compilation
+    - [x] **Route Configuration** (0.25 hour)
+      - [x] Update `src/devtools/DevTools.tsx`
+      - [x] Add `<Route path="logs" element={<LogView />} />` to DatabaseTabs nested routes
+      - [x] Place logs route BEFORE migration route (maintains tab order)
+      - [x] Import LogView component from `@/devtools/components/LogTab/LogView`
+      - [x] Verify nested route structure
+      - [x] Verify TypeScript compilation
+    - [x] **Testing & Verification** (0.25 hour)
+      - [x] Click "Log" tab → should navigate to `/openedDB/:dbname/logs`
+      - [x] Verify tab highlights with active state styling (border-b-2 border-primary-600 text-primary-600)
+      - [x] Verify LogView renders correctly
+      - [x] Test tab switching between all 6 tabs (Tables, Query, Log, Migration, Seed, About)
+      - [x] Test with different databases
+      - [x] Verify log functionality works (filtering, subscription)
+      - [x] Test direct URL access to `/openedDB/:dbname/logs`
+      - [x] Verify no console errors
+    - [x] **Build Verification** (0.125 hour)
+      - [x] Run `npm run build` - verify no errors
+      - [x] Run `npm run typecheck` - verify no type errors
+      - [x] Check bundle size impact (< 5KB increase)
+    - [x] **Documentation** (0.125 hour)
+      - [x] Update feature spec: `agent-docs/01-discovery/features/F-009-log-tab.md`
+        - Mark all acceptance criteria as complete
+      - [x] Update LLD: `agent-docs/05-design/03-modules/log-tab-integration.md`
+        - Add implementation notes and completion status
+      - [x] Update module doc implementation status
+      - [x] Update status board with completion evidence
+    - [x] Build passed with no errors
     - [x] Feature spec marked complete

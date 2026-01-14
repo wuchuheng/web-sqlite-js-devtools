@@ -139,13 +139,25 @@ NOTES
 
 **Milestone**: F-008 Complete - Generic /openedDB route with database list
 
-- [ ] **TASK-304**: Opened Database List Route Feature (F-008)
+- [x] **TASK-304**: Opened Database List Route Feature (F-008) (Completed 2026-01-14)
   - Create OpenedDBList component with 6 sub-components
   - Add generic /openedDB route to DevTools.tsx
   - Update sidebar "Opened DB" link from / to /openedDB
   - Implement loading, error, empty, and success states
   - Add refresh button with IoMdRefresh icon
   - Implement database card navigation to /openedDB/:dbname/tables
+  - Testing and documentation
+
+#### Phase 6: Log Tab Integration (Day 11)
+
+**Milestone**: F-009 Complete - Log tab in database navigation
+
+- [ ] **TASK-305**: Log Tab Integration Feature (F-009)
+  - Add IoTimeOutline icon import to DatabaseTabHeader
+  - Add logs tab to DATABASE_TABS array (between Query and Migration)
+  - Add logs route to DevTools.tsx nested routes (before migration)
+  - Test tab navigation and active state styling
+  - Verify LogView component renders correctly
   - Testing and documentation
 
 ### Release v1.3.0 (Future Enhancements)
@@ -169,8 +181,8 @@ NOTES
 - [ ] **Query & Logs Working**: By end of Day 12 (TASK-05.2, TASK-05.3, TASK-05.7, TASK-05.8, TASK-07, TASK-08, TASK-09)
 - [ ] **OPFS & About Working**: By end of Day 13 (TASK-05.4, TASK-05.5, TASK-10, TASK-11)
 - [ ] **v1.0.0 MVP Released**: 2026-01-27 (TASK-12)
-- [x] **v1.2.0 Phase 1-4 Complete**: 2026-01-14 (F-004, F-005, F-006)
-- [ ] **v1.2.0 Phase 5 Complete**: TBD (F-008)
+- [x] **v1.2.0 Phase 1-5 Complete**: 2026-01-14 (F-004, F-005, F-006, F-008)
+- [ ] **v1.2.0 Phase 6 Complete**: TBD (F-009)
 
 ## 4. Feature F-001: Service Layer Expansion
 
@@ -308,40 +320,40 @@ Add a generic `/openedDB` route to display a list of all opened databases, enabl
 ### Success Criteria
 
 1. Route Structure
-   - [ ] `/openedDB` route exists and renders `OpenedDBList` component
-   - [ ] Direct navigation to `/openedDB` works
-   - [ ] Route is added to `DevTools.tsx` Routes configuration
+   - [x] `/openedDB` route exists and renders `OpenedDBList` component
+   - [x] Direct navigation to `/openedDB` works
+   - [x] Route is added to `DevTools.tsx` Routes configuration
 
 2. Sidebar Navigation
-   - [ ] "Opened DB" link navigates to `/openedDB` instead of `/`
-   - [ ] Active state highlights correctly on `/openedDB` and child routes
-   - [ ] Clicking "Opened DB" shows database list in main content area
+   - [x] "Opened DB" link navigates to `/openedDB` instead of `/`
+   - [x] Active state highlights correctly on `/openedDB` and child routes
+   - [x] Clicking "Opened DB" shows database list in main content area
 
 3. Database List Display
-   - [ ] Fetches databases using `databaseService.getDatabases()`
-   - [ ] Displays each database as a clickable card
-   - [ ] Shows database name and table count
-   - [ ] Clicking card navigates to `/openedDB/:dbname/tables`
+   - [x] Fetches databases using `databaseService.getDatabases()`
+   - [x] Displays each database as a clickable card
+   - [x] Shows database name and table count
+   - [x] Clicking card navigates to `/openedDB/:dbname/tables`
 
 4. Empty State
-   - [ ] Shows when no databases are opened
-   - [ ] Displays SiSqlite icon
-   - [ ] Shows "No Opened Databases" title
-   - [ ] Shows helpful message about web-sqlite-js
-   - [ ] Includes refresh button with `IoMdRefresh` icon
+   - [x] Shows when no databases are opened
+   - [x] Displays SiSqlite icon
+   - [x] Shows "No Opened Databases" title
+   - [x] Shows helpful message about web-sqlite-js
+   - [x] Includes refresh button with `IoMdRefresh` icon
 
 5. Refresh Functionality
-   - [ ] Header refresh button re-fetches database list
-   - [ ] Empty state refresh button re-fetches database list
-   - [ ] Shows loading state during refresh
-   - [ ] Handles errors with retry option
+   - [x] Header refresh button re-fetches database list
+   - [x] Empty state refresh button re-fetches database list
+   - [x] Shows loading state during refresh
+   - [x] Handles errors with retry option
 
 6. Edge Cases
-   - [ ] Loading state shows on initial load
-   - [ ] Error state shows with retry button
-   - [ ] Empty database list shows custom empty state
-   - [ ] Single database shows correctly
-   - [ ] Multiple databases show as list
+   - [x] Loading state shows on initial load
+   - [x] Error state shows with retry button
+   - [x] Empty database list shows custom empty state
+   - [x] Single database shows correctly
+   - [x] Multiple databases show as list
 
 ### Risk Mitigation
 
@@ -360,14 +372,126 @@ Add a generic `/openedDB` route to display a list of all opened databases, enabl
 
 ### Definition of Done
 
-- [ ] All 7 components implemented with TypeScript strict mode
-- [ ] All components use F-007 theme tokens
-- [ ] Route configuration updated with correct order
-- [ ] Sidebar link updated to `/openedDB`
-- [ ] Loading, error, empty states implemented
-- [ ] Keyboard navigation tested
-- [ ] ARIA labels added
-- [ ] Build passes with no errors
+- [x] All 7 components implemented with TypeScript strict mode
+- [x] All components use F-007 theme tokens
+- [x] Route configuration updated with correct order
+- [x] Sidebar link updated to `/openedDB`
+- [x] Loading, error, empty states implemented
+- [x] Keyboard navigation tested
+- [x] ARIA labels added
+- [x] Build passes with no errors
+- [x] Manual testing complete (all 10 scenarios from LLD)
+- [x] Feature spec marked complete
+- [x] Documentation updated
+
+## 6. Feature F-009: Log Tab Integration
+
+### Overview
+
+**Feature ID**: F-009 (Discovery)
+**Status**: Implementation Ready
+**Priority**: P2 (Medium - Navigation enhancement)
+**Target**: Complete during v1.2.0 Phase 6 (Day 11 from 2026-01-14)
+
+### Objective
+
+Add Log tab to database tab navigation, integrating the existing LogView component into the database context. This provides unified navigation for all database-related features (Tables, Query, Log, Migration, Seed, About).
+
+### Tasks Breakdown
+
+#### TASK-305: Log Tab Integration Feature (F-009)
+
+**Estimated**: 0.5-1 hour
+**Priority**: P2 (Medium)
+**Dependencies**: F-002 (Database Tab Navigation), TASK-09 (Log Streaming - provides LogView component)
+
+**Implementation Phases**:
+
+1. **Tab Header Update** (0.25 hour)
+   - Add import: `import { IoTimeOutline } from "react-icons/io5";` to DatabaseTabHeader.tsx
+   - Add logs tab to DATABASE_TABS array after "query" tab
+   - Position: 3rd tab (between Query and Migration)
+   - Icon: IoTimeOutline with size={18}
+   - Label: "Log"
+
+2. **Route Configuration** (0.25 hour)
+   - Add `<Route path="logs" element={<LogView />} />` to DevTools.tsx
+   - Place logs route BEFORE migration route (maintains tab order)
+   - Import LogView component from existing location
+   - Verify nested route structure
+
+3. **Testing & Verification** (0.25 hour)
+   - Click "Log" tab → should navigate to `/openedDB/:dbname/logs`
+   - Verify tab highlights with active state styling
+   - Verify LogView renders correctly
+   - Test tab switching between all 6 tabs
+   - Test with different databases
+   - Verify log functionality (filtering, subscription) works
+
+4. **Documentation** (0.25 hour)
+   - Update feature spec with completion status
+   - Verify LLD implementation notes
+   - Update module doc implementation status
+   - Verify all acceptance criteria met
+
+### Dependencies
+
+- **Upstream**: F-002 (Database Tab Navigation), TASK-09 (Log Streaming)
+- **Downstream**: None (can proceed independently)
+
+### Success Criteria
+
+1. **Tab Addition**
+   - [ ] "Log" tab appears in database tab header
+   - [ ] Positioned between "Query" and "Migration"
+   - [ ] Uses `IoTimeOutline` icon
+   - [ ] Label shows "Log"
+
+2. **Navigation**
+   - [ ] Clicking "Log" tab navigates to `/openedDB/:dbname/logs`
+   - [ ] Active state styling applies correctly
+   - [ ] URL updates in browser address bar
+
+3. **Component Rendering**
+   - [ ] LogView component renders correctly
+   - [ ] Database name available from route params
+   - [ ] Log functionality works (subscription, filtering)
+
+4. **Integration**
+   - [ ] Tab switching works smoothly
+   - [ ] No visual glitches
+   - [ ] Consistent with other tabs
+
+5. **Build Verification**
+   - [ ] `npm run build` passes
+   - [ ] `npm run typecheck` passes
+   - [ ] No console errors
+
+### Risk Mitigation
+
+- **Complexity**: Low (simple integration of existing component)
+- **Files Modified**: Only 2 files (DatabaseTabHeader.tsx, DevTools.tsx)
+- **Component Reuse**: LogView works as-is, no modifications needed
+- **Route Order**: Ensure logs route placed before migration route
+- **Backward Compatibility**: Old `/logs/:dbname` route kept (optional redirect)
+
+### Timeline
+
+- **15 minutes**: Add IoTimeOutline import and logs tab to DATABASE_TABS array
+- **15 minutes**: Add logs route to DevTools.tsx nested routes
+- **15 minutes**: Manual testing (all scenarios)
+- **15 minutes**: Documentation and final verification
+
+### Definition of Done
+
+- [ ] DatabaseTabHeader.tsx updated with IoTimeOutline icon and logs tab
+- [ ] DevTools.tsx updated with logs route inside DatabaseTabs
+- [ ] Build passes with no errors (npm run build)
+- [ ] Type checking passes (npm run typecheck)
 - [ ] Manual testing complete (all 10 scenarios from LLD)
+- [ ] Tab navigation works correctly
+- [ ] Active state styling applied correctly
+- [ ] LogView functionality preserved
+- [ ] No console errors
 - [ ] Feature spec marked complete
 - [ ] Documentation updated

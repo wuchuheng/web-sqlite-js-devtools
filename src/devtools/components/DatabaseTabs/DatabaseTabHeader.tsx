@@ -1,6 +1,7 @@
 import { NavLink, Outlet, useParams } from "react-router-dom";
 import { CiViewTable } from "react-icons/ci";
 import { BsFiletypeSql } from "react-icons/bs";
+import { IoTimeOutline } from "react-icons/io5";
 import { MdOutlineQueryBuilder } from "react-icons/md";
 import { FaSeedling } from "react-icons/fa6";
 import { FaInfoCircle } from "react-icons/fa";
@@ -20,6 +21,7 @@ interface DatabaseTab {
 const DATABASE_TABS: DatabaseTab[] = [
   { path: "tables", label: "Tables", icon: <CiViewTable size={18} /> },
   { path: "query", label: "Query", icon: <BsFiletypeSql size={16} /> },
+  { path: "logs", label: "Log", icon: <IoTimeOutline size={18} /> },
   {
     path: "migration",
     label: "Migration",
@@ -40,7 +42,7 @@ interface DatabaseTabHeaderProps {
  * Database tab header component
  *
  * @remarks
- * Renders 5 tabs: Tables, Query, Migration, Seed, About
+ * Renders 6 tabs: Tables, Query, Log, Migration, Seed, About
  * Uses NavLink for active state styling
  */
 export const DatabaseTabHeader = ({ dbname }: DatabaseTabHeaderProps) => {
@@ -71,7 +73,7 @@ export const DatabaseTabHeader = ({ dbname }: DatabaseTabHeaderProps) => {
  * DatabaseTabs component
  *
  * @remarks
- * - Renders tab header with 5 tabs
+ * - Renders tab header with 6 tabs
  * - Uses Outlet for nested route rendering
  * - Redirects /openedDB/:dbname to /openedDB/:dbname/tables
  *
