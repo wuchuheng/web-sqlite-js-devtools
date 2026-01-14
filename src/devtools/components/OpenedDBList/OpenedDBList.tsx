@@ -52,7 +52,7 @@ export const OpenedDBList = () => {
 
   // 1. Show empty state when no databases
   if (databases.length === 0) {
-    return <EmptyDatabaseList refresh={reload} />;
+    return <EmptyDatabaseList refresh={triggerRefresh} />;
   }
 
   // 1. Show header and database list
