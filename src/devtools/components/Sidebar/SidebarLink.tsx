@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigation } from "react-router-dom";
 import { IconType } from "react-icons";
 import { SidebarIcon } from "./SidebarIcon";
 
@@ -10,6 +10,8 @@ interface SidebarLinkProps {
   isCollapsed?: boolean;
   className?: string;
   style?: React.CSSProperties;
+  children?: React.ReactNode;
+  isTopLevel?: boolean;
 }
 
 export const SidebarLink = ({
@@ -20,10 +22,23 @@ export const SidebarLink = ({
   isCollapsed = false,
   className = "",
   style,
+  children,
+  isTopLevel = false,
 }: SidebarLinkProps) => {
-  const activeClass = isActive
-    ? "bg-primary-50 text-primary-600 border-r-2 border-primary-600"
-    : "text-secondary-600";
+  // Access the current route from the hooks
+  // print the current router for debugging
+
+  const location = useLocation();
+  const isMatchCurrenRoute = location.pathname === to;
+
+  const isActiveForTopLevel =
+    isMatchCurrenRoute || (isTopLevel && isActive && isCollapsed);
+  const isActiveForChildLevel = !isTopLevel && isActive && !isCollapsed;
+
+  const activeClass =
+    isActiveForTopLevel || isActiveForChildLevel
+      ? "bg-primary-50 text-primary-600 border-r-2 border-primary-600"
+      : "text-secondary-600";
 
   return (
     <Link
@@ -42,11 +57,14 @@ export const SidebarLink = ({
             but here we just conditionally render for simplicity and alignment.
       */}
       {(!isCollapsed || !icon) && (
-        <span
-          className={`${icon ? "text-sm" : ""} whitespace-nowrap overflow-hidden text-ellipsis`}
+        <div
+          className={`${icon ? "text-sm" : ""} whitespace-nowrap overflow-hidden text-ellipsis
+          justify-between align-center w-full flex
+          `}
         >
-          {label}
-        </span>
+          <div>{label}</div>
+          <div>{children}</div>
+        </div>
       )}
     </Link>
   );

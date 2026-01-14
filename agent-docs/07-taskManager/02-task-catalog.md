@@ -725,3 +725,74 @@ NOTES
       - [x] Update status board with completion evidence
     - [x] Build passed with no errors
     - [x] Feature spec marked complete
+
+- [x] **TASK-306**: Database Refresh Coordination Feature (F-010)
+  - **Priority**: P2 (Medium)
+  - **Dependencies**: F-002 (Database Tab Navigation), F-008 (Opened Database List Route), TASK-09 (Log Streaming - provides context pattern reference)
+  - **Boundary**: `src/devtools/contexts/DatabaseRefreshContext.tsx` (NEW), `src/devtools/DevTools.tsx`, `src/devtools/components/Sidebar/DatabaseList.tsx`, `src/devtools/components/OpenedDBList/OpenedDBList.tsx`
+  - **Maps to**: F-010
+  - **Feature**: [F-010: Database Refresh Coordination](agent-docs/01-discovery/features/F-010-database-refresh-coordination.md)
+  - **Estimated**: 1-2 hours
+  - **Micro-Spec**: [draft](agent-docs/08-task/active/TASK-306.md)
+  - **DoD**:
+    - [ ] **Context Creation** (0.5 hour)
+      - [ ] Create `src/devtools/contexts/DatabaseRefreshContext.tsx`
+      - [ ] Define `DatabaseRefreshContextValue` interface
+      - [ ] Create `DatabaseRefreshContext` with null default
+      - [ ] Implement `DatabaseRefreshProvider` component
+        - [ ] Add refreshVersion state (useState, default 0)
+        - [ ] Implement triggerRefresh callback (useCallback)
+        - [ ] Memoize context value (useMemo)
+        - [ ] Add TSDoc comments
+      - [ ] Implement `useDatabaseRefresh` hook
+        - [ ] Call useContext
+        - [ ] Add error if context missing
+        - [ ] Add TSDoc comments
+      - [ ] Export context, provider, and hook
+      - [ ] Verify TypeScript compilation
+    - [ ] **DevTools Integration** (0.25 hour)
+      - [ ] Import `DatabaseRefreshProvider` in DevTools.tsx
+      - [ ] Wrap DevToolsContent return with provider
+      - [ ] Verify provider placement (before Sidebar/main split)
+      - [ ] Verify TypeScript compilation
+    - [ ] **Sidebar Integration** (0.5 hour)
+      - [ ] Import `useDatabaseRefresh` in DatabaseList.tsx
+      - [ ] Import `IoMdRefresh` icon from react-icons/io
+      - [ ] Consume context in component
+      - [ ] Add refreshVersion to dependency array
+      - [ ] Add refresh button to header (left side)
+        - [ ] Button positioned before SidebarLink
+        - [ ] Flex container for layout
+        - [ ] Button styling (text-secondary-500 hover:text-primary-600)
+        - [ ] ARIA label added
+      - [ ] Test refresh button functionality
+      - [ ] Test collapsed/expanded states
+      - [ ] Verify TypeScript compilation
+    - [ ] **Main Page Integration** (0.25 hour)
+      - [ ] Import `useDatabaseRefresh` in OpenedDBList.tsx
+      - [ ] Consume context in component
+      - [ ] Add refreshVersion to dependency array
+      - [ ] Pass triggerRefresh to Header (existing prop)
+      - [ ] Verify TypeScript compilation
+    - [ ] **Testing & Verification** (0.5 hour)
+      - [ ] Test bidirectional refresh (main page → sidebar)
+      - [ ] Test bidirectional refresh (sidebar → main page)
+      - [ ] Test data consistency (both show same data)
+      - [ ] Test collapsed sidebar (button visible, works)
+      - [ ] Test expanded sidebar (button visible, works)
+      - [ ] Test error state (both refresh buttons work)
+      - [ ] Test empty state (both refresh buttons work)
+      - [ ] Test rapid clicks (debounced, single refresh)
+      - [ ] Verify no console errors
+      - [ ] Verify no TypeScript errors
+    - [ ] **Build Verification** (0.125 hour)
+      - [ ] Run `npm run build` - verify no errors
+      - [ ] Run `npm run typecheck` - verify no type errors
+      - [ ] Check bundle size impact (< 5KB expected)
+    - [ ] **Documentation** (0.125 hour)
+      - [ ] Update feature spec: `agent-docs/01-discovery/features/F-010-database-refresh-coordination.md`
+        - Mark all acceptance criteria as complete
+      - [ ] Update LLD: `agent-docs/05-design/03-modules/database-refresh.md`
+        - Add implementation notes and completion status
+      - [ ] Update status board with completion evidence
+      - [ ] Verify all DoD items complete

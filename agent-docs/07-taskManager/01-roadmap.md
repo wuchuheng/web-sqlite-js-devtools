@@ -152,12 +152,23 @@ NOTES
 
 **Milestone**: F-009 Complete - Log tab in database navigation
 
-- [ ] **TASK-305**: Log Tab Integration Feature (F-009)
+- [x] **TASK-305**: Log Tab Integration Feature (F-009) (Completed 2026-01-14)
   - Add IoTimeOutline icon import to DatabaseTabHeader
   - Add logs tab to DATABASE_TABS array (between Query and Migration)
   - Add logs route to DevTools.tsx nested routes (before migration)
   - Test tab navigation and active state styling
   - Verify LogView component renders correctly
+  - Testing and documentation
+
+#### Phase 7: Database Refresh Coordination (Day 12)
+
+**Milestone**: F-010 Complete - Coordinated refresh between sidebar and main page
+
+- [ ] **TASK-306**: Database Refresh Coordination Feature (F-010)
+  - Create DatabaseRefreshContext with Provider and hook
+  - Add refresh button to sidebar "Opened DB" header (left side)
+  - Integrate context with DatabaseList and OpenedDBList
+  - Test bidirectional refresh synchronization
   - Testing and documentation
 
 ### Release v1.3.0 (Future Enhancements)
@@ -182,7 +193,8 @@ NOTES
 - [ ] **OPFS & About Working**: By end of Day 13 (TASK-05.4, TASK-05.5, TASK-10, TASK-11)
 - [ ] **v1.0.0 MVP Released**: 2026-01-27 (TASK-12)
 - [x] **v1.2.0 Phase 1-5 Complete**: 2026-01-14 (F-004, F-005, F-006, F-008)
-- [ ] **v1.2.0 Phase 6 Complete**: TBD (F-009)
+- [x] **v1.2.0 Phase 6 Complete**: 2026-01-14 (F-009)
+- [ ] **v1.2.0 Phase 7 Complete**: TBD (F-010)
 
 ## 4. Feature F-001: Service Layer Expansion
 
@@ -484,14 +496,176 @@ Add Log tab to database tab navigation, integrating the existing LogView compone
 
 ### Definition of Done
 
-- [ ] DatabaseTabHeader.tsx updated with IoTimeOutline icon and logs tab
-- [ ] DevTools.tsx updated with logs route inside DatabaseTabs
-- [ ] Build passes with no errors (npm run build)
-- [ ] Type checking passes (npm run typecheck)
-- [ ] Manual testing complete (all 10 scenarios from LLD)
-- [ ] Tab navigation works correctly
-- [ ] Active state styling applied correctly
-- [ ] LogView functionality preserved
-- [ ] No console errors
-- [ ] Feature spec marked complete
-- [ ] Documentation updated
+- [x] DatabaseTabHeader.tsx updated with IoTimeOutline icon and logs tab
+- [x] DevTools.tsx updated with logs route inside DatabaseTabs
+- [x] Build passes with no errors (npm run build)
+- [x] Type checking passes (npm run typecheck)
+- [x] Manual testing complete (all 10 scenarios from LLD)
+- [x] Tab navigation works correctly
+- [x] Active state styling applied correctly
+- [x] LogView functionality preserved
+- [x] No console errors
+- [x] Feature spec marked complete
+- [x] Documentation updated
+
+## 7. Feature F-010: Database Refresh Coordination
+
+### Overview
+
+**Feature ID**: F-010 (Discovery)
+**Status**: Implementation Ready
+**Priority**: P2 (Medium - UX enhancement)
+**Target**: Complete during v1.2.0 Phase 7 (Day 12 from 2026-01-14)
+
+### Objective
+
+Add shared React Context to coordinate database refresh between sidebar and main page, ensuring consistent data across both locations. Add refresh button to sidebar "Opened DB" header (left side) for better UX.
+
+### Tasks Breakdown
+
+#### TASK-306: Database Refresh Coordination Feature (F-010)
+
+**Estimated**: 1-2 hours
+**Priority**: P2 (Medium)
+**Dependencies**: F-002 (Database Tab Navigation), F-008 (Opened Database List Route), TASK-09 (Log Streaming - provides context pattern reference)
+
+**Implementation Phases**:
+
+1. **Context Creation** (0.5 hour)
+   - Create `src/devtools/contexts/DatabaseRefreshContext.tsx`
+   - Define `DatabaseRefreshContextValue` interface
+   - Create `DatabaseRefreshContext` with null default
+   - Implement `DatabaseRefreshProvider` component
+     - Add refreshVersion state (useState, default 0)
+     - Implement triggerRefresh callback (useCallback)
+     - Memoize context value (useMemo)
+     - Add TSDoc comments
+   - Implement `useDatabaseRefresh` hook
+     - Call useContext
+     - Add error if context missing
+     - Add TSDoc comments
+   - Export context, provider, and hook
+
+2. **DevTools Integration** (0.25 hour)
+   - Import `DatabaseRefreshProvider` in DevTools.tsx
+   - Wrap DevToolsContent return with provider
+   - Verify provider placement (before Sidebar/main split)
+
+3. **Sidebar Integration** (0.5 hour)
+   - Import `useDatabaseRefresh` in DatabaseList.tsx
+   - Import `IoMdRefresh` icon from react-icons/io
+   - Consume context in component
+   - Add refreshVersion to dependency array
+   - Add refresh button to header (left side)
+     - Button positioned before SidebarLink
+     - Flex container for layout
+     - Button styling (text-secondary-500 hover:text-primary-600)
+     - ARIA label added
+
+4. **Main Page Integration** (0.25 hour)
+   - Import `useDatabaseRefresh` in OpenedDBList.tsx
+   - Consume context in component
+   - Add refreshVersion to dependency array
+   - Pass triggerRefresh to Header (existing prop)
+
+5. **Testing & Verification** (0.5 hour)
+   - Test bidirectional refresh (main page → sidebar)
+   - Test bidirectional refresh (sidebar → main page)
+   - Test data consistency (both show same data)
+   - Test collapsed sidebar (button visible, works)
+   - Test expanded sidebar (button visible, works)
+   - Test error state (both refresh buttons work)
+   - Test empty state (both refresh buttons work)
+   - Test rapid clicks (debounced, single refresh)
+   - Verify no console errors
+   - Verify no TypeScript errors
+
+6. **Build & Documentation** (0.125 hour each)
+   - Run build: `npm run build`
+   - Run type check: `npm run typecheck`
+   - Update feature spec with completion status
+   - Update LLD with implementation notes
+   - Update status board with completion evidence
+   - Verify all DoD items complete
+
+### Dependencies
+
+- **Upstream**: F-002 (Database Tab Navigation), F-008 (Opened Database List Route), TASK-09 (Log Streaming)
+- **Downstream**: None (can proceed independently)
+
+### Success Criteria
+
+1. **Context Creation**
+   - [ ] DatabaseRefreshContext created with proper TypeScript types
+   - [ ] Provider wraps DevTools content
+   - [ ] Context exports useDatabaseRefresh hook
+   - [ ] TSDoc comments added
+
+2. **Sidebar Refresh Button**
+   - [ ] Refresh button appears on left side of "Opened DB" header
+   - [ ] Button uses IoMdRefresh icon (16px)
+   - [ ] Clicking button triggers shared refresh
+   - [ ] Button styling matches F-007 theme tokens
+
+3. **Main Page Integration**
+   - [ ] OpenedDBList consumes DatabaseRefreshContext
+   - [ ] Header refresh button uses shared trigger
+   - [ ] Component refetches on refreshVersion change
+
+4. **Synchronization**
+   - [ ] Clicking main page refresh updates sidebar list
+   - [ ] Clicking sidebar refresh updates main page list
+   - [ ] Both locations show consistent data after refresh
+   - [ ] No duplicate API calls (single refreshVersion increment)
+
+5. **Edge Cases**
+   - [ ] Refresh works when sidebar is collapsed
+   - [ ] Refresh works when sidebar is expanded
+   - [ ] Refresh works on error state
+   - [ ] Refresh works on empty state
+   - [ ] Multiple rapid clicks only trigger one refresh (debounced)
+
+6. **Build Verification**
+   - [ ] `npm run build` passes
+   - [ ] `npm run typecheck` passes
+   - [ ] No console errors
+   - [ ] Bundle size impact acceptable (< 5KB)
+
+### Risk Mitigation
+
+- **Complexity**: Low (standard React Context pattern)
+- **Files Modified**: 4 files (1 new, 3 existing)
+- **Component Reuse**: 100% (no new components, just context)
+- **API Changes**: None (uses existing getDatabases)
+- **Breaking Changes**: None (additive only)
+- **Rollback**: Simple (remove provider wrapper, revert imports)
+
+### Timeline
+
+- **30 minutes**: Create DatabaseRefreshContext with Provider and hook
+- **15 minutes**: Update DevTools.tsx to wrap content with provider
+- **30 minutes**: Update DatabaseList to consume context and add refresh button
+- **15 minutes**: Update OpenedDBList to consume context
+- **30 minutes**: Testing and bug fixes
+- **7 minutes**: Build verification
+- **8 minutes**: Documentation and final verification
+
+### Definition of Done
+
+- [ ] DatabaseRefreshContext created with proper TypeScript types
+- [ ] DatabaseRefreshProvider wraps DevTools content
+- [ ] useDatabaseRefresh hook exported and documented
+- [ ] Sidebar refresh button added (left side, IoMdRefresh icon)
+- [ ] Sidebar refresh button styling matches F-007 tokens
+- [ ] OpenedDBList consumes DatabaseRefreshContext
+- [ ] Main page refresh button uses shared trigger
+- [ ] Bidirectional refresh working (both directions)
+- [ ] Data consistency verified (both locations show same data)
+- [ ] Debounce working (rapid clicks = single refresh)
+- [ ] Edge cases handled (collapsed, error, empty states)
+- [ ] Build passed with no errors
+- [ ] Type check passed with no errors
+- [ ] Bundle size impact acceptable (< 5KB)
+- [ ] Feature spec updated
+- [ ] LLD updated with implementation status
+- [ ] Status board updated

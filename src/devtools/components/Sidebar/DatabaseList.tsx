@@ -1,12 +1,14 @@
 import { useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import { FaDatabase } from "react-icons/fa";
+import { IoMdRefresh } from "react-icons/io";
 import {
   databaseService,
   type DatabaseSummary,
 } from "@/devtools/services/databaseService";
 import { useInspectedWindowRequest } from "@/devtools/hooks/useInspectedWindowRequest";
 import { getDatabaseNameFromPath } from "@/devtools/utils/databaseNames";
+import { useDatabaseRefresh } from "@/devtools/contexts/DatabaseRefreshContext";
 import { SidebarLink } from "./SidebarLink";
 
 /**
@@ -34,6 +36,15 @@ interface DatabaseListProps {
  */
 export const DatabaseList = ({ isCollapsed }: DatabaseListProps) => {
   const location = useLocation();
+
+  // 1. Consume database refresh context for coordinated refresh (F-010)
+  // 2. triggerRefresh: Function to increment refreshVersion and trigger refetch
+  // 3. refreshVersion: Used in dependency array to trigger refetch when changed
+  const { triggerRefresh, refreshVersion } = useDatabaseRefresh();
+
+  // 1. Load database list from inspected window
+  // 2. Refetch when refreshVersion changes (triggered by refresh button)
+  // 3. Empty dependency array for initial load
   const {
     data: databases,
     isLoading,
@@ -41,7 +52,7 @@ export const DatabaseList = ({ isCollapsed }: DatabaseListProps) => {
     reload,
   } = useInspectedWindowRequest<DatabaseSummary[]>(
     () => databaseService.getDatabases(),
-    [],
+    [refreshVersion], // Refetch when refreshVersion changes
     [],
   );
 
@@ -67,14 +78,32 @@ export const DatabaseList = ({ isCollapsed }: DatabaseListProps) => {
    */
   return (
     <div className="flex flex-col ">
-      <SidebarLink
-        to="/openedDB"
-        label="Opened DB"
-        icon={FaDatabase}
-        isActive={isActive}
-        isCollapsed={isCollapsed}
-        className="px-4 py-2"
-      />
+      {/* 1. Header with refresh button (LEFT side) and sidebar link */}
+      {/* 2. Flex container enables proper button positioning */}
+      {/* 3. Refresh button coordinates with main page via context (F-010) */}
+      <div className="flex items-center  py-2">
+        {/* Sidebar link - takes remaining space */}
+        <SidebarLink
+          to="/openedDB"
+          label="Opened DB"
+          icon={FaDatabase}
+          isActive={isActive}
+          isCollapsed={isCollapsed}
+          // className="flex-1 py-2"
+          className="px-4 py-2 flex-1"
+          isTopLevel
+        >
+          {/* Refresh button - LEFT side of "Opened DB" */}
+          <button
+            onClick={triggerRefresh}
+            className="mr-2 text-secondary-500 hover:text-primary-600"
+            aria-label="Refresh database list"
+            type="button"
+          >
+            <IoMdRefresh size={16} />
+          </button>
+        </SidebarLink>
+      </div>
 
       {!isCollapsed && (
         <div className="pb-2">

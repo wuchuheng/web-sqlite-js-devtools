@@ -41,6 +41,7 @@ agent-docs/05-design/
 | OPFS Browser         | `agent-docs/05-design/03-modules/opfs-browser.md`         | `### Module: OPFS Browser`         | File operations     |
 | Opened DB List       | `agent-docs/05-design/03-modules/opened-db-list.md`       | `### Module: Database Discovery`   | Database navigation |
 | Log Tab Integration  | `agent-docs/05-design/03-modules/log-tab-integration.md`  | `### Module: Log Streaming`        | UI Integration      |
+| Database Refresh     | `agent-docs/05-design/03-modules/database-refresh.md`     | `### Module: Database Refresh`     | React Context       |
 
 ## 1) Standards
 

@@ -3,6 +3,7 @@ import {
   type DatabaseSummary,
 } from "@/devtools/services/databaseService";
 import { useInspectedWindowRequest } from "@/devtools/hooks/useInspectedWindowRequest";
+import { useDatabaseRefresh } from "@/devtools/contexts/DatabaseRefreshContext";
 import { LoadingSkeleton } from "./LoadingSkeleton";
 import { ErrorState } from "./ErrorState";
 import { EmptyDatabaseList } from "./EmptyDatabaseList";
@@ -20,8 +21,14 @@ import { DatabaseList } from "./DatabaseList";
  * @returns JSX.Element - Database list page
  */
 export const OpenedDBList = () => {
+  // 1. Consume database refresh context for coordinated refresh (F-010)
+  // 2. triggerRefresh: Function passed to Header for refresh button
+  // 3. refreshVersion: Used in dependency array to trigger refetch when changed
+  const { triggerRefresh, refreshVersion } = useDatabaseRefresh();
+
   // 1. Fetch databases using service layer
-  // 2. Handle loading, error, empty, and success states
+  // 2. Refetch when refreshVersion changes (triggered by refresh button)
+  // 3. Handle loading, error, empty, and success states
   const {
     data: databases,
     isLoading,
@@ -29,7 +36,7 @@ export const OpenedDBList = () => {
     reload,
   } = useInspectedWindowRequest<DatabaseSummary[]>(
     () => databaseService.getDatabases(),
-    [],
+    [refreshVersion], // Refetch when refreshVersion changes
     [],
   );
 
@@ -49,9 +56,10 @@ export const OpenedDBList = () => {
   }
 
   // 1. Show header and database list
+  // 2. Pass triggerRefresh to Header for coordinated refresh (F-010)
   return (
     <div className="flex flex-col h-full">
-      <Header refresh={reload} count={databases.length} />
+      <Header refresh={triggerRefresh} count={databases.length} />
       <DatabaseList databases={databases} />
     </div>
   );

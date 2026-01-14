@@ -38,10 +38,10 @@ NOTES
 
 ## 3) Current stage
 
-- **Current stage (1-8)**: Stage 8 - Implementation (Worker - TASK-304)
-- **Active release**: v1.2.0 (Enhancements) - Target: TBD
-- **Status summary**: TASK-301 complete (F-005), TASK-302 complete (F-006), TASK-303 complete (Integration), TASK-304 complete (F-008)
-- **Last updated (YYYY-MM-DD)**: 2026-01-14 (TASK-304: Opened Database List Route)
+- **Current stage (1-8)**: Stage 8 - Implementation (S8:worker - TASK-306)
+- **Active release**: v1.2.0 (Enhancements) - Target: 2026-01-21
+- **Status summary**: TASK-306 complete (F-010), TASK-305 complete (F-009), TASK-304 complete (F-008), TASK-303 complete (Integration), TASK-302 complete (F-006), TASK-301 complete (F-005)
+- **Last updated (YYYY-MM-DD)**: 2026-01-14 (F-010: Database Refresh Coordination - Implementation Complete)
 
 ## 4) Technology stack (chosen in Stage 2)
 
@@ -73,6 +73,8 @@ NOTES
 - `agent-docs/01-discovery/features/F-006-resizable-vertical-dividers.md` (NEW - Feature F-006)
 - `agent-docs/01-discovery/features/F-007-uniform-theme-configuration.md` (COMPLETED - Feature F-007)
 - `agent-docs/01-discovery/features/F-008-opened-database-list-route.md` (NEW - Feature F-008)
+- `agent-docs/01-discovery/features/F-009-log-tab.md` (COMPLETED - Feature F-009)
+- `agent-docs/01-discovery/features/F-010-database-refresh-coordination.md` (NEW - Feature F-010)
 - `agent-docs/02-feasibility/01-options.md`
 - `agent-docs/02-feasibility/02-risk-assessment.md`
 - `agent-docs/02-feasibility/03-spike-plan.md`
@@ -94,6 +96,7 @@ NOTES
 - `agent-docs/05-design/03-modules/content-script-proxy.md`
 - `agent-docs/05-design/03-modules/background-service.md`
 - `agent-docs/05-design/03-modules/opfs-browser.md`
+- `agent-docs/05-design/03-modules/database-refresh.md` (NEW - Feature F-010)
 - `agent-docs/07-taskManager/01-roadmap.md`
 - `agent-docs/07-taskManager/02-task-catalog.md`
 - `agent-docs/06-implementation/01-build-and-run.md` (pending)

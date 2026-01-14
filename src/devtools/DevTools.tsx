@@ -14,6 +14,7 @@ import { KeyboardShortcutsHelp } from "./components/KeyboardShortcutsHelp";
 import { OpenedDBList } from "./components/OpenedDBList";
 import { useConnection } from "./hooks/useConnection";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
+import { DatabaseRefreshProvider } from "./contexts/DatabaseRefreshContext";
 import "./DevTools.css";
 
 /**
@@ -129,88 +130,92 @@ const DevToolsContent = () => {
   };
 
   return (
-    // 1. Main container with flex layout
-    // 2. Sidebar takes 20% width when expanded
-    // 3. Main content takes remaining width
-    <div className="devtools-panel flex">
-      <Sidebar
-        isCollapsed={isSidebarCollapsed}
-        onToggle={() => setIsSidebarCollapsed((prev) => !prev)}
-      />
+    // 1. Wrap with DatabaseRefreshProvider for shared refresh state (F-010)
+    // 2. Provider enables coordinated refresh between sidebar and main page
+    <DatabaseRefreshProvider>
+      {/* 1. Main container with flex layout */}
+      {/* 2. Sidebar takes 20% width when expanded */}
+      {/* 3. Main content takes remaining width */}
+      <div className="devtools-panel flex">
+        <Sidebar
+          isCollapsed={isSidebarCollapsed}
+          onToggle={() => setIsSidebarCollapsed((prev) => !prev)}
+        />
 
-      <main className="flex-1 h-full overflow-auto flex flex-col text-left">
-        {/* Connection status indicator */}
-        {renderConnectionStatus()}
+        <main className="flex-1 h-full overflow-auto flex flex-col text-left">
+          {/* Connection status indicator */}
+          {renderConnectionStatus()}
 
-        <Routes>
-          {/* 1. Default route - redirect to opened database list (F-008) */}
-          {/* 2. Shows all opened databases when DevTools opens */}
-          <Route path="/" element={<Navigate to="/openedDB" replace />} />
+          <Routes>
+            {/* 1. Default route - redirect to opened database list (F-008) */}
+            {/* 2. Shows all opened databases when DevTools opens */}
+            <Route path="/" element={<Navigate to="/openedDB" replace />} />
 
-          {/* 1. Opened database list route (F-008) */}
-          {/* 2. Displays all opened databases as clickable cards */}
-          {/* 3. CRITICAL: Generic route must precede parameterized route */}
-          <Route path="/openedDB" element={<OpenedDBList />} />
+            {/* 1. Opened database list route (F-008) */}
+            {/* 2. Displays all opened databases as clickable cards */}
+            {/* 3. CRITICAL: Generic route must precede parameterized route */}
+            <Route path="/openedDB" element={<OpenedDBList />} />
 
-          {/* 1. Database tabs with nested routing (F-002) */}
-          {/* 2. /openedDB/:dbname redirects to /openedDB/:dbname/tables */}
-          {/* 3. Each tab has its own route under the database path */}
-          <Route path="/openedDB/:dbname" element={<DatabaseTabs />}>
-            {/* Default redirect to tables tab */}
-            <Route index element={<Navigate to="tables" replace />} />
+            {/* 1. Database tabs with nested routing (F-002) */}
+            {/* 2. /openedDB/:dbname redirects to /openedDB/:dbname/tables */}
+            {/* 3. Each tab has its own route under the database path */}
+            <Route path="/openedDB/:dbname" element={<DatabaseTabs />}>
+              {/* Default redirect to tables tab */}
+              <Route index element={<Navigate to="tables" replace />} />
 
-            {/* Tables tab with nested :tableName route */}
-            <Route path="tables" element={<TablesTab />}>
-              <Route path=":tableName" element={<TableDetail />} />
+              {/* Tables tab with nested :tableName route */}
+              <Route path="tables" element={<TablesTab />}>
+                <Route path=":tableName" element={<TableDetail />} />
+              </Route>
+
+              {/* Query tab */}
+              <Route
+                path="query"
+                element={
+                  <QueryTab
+                    onExecuteRef={queryExecuteRef}
+                    onClearRef={queryClearRef}
+                    onToggleHistoryRef={queryToggleHistoryRef}
+                  />
+                }
+              />
+
+              {/* Log tab */}
+              <Route path="logs" element={<LogView />} />
+
+              {/* Migration tab */}
+              <Route path="migration" element={<MigrationTab />} />
+
+              {/* Seed tab */}
+              <Route path="seed" element={<SeedTab />} />
+
+              {/* About tab */}
+              <Route path="about" element={<AboutTab />} />
             </Route>
 
-            {/* Query tab */}
-            <Route
-              path="query"
-              element={
-                <QueryTab
-                  onExecuteRef={queryExecuteRef}
-                  onClearRef={queryClearRef}
-                  onToggleHistoryRef={queryToggleHistoryRef}
-                />
-              }
-            />
+            {/* 1. Log view route (separate from database tabs) */}
+            {/* 2. Shows real-time log entries for a database */}
+            {/* 3. Log streaming implemented in TASK-09 */}
+            <Route path="/logs/:dbname" element={<LogView />} />
 
-            {/* Log tab */}
-            <Route path="logs" element={<LogView />} />
+            {/* 1. OPFS browser route */}
+            {/* 2. Shows file tree with lazy-loaded directories */}
+            {/* 3. Implemented in TASK-10 */}
+            <Route path="/opfs" element={<OPFSGallery />} />
 
-            {/* Migration tab */}
-            <Route path="migration" element={<MigrationTab />} />
+            {/* Catch-all - redirect to root */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </main>
 
-            {/* Seed tab */}
-            <Route path="seed" element={<SeedTab />} />
-
-            {/* About tab */}
-            <Route path="about" element={<AboutTab />} />
-          </Route>
-
-          {/* 1. Log view route (separate from database tabs) */}
-          {/* 2. Shows real-time log entries for a database */}
-          {/* 3. Log streaming implemented in TASK-09 */}
-          <Route path="/logs/:dbname" element={<LogView />} />
-
-          {/* 1. OPFS browser route */}
-          {/* 2. Shows file tree with lazy-loaded directories */}
-          {/* 3. Implemented in TASK-10 */}
-          <Route path="/opfs" element={<OPFSGallery />} />
-
-          {/* Catch-all - redirect to root */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </main>
-
-      {/* Keyboard shortcuts help modal */}
-      <KeyboardShortcutsHelp
-        isOpen={isHelpOpen}
-        onClose={closeHelp}
-        categories={shortcutCategories}
-      />
-    </div>
+        {/* Keyboard shortcuts help modal */}
+        <KeyboardShortcutsHelp
+          isOpen={isHelpOpen}
+          onClose={closeHelp}
+          categories={shortcutCategories}
+        />
+      </div>
+    </DatabaseRefreshProvider>
   );
 };
 

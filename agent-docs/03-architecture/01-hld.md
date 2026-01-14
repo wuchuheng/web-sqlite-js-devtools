@@ -1466,3 +1466,341 @@ const LogView: React.FC = () => {
 - **Complexity**: Low (simple integration of existing component)
 - **Estimated Time**: 0.5-1 hour
 - **Risk**: Low (uses existing, tested LogView component)
+
+## 15) Database Refresh Coordination (Feature F-010)
+
+**Purpose**: Coordinate database refresh between sidebar and main page via shared React Context, eliminating stale data inconsistencies.
+
+**Problem Solved**:
+
+- **Current Issue**: OpenedDBList (`/openedDB` route) and Sidebar DatabaseList each have their own `reload()` function. When user clicks refresh in main page, sidebar list shows stale data.
+- **Solution**: Create `DatabaseRefreshContext` at DevTools level to coordinate refresh across both locations. Add refresh button to sidebar header (left side).
+
+**State Management Architecture**:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  DevToolsContent (Context Provider)                          │
+│  ├── refreshVersion: number (increments on refresh)        │
+│  └── triggerRefresh: () => void (increments version)       │
+└─────────────────────────────────────────────────────────────┘
+                            │
+         ┌──────────────────┴──────────────────┐
+         ▼                                     ▼
+┌─────────────────────────┐     ┌─────────────────────────┐
+│  Sidebar DatabaseList   │     │  OpenedDBList           │
+│  (Context Consumer)     │     │  (Context Consumer)     │
+│  ├── Consumes context   │     │  ├── Consumes context   │
+│  ├── Uses refreshVersion│     │  ├── Uses refreshVersion│
+│  │   in deps array      │     │  │   in deps array      │
+│  └── New refresh button │     │  └── Header refresh     │
+│      (left side)        │     │      button             │
+└─────────────────────────┘     └─────────────────────────┘
+```
+
+**Refresh Coordination Flow**:
+
+```
+┌──────────────────┐
+│  User clicks     │
+│  refresh in      │
+│  main page OR    │
+│  sidebar         │
+└────────┬─────────┘
+         │
+         ▼
+┌──────────────────┐
+│  triggerRefresh()│ → Increments refreshVersion
+└────────┬─────────┘
+         │
+         ▼
+┌──────────────────┐
+│  Context updates │ → All consumers re-render
+│  (refreshVersion │ → Dependency array triggers
+│   value changes) │ → useInspectedWindowRequest
+└────────┬─────────┘
+         │
+         ▼
+┌──────────────────┐     ┌──────────────────┐
+│  Sidebar refetch │     │  Main page       │
+│  databases       │     │  refetches       │
+│  (fresh data)     │     │  databases       │
+└──────────────────┘     └──────────────────┘
+```
+
+**Context API Pattern**:
+
+```typescript
+// DatabaseRefreshContext.tsx
+interface DatabaseRefreshContextValue {
+  triggerRefresh: () => void;
+  refreshVersion: number;
+}
+
+export const DatabaseRefreshContext = createContext<DatabaseRefreshContextValue | null>(null);
+
+export const DatabaseRefreshProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [refreshVersion, setRefreshVersion] = useState(0);
+
+  const triggerRefresh = useCallback(() => {
+    setRefreshVersion(prev => prev + 1);
+  }, []);
+
+  const value = useMemo(() => ({
+    triggerRefresh,
+    refreshVersion,
+  }), [triggerRefresh, refreshVersion]);
+
+  return (
+    <DatabaseRefreshContext.Provider value={value}>
+      {children}
+    </DatabaseRefreshContext.Provider>
+  );
+};
+
+export const useDatabaseRefresh = () => {
+  const context = useContext(DatabaseRefreshContext);
+  if (!context) {
+    throw new Error('useDatabaseRefresh must be used within DatabaseRefreshProvider');
+  }
+  return context;
+};
+```
+
+**Component Integration**:
+
+```typescript
+// Sidebar DatabaseList (MODIFIED)
+export const DatabaseList = ({ isCollapsed }: DatabaseListProps) => {
+  const { triggerRefresh, refreshVersion } = useDatabaseRefresh();
+
+  const {
+    data: databases,
+    isLoading,
+    error,
+    reload: localReload,
+  } = useInspectedWindowRequest<DatabaseSummary[]>(
+    () => databaseService.getDatabases(),
+    [refreshVersion], // ← Refetch when version changes
+    [],
+  );
+
+  // NEW: Refresh button in header (LEFT side)
+  return (
+    <div className="flex flex-col">
+      <div className="flex items-center px-4 py-2">
+        <button
+          onClick={triggerRefresh}
+          className="mr-2 text-secondary-500 hover:text-primary-600"
+          aria-label="Refresh database list"
+        >
+          <IoMdRefresh size={16} />
+        </button>
+        <SidebarLink
+          to="/openedDB"
+          label="Opened DB"
+          icon={FaDatabase}
+          isActive={isActive}
+          isCollapsed={isCollapsed}
+          className="flex-1"
+        />
+      </div>
+      {/* ... database list ... */}
+    </div>
+  );
+};
+
+// OpenedDBList (MODIFIED)
+export const OpenedDBList = () => {
+  const { triggerRefresh, refreshVersion } = useDatabaseRefresh();
+
+  const {
+    data: databases,
+    isLoading,
+    error,
+    reload: localReload,
+  } = useInspectedWindowRequest<DatabaseSummary[]>(
+    () => databaseService.getDatabases(),
+    [refreshVersion], // ← Refetch when version changes
+    [],
+  );
+
+  // Header refresh button uses shared trigger
+  return (
+    <Header
+      refresh={triggerRefresh} // ← Use shared trigger
+      count={databases.length}
+    />
+  );
+};
+
+// DevToolsContent (MODIFIED)
+const DevToolsContent = () => {
+  // ... existing code ...
+
+  return (
+    <DatabaseRefreshProvider>
+      <div className="devtools-panel flex">
+        <Sidebar ... />
+        <main className="flex-1 ...">
+          {/* Routes */}
+        </main>
+      </div>
+    </DatabaseRefreshProvider>
+  );
+};
+```
+
+**Sidebar Header Layout** (F-010):
+
+```
+┌────────────────────────────┐
+│ [🔄] Opened DB              │  ← Refresh button on LEFT side
+├────────────────────────────┤
+│ • database1                 │
+│ • database2                 │
+│ • database3                 │
+└────────────────────────────┘
+
+Layout:
+<div className="flex items-center px-4 py-2">
+  <button onClick={triggerRefresh} className="mr-2">
+    <IoMdRefresh size={16} />
+  </button>
+  <SidebarLink className="flex-1" ... />
+</div>
+```
+
+**Bidirectional Refresh Behavior**:
+
+| Action                  | Main Page      | Sidebar        | Result                        |
+| ----------------------- | -------------- | -------------- | ----------------------------- |
+| Click main page refresh | Refetches data | Refetches data | Both show fresh data          |
+| Click sidebar refresh   | Refetches data | Refetches data | Both show fresh data          |
+| Rapid clicks on either  | Single refresh | Single refresh | Debounced, no duplicate calls |
+
+**Debounce Strategy**:
+
+```typescript
+const triggerRefresh = useCallback(() => {
+  setRefreshVersion((prev) => {
+    const next = prev + 1;
+    // Debounce: increment once, ignore rapid clicks
+    return next;
+  });
+}, []);
+```
+
+**Component Hierarchy** (F-010 Updated):
+
+```
+DevToolsContent
+├── DatabaseRefreshProvider (NEW - wraps entire content)
+│   ├── Sidebar
+│   │   ├── SidebarHeader
+│   │   ├── DatabaseList (MODIFIED)
+│   │   │   ├── Refresh button (NEW - left side)
+│   │   │   │   └── IoMdRefresh icon (16px)
+│   │   │   └── Database items (consumes context)
+│   │   ├── OPFSLink
+│   │   └── CollapseToggle
+│   └── MainContent
+│       ├── OpenedDBList (MODIFIED)
+│       │   ├── Header (consumes context)
+│       │   │   └── Refresh Button (uses shared trigger)
+│       │   └── Database List
+│       └── DatabaseTabs
+```
+
+**Code Structure** (F-010):
+
+```
+/src/devtools
+  /contexts (NEW FOLDER)
+    DatabaseRefreshContext.tsx    # NEW - Context provider + hook
+  /components
+    /Sidebar
+      DatabaseList.tsx             # MODIFIED - Add refresh button, consume context
+    /OpenedDBList
+      OpenedDBList.tsx             # MODIFIED - Consume context
+  DevTools.tsx                     # MODIFIED - Wrap with provider
+```
+
+**State Management Strategy** (F-010):
+
+- **Pattern**: React Context API (no external state library)
+- **Ownership**: DevToolsContent owns context state
+- **Propagation**: Context value flows down to consumers
+- **Trigger**: `triggerRefresh()` increments version number
+- **Response**: Consumers refetch when version changes (dependency array)
+
+**Service Layer Integration** (F-010):
+
+No changes to service layer required. Uses existing `getDatabases()` function:
+
+```typescript
+// From databaseService.ts (unchanged)
+getDatabases(): Promise<ServiceResponse<DatabaseSummary[]>>
+```
+
+**Refresh Synchronization Guarantees**:
+
+1. **Atomic Update**: Single `refreshVersion` increment triggers all refetches
+2. **No Race Conditions**: React's batching ensures consistent state
+3. **Eventual Consistency**: Both locations show same data within one render cycle
+4. **Error Handling**: Each component handles its own error state independently
+
+**Icon Integration** (F-010):
+
+- **Refresh**: `IoMdRefresh` (react-icons/io) - Refresh button in sidebar header
+- **Size**: 16px (slightly smaller than main page 18px)
+- **Position**: Left side of menu title (before "Opened DB" text)
+- **Styling**: `text-secondary-500 hover:text-primary-600`
+
+**Theme Colors** (from F-007):
+
+- **Secondary**: `secondary-500` (`#6b7280` - gray-500) - Default icon color
+- **Primary**: `primary-600` (`#059669` - emerald-600) - Hover icon color
+
+**Accessibility** (F-010):
+
+- **ARIA Label**: Refresh button has `aria-label="Refresh database list"`
+- **Keyboard Navigation**: Button is focusable (Tab key), activates on Enter/Space
+- **Button Placement**: Left side of header (user request)
+- **Visual Feedback**: Hover state color change (gray-500 → emerald-600)
+
+**Performance Optimizations** (F-010):
+
+- **Context Value Memoization**: `useMemo` prevents unnecessary re-renders
+- **Callback Memoization**: `useCallback` prevents function recreation
+- **Dependency Array**: `refreshVersion` triggers refetch only when changed
+- **No Duplicate Calls**: Single version increment = single API call per consumer
+
+**Edge Cases** (F-010):
+
+1. **Sidebar Collapsed**: Refresh button still visible and functional
+2. **Sidebar Expanded**: Refresh button visible and functional
+3. **Error State**: Both refresh buttons work, trigger shared refetch
+4. **Empty State**: Both refresh buttons work, trigger shared refetch
+5. **Loading State**: Refresh buttons disabled during load (optional enhancement)
+6. **Rapid Clicks**: Debounced via state update (React batches updates)
+7. **Context Missing**: Throw error with clear message (development guard)
+
+**Benefits** (F-010):
+
+- **Data Consistency**: Both locations always show same database list
+- **Better UX**: Users can refresh from sidebar without navigating
+- **Bidirectional**: Refresh works from either location
+- **Simple Pattern**: Standard React Context, no external dependencies
+- **Scalable**: Pattern can be reused for other shared state (OPFS, logs)
+
+**Implementation Notes** (F-010):
+
+- **Files Modified**: 4 files (1 new, 3 existing)
+  - **New**: `src/devtools/contexts/DatabaseRefreshContext.tsx`
+  - **Modified**: `src/devtools/DevTools.tsx` (wrap with provider)
+  - **Modified**: `src/devtools/components/Sidebar/DatabaseList.tsx` (add button, consume context)
+  - **Modified**: `src/devtools/components/OpenedDBList/OpenedDBList.tsx` (consume context)
+- **Complexity**: Low (standard React Context pattern)
+- **Estimated Time**: 1-2 hours
+- **Risk**: Low (well-established pattern, isolated changes)
