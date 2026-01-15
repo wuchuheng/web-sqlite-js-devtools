@@ -38,10 +38,10 @@ NOTES
 
 ## 3) Current stage
 
-- **Current stage (1-8)**: Stage 8 - Implementation Worker (F-014 Complete)
-- **Active release**: v1.3.0 (UI Polish) - Target: 2026-01-21
-- **Status summary**: F-014 Complete (TASK-320 through TASK-325 all complete - Color + Header + Counts + Icons + Footer + Integration). F-013 Complete (TASK-314 through TASK-319), F-012 Complete (TASK-308 through TASK-313), F-011 Complete (TASK-307), F-010 Complete (TASK-306), F-009 Complete (TASK-305), F-008 Complete (TASK-304), TASK-303 Complete (Integration), TASK-302 Complete (F-006), TASK-301 Complete (F-005)
-- **Last updated (YYYY-MM-DD)**: 2026-01-16 (F-014: Complete - OPFS UI Visual Redesign)
+- **Current stage (1-8)**: Stage 8 - Worker (F-015: TASK-326 Icon Imports & Helper Functions complete)
+- **Active release**: v1.3.1 (Tree Enhancements) - Target: 2026-01-22
+- **Status summary**: F-015 In Progress (TASK-326 complete, TASK-327/328/329 pending). F-014 Complete (TASK-320 through TASK-325). F-013 Complete, F-012 Complete, F-011 Complete, F-010 Complete, F-009 Complete, F-008 Complete.
+- **Last updated (YYYY-MM-DD)**: 2026-01-16 (F-015: TASK-326 Icon Imports & Helper Functions complete)
 
 ## 4) Technology stack (chosen in Stage 2)
 

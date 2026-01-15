@@ -3565,3 +3565,409 @@ src/devtools/components/OPFSBrowser/
 ### 19.19 Rollback Strategy
 
 **Instant rollback** - Revert CSS class changes if issues arise.
+
+## 20) OPFS Tree Visual Enhancements Architecture (Feature F-015)
+
+**Purpose**: Enhance OPFS File Tree with default root expansion, dotted tree lines, and file type-specific icons for improved visual hierarchy and file recognition.
+
+**Dependencies**: F-012 (OPFS Browser Enhancement), F-013 (OPFS Two-Panel Preview), F-014 (OPFS UI Visual Redesign)
+**Baseline**: Option A (Component-Based Enhancement)
+
+**Key Changes**:
+
+- **Default Expansion**: Root directories (level 0) expand automatically on load
+- **Tree Line Styling**: Solid lines → Dotted/dashed borders for subtle hierarchy
+- **File Type Icons**: 6 icon types based on file extension (sqlite3, images, txt, json, folders, unknown)
+
+**Rationale**:
+
+- **Improved Discoverability**: Auto-expanded roots show content structure immediately
+- **Visual Hierarchy**: Dotted lines provide subtle guidance without visual clutter
+- **File Recognition**: Type-specific icons allow quick identification without reading filenames
+- **Reduced Clicks**: Users see directory contents at a glance instead of expanding manually
+
+### 20.1 C4 Component Diagram (F-015)
+
+```mermaid
+C4Component
+  title OPFS Tree Visual Enhancements (F-015)
+  Container_Boundary(opfsBrowser, "OPFS Browser Components") {
+    Component(fileTree, "FileTree", "File Browser", "Auto-expand roots, dotted lines, type icons")
+    Component(treeLines, "TreeLines", "Hierarchy Lines", "Dotted border styling")
+  }
+  Rel(fileTree, treeLines, "Uses for visual hierarchy")
+```
+
+### 20.2 Component Hierarchy (F-015)
+
+**Modified Structure** (changes to FileTree.tsx and TreeLines.tsx):
+
+```
+FileTree (MODIFIED - F-015)
+├── FileTreeItem (MODIFIED - F-015)
+│   ├── Icon (MODIFIED - F-015)
+│   │   ├── getFileIcon() helper (NEW - F-015)
+│   │   │   ├── FaDatabase (.sqlite3 files)
+│   │   │   ├── FaRegFileImage (images)
+│   │   │   ├── TiDocumentText (.txt files)
+│   │   │   ├── LuFileJson (.json/.json5 files)
+│   │   │   ├── FaFolder (closed directories)
+│   │   │   ├── FaFolderOpen (open directories)
+│   │   │   └── FaFile (unknown files)
+│   ├── Name + Counts (existing from F-014)
+│   ├── Action Icons (existing from F-014)
+│   └── TreeLines (MODIFIED - F-015)
+│       └── Dotted border styling
+└── Auto-Expand Logic (NEW - F-015)
+    ├── useState(level === 0) for initial state
+    └── useEffect for auto-loading root children
+```
+
+**Preserved Components** (no changes):
+
+- OPFSGallery (container, no changes)
+- FilePreview (preview panel, no changes)
+- DeleteConfirmModal (no changes)
+- Toast notifications (no changes)
+
+### 20.3 Icon Mapping Architecture (F-015)
+
+**File Type Detection Flow**:
+
+```tsx
+// 1. Extract file extension
+const ext = getFileExtension(entry.name);
+
+// 2. Map extension to icon component
+switch (ext) {
+  case ".sqlite3":
+    return <FaDatabase className="text-purple-600" />;
+  case ".png":
+  case ".jpg":
+  case ".jpeg":
+  case ".webp":
+  case ".gif":
+  case ".svg":
+  case ".ico":
+    return <FaRegFileImage className="text-purple-500" />;
+  case ".txt":
+    return <TiDocumentText className="text-gray-600" />;
+  case ".json":
+  case ".json5":
+    return <LuFileJson className="text-yellow-600" />;
+  default:
+    if (entry.type === "directory") {
+      return isExpanded ? (
+        <FaFolderOpen className="text-yellow-500" />
+      ) : (
+        <FaFolder className="text-gray-600" />
+      );
+    }
+    return <FaFile className="text-gray-500" />;
+}
+```
+
+**Icon Imports Required**:
+
+```tsx
+import { FaDatabase } from "react-icons/fa6";
+import { FaRegFileImage, FaFolder, FaFolderOpen, FaFile } from "react-icons/fa";
+import { TiDocumentText } from "react-icons/ti";
+import { LuFileJson } from "react-icons/lu";
+```
+
+**Icon Color Scheme**:
+
+| File Type            | Icon           | Tailwind Color    | Hex     | Rationale                          |
+| -------------------- | -------------- | ----------------- | ------- | ---------------------------------- |
+| SQLite Database      | FaDatabase     | `text-purple-600` | #9333ea | Purple indicates structured data   |
+| Images               | FaRegFileImage | `text-purple-500` | #a855f7 | Purple variant for visual assets   |
+| Text Files           | TiDocumentText | `text-gray-600`   | #4b5563 | Neutral for plain text             |
+| JSON Files           | LuFileJson     | `text-yellow-600` | #ca8a04 | Yellow indicates structured config |
+| Directories (closed) | FaFolder       | `text-gray-600`   | #4b5563 | Gray for collapsed state           |
+| Directories (open)   | FaFolderOpen   | `text-yellow-500` | #eab308 | Yellow indicates active/open       |
+| Unknown Files        | FaFile         | `text-gray-500`   | #6b7280 | Lighter gray for unknown type      |
+
+### 20.4 Expansion State Architecture (F-015)
+
+**Current Behavior** (pre-F-015):
+
+```tsx
+const [isExpanded, setIsExpanded] = useState(false); // All directories collapsed
+```
+
+**New Behavior** (F-015):
+
+```tsx
+// Root directories (level 0) expand by default
+const [isExpanded, setIsExpanded] = useState(level === 0);
+
+// Auto-load root children on mount
+useEffect(() => {
+  if (level === 0 && !hasLoaded && !isLoading) {
+    loadChildren();
+  }
+}, [level, hasLoaded, isLoading, loadChildren]);
+```
+
+**State Diagram**:
+
+```
+Initial Load (level 0)
+    ↓
+isExpanded = true (initial state)
+    ↓
+loadChildren() triggered via useEffect
+    ↓
+Root directory shows first-level children
+
+Child Directories (level > 0)
+    ↓
+isExpanded = false (initial state)
+    ↓
+User clicks to expand (on-demand lazy load)
+    ↓
+Children displayed
+```
+
+**Performance Considerations**:
+
+- **Root-Only Expansion**: Only level 0 directories auto-expand, preserving lazy-load for deeper levels
+- **Preserved Lazy-Loading**: Child directories remain collapsed until user interaction
+- **No State Bloat**: No additional state variables, using existing `hasLoaded` flag
+
+### 20.5 Tree Line Styling Architecture (F-015)
+
+**Current Implementation** (pre-F-015):
+
+```tsx
+// TreeLines.tsx - solid gray line
+className = "absolute top-0 left-0 w-px bg-gray-200";
+```
+
+**New Implementation** (F-015):
+
+```tsx
+// TreeLines.tsx - dotted lighter line
+className = "absolute top-0 left-0 border-l border-dotted border-gray-300";
+```
+
+**Styling Comparison**:
+
+| Property       | Before (F-014)                       | After (F-015)        | Rationale                                   |
+| -------------- | ------------------------------------ | -------------------- | ------------------------------------------- |
+| Border Style   | `bg-gray-200` (solid via background) | `border-dotted`      | Dotted provides classic tree view aesthetic |
+| Color          | `gray-200` (#e5e7eb)                 | `gray-300` (#d1d5db) | Lighter color for subtler visual            |
+| Implementation | Background width                     | Border-left          | Semantically correct for lines              |
+
+**Responsive Behavior** (preserved from F-012):
+
+- Hidden when container width < 200px (sidebar collapsed)
+- Controlled by `showLines` prop from ResizeObserver
+- No changes to responsive hiding logic
+
+### 20.6 Component State Changes (F-015)
+
+**FileTreeItem State** (modified):
+
+| State        | Type           | Default       | Purpose (F-015)                      |
+| ------------ | -------------- | ------------- | ------------------------------------ |
+| `isExpanded` | boolean        | `level === 0` | Root directories start expanded      |
+| `isLoading`  | boolean        | `false`       | (unchanged) Loading state            |
+| `hasLoaded`  | boolean        | `false`       | (unchanged) Prevents duplicate loads |
+| `error`      | string \| null | `null`        | (unchanged) Error display            |
+
+**FileTree Props** (unchanged):
+
+| Prop           | Type                  | Purpose                             |
+| -------------- | --------------------- | ----------------------------------- |
+| `onDownload`   | function              | (unchanged) Download callback       |
+| `onDelete`     | function              | (unchanged) Delete callback         |
+| `onFileSelect` | function              | (unchanged) File selection callback |
+| `selectedFile` | OpfsFileEntry \| null | (unchanged) Currently selected file |
+
+### 20.7 Data Flow Architecture (F-015)
+
+**Expansion Flow** (new auto-expand logic):
+
+```
+FileTree Mount
+    ↓
+FileTreeItem rendered for each root entry (level=0)
+    ↓
+isExpanded = useState(level === 0) → true for roots
+    ↓
+useEffect detects level=0 + !hasLoaded
+    ↓
+loadChildren() called
+    ↓
+databaseService.getOpfsFiles(entry.path)
+    ↓
+Children loaded and displayed
+```
+
+**Icon Selection Flow** (new helper function):
+
+```
+FileTreeItem Render
+    ↓
+Get entry.type (directory vs file)
+    ↓
+If directory: return FaFolderOpen or FaFolder based on isExpanded
+    ↓
+If file: call getFileIcon(entry.name)
+    ↓
+Extract extension via getFileExtension()
+    ↓
+Switch on extension: return matching icon component
+    ↓
+Icon rendered with appropriate color className
+```
+
+### 20.8 Interface Updates (F-015)
+
+**No Interface Changes**:
+
+- `OpfsFileEntry` type: No modifications (uses existing `name`, `type`, `path` fields)
+- `databaseService.getOpfsFiles()`: No modifications (existing signature preserved)
+- Component props: No new props added to FileTree or FileTreeItem
+
+**Helper Function Signature** (internal to FileTree.tsx):
+
+```tsx
+interface getFileIconParams {
+  entry: OpfsFileEntry;
+  isExpanded: boolean;
+}
+
+const getFileIcon = ({ entry, isExpanded }: getFileIconParams): ReactNode => {
+  // ... implementation
+};
+```
+
+### 20.9 Error Handling Architecture (F-015)
+
+**Preserved Error Handling** (no changes to existing logic):
+
+- `error` state: Displayed below node if loadChildren() fails
+- `isLoading` state: Shows spinner during load
+- `hasLoaded` state: Prevents duplicate load attempts
+
+**New Error Scenarios** (low risk):
+
+| Scenario                   | Handling                                |
+| -------------------------- | --------------------------------------- |
+| Icon library missing       | Build error (caught at compile time)    |
+| Extension edge case        | Fallback to FaFile icon                 |
+| useEffect dependency cycle | Dependency array prevents infinite loop |
+
+### 20.10 Performance Considerations (F-015)
+
+**Bundle Size Impact**:
+
+| Addition                              | Size      | Notes                             |
+| ------------------------------------- | --------- | --------------------------------- |
+| react-icons/fa6 (FaDatabase)          | ~3KB      | Tree-shakeable                    |
+| react-icons/fa (FaRegFileImage, etc.) | ~8KB      | Already partially imported        |
+| react-icons/ti (TiDocumentText)       | ~2KB      | New sub-package                   |
+| react-icons/lu (LuFileJson)           | ~2KB      | New sub-package                   |
+| **Total**                             | **~15KB** | Acceptable for DevTools extension |
+
+**Runtime Performance**:
+
+- **Initial Load**: +50-100ms for root directory auto-expansion (acceptable trade-off)
+- **Render Performance**: No change (icon selection is pure function)
+- **Memory**: No change (same number of components, different icons only)
+
+**Optimization Strategies**:
+
+1. **Preserved Lazy-Loading**: Child directories still load on-demand
+2. **Memoization Potential**: Icon component could be memoized if performance issues arise
+3. **Code Splitting**: Not needed for small icon additions
+
+### 20.11 File Structure (F-015)
+
+```text
+src/devtools/components/OPFSBrowser/
+  FileTree.tsx              # MODIFIED - Add icon imports, getFileIcon helper, auto-expand
+  TreeLines.tsx             # MODIFIED - Dotted border styling
+  FilePreview.tsx           # unchanged
+  PreviewHeader.tsx         # unchanged
+  OPFSGallery.tsx           # unchanged
+```
+
+### 20.12 Browser Compatibility (F-015)
+
+- Chrome 90+ (no changes - `border-dotted` widely supported)
+- Edge 90+ (same engine as Chrome)
+- Firefox: Not supported (OPFS not available)
+
+### 20.13 Benefits (F-015)
+
+1. **Improved Discoverability**: Users see directory structure immediately without clicking
+2. **Visual Clarity**: Dotted lines provide subtle hierarchy guidance
+3. **File Recognition**: Type-specific icons allow quick identification
+4. **Reduced Interaction**: Fewer clicks to view file system contents
+5. **Professional Appearance**: Matches classic tree view patterns users expect
+
+### 20.14 Implementation Notes (F-015)
+
+**Phase 1: Icon Imports and Helper Function** (1h)
+
+1. Add 6 icon imports to FileTree.tsx
+2. Create `getFileExtension()` helper function
+3. Create `getFileIcon()` helper function with switch statement
+4. Add TSDoc comments with @example
+
+**Phase 2: Expansion State Update** (0.5h)
+
+1. Update `useState(false)` → `useState(level === 0)`
+2. Add `useEffect` hook for auto-loading root children
+3. Test expand/collapse behavior
+
+**Phase 3: Tree Line Styling** (0.5h)
+
+1. Update TreeLines.tsx className
+2. Change `bg-gray-200` to `border-dotted border-gray-300`
+3. Test responsive hiding (sidebar collapse)
+
+**Phase 4: Testing & Validation** (1h)
+
+1. Visual testing: Verify icons match file types
+2. Functional testing: Verify expand/collapse works
+3. Performance testing: Verify no significant load time increase
+4. ESLint and build verification
+
+### 20.15 Integration Points
+
+- **Service Layer**: No changes to `databaseService.ts`
+- **Bridge Layer**: No changes to `inspectedWindow.ts`
+- **Type System**: No changes to `OpfsFileEntry`
+- **Routing**: No changes to `/opfs` route
+- **Other Components**: No changes to FilePreview, PreviewHeader, etc.
+
+### 20.16 Dependencies
+
+- F-012 (OPFS Browser Enhancement) - Complete (provides TreeLines component)
+- F-013 (OPFS Two-Panel Preview) - Complete (provides file selection)
+- F-014 (OPFS UI Visual Redesign) - Complete (provides green theme)
+- React 18+ (existing)
+- Tailwind CSS 4 (existing)
+- react-icons (existing)
+
+### 20.17 Risk Assessment
+
+| Risk                   | Impact | Mitigation                              |
+| ---------------------- | ------ | --------------------------------------- |
+| Missing icon libraries | Medium | Verify imports before commit            |
+| Performance regression | Low    | Root-only expansion preserves lazy-load |
+| Icon bundle size       | Low    | ~15KB acceptable for DevTools           |
+| Visual inconsistency   | Low    | Reference prototype screenshot          |
+
+### 20.18 Migration Strategy
+
+**No migration needed** - Visual-only changes with no data impact.
+
+### 20.19 Rollback Strategy
+
+**Instant rollback** - Revert FileTree.tsx and TreeLines.tsx changes if issues arise.

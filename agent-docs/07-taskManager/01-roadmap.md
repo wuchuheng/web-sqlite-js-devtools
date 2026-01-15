@@ -1502,3 +1502,126 @@ Enhance the OPFS File Browser with guided tree lines for visual hierarchy, delet
 - [ ] Type check passed with no errors
 - [ ] Feature spec marked complete
 - [ ] Documentation updated (HLD, LLD, status board)
+
+---
+
+#### Phase 12: OPFS Tree Visual Enhancements (Day 22)
+
+**Milestone**: Default root expansion, dotted tree lines, file type icons
+
+**Feature**: F-015 - OPFS Tree Visual Enhancements
+
+**Overview**: Enhance the OPFS File Tree with three visual improvements: (1) Root directories expand by default on load, (2) Tree hierarchy lines use dotted/dashed styling for subtle visual guidance, (3) File type-specific icons for quick identification (sqlite3, images, txt, json, folders, unknown).
+
+**Target Date**: 2026-01-22
+**Duration**: 3 hours (0.5 days)
+**Baseline**: Option A (Component-Based Enhancement)
+
+### Task Breakdown
+
+- [ ] **TASK-326**: Icon Imports and Helper Functions (F-015)
+  - Add 6 icon imports to FileTree.tsx: FaDatabase (fa6), FaRegFileImage, FaFolder, FaFolderOpen, FaFile (fa), TiDocumentText (ti), LuFileJson (lu)
+  - Create getFileExtension(filename) helper to extract file extension
+  - Create getFileIcon(entry, isExpanded) helper with switch statement for 6 file types
+  - Add TSDoc comments with @example for both helpers
+  - Test icon rendering for all 6 types
+  - Estimated time: 1 hour
+
+- [ ] **TASK-327**: Expansion State Update (F-015)
+  - Update useState(false) to useState(level === 0) for root-level auto-expansion
+  - Add useEffect hook to auto-load root directory children on mount
+  - Verify only root (level 0) directories auto-expand
+  - Verify child directories remain lazy-loaded
+  - Test expand/collapse behavior still works
+  - Estimated time: 0.5 hours
+
+- [ ] **TASK-328**: Tree Line Styling (F-015)
+  - Update TreeLines.tsx className: bg-gray-200 to border-dotted border-gray-300
+  - Verify dotted lines display correctly
+  - Test responsive hiding (sidebar collapse) still works
+  - Estimated time: 0.5 hours
+
+- [ ] **TASK-329**: Integration and Testing (F-015)
+  - Visual testing: verify all 6 icon types display correctly
+  - Functional testing: verify expand, lazy-load, download, delete work
+  - Integration testing: verify compatibility with F-012, F-013, F-014
+  - Performance testing: verify no significant load time increase
+  - ESLint verification (no new warnings)
+  - Build verification (no errors)
+  - Estimated time: 1 hour
+
+**Total**: 3 hours (0.5 days)
+
+### Acceptance Criteria
+
+**Default Expansion**:
+
+- [ ] Root directories (level 0) are expanded on load
+- [ ] Root directory children are loaded automatically
+- [ ] Child directories (level > 0) remain collapsed (lazy-loaded)
+- [ ] Expand/collapse behavior still works for all directories
+
+**Tree Line Styling**:
+
+- [ ] Tree lines use dotted/dashed styling (not solid)
+- [ ] Line color is lighter (gray-300 vs gray-200)
+- [ ] Responsive hiding works (sidebar collapse)
+
+**File Type Icons**:
+
+- [ ] .sqlite3 files display FaDatabase icon (purple)
+- [ ] Image files (.png, .jpg, etc.) display FaRegFileImage icon (purple)
+- [ ] .txt files display TiDocumentText icon (gray)
+- [ ] .json/.json5 files display LuFileJson icon (yellow)
+- [ ] Closed directories display FaFolder icon (gray)
+- [ ] Open directories display FaFolderOpen icon (yellow)
+- [ ] Unknown file types display FaFile icon (gray fallback)
+
+**Functionality**:
+
+- [ ] All existing features work: expand/collapse, download, delete, preview
+- [ ] File selection works correctly
+- [ ] Panel resize works correctly
+- [ ] Delete confirmation modal works
+- [ ] Toast notifications work
+
+**Performance**:
+
+- [ ] Initial load time increased by < 100ms (acceptable)
+- [ ] No render performance regression
+- [ ] Bundle size increased by ~15KB (acceptable)
+
+**Code Quality**:
+
+- [ ] ESLint passed with no new warnings
+- [ ] Build passed with no errors
+- [ ] Type check passed with no errors
+- [ ] TSDoc comments added to helper functions
+- [ ] Code follows S8 quality rules (functional components, hooks)
+
+### Risk Mitigation
+
+| Risk                   | Impact | Mitigation                                    |
+| ---------------------- | ------ | --------------------------------------------- |
+| Missing icon libraries | Medium | Verify imports before committing              |
+| Performance regression | Low    | Root-only expansion preserves lazy-loading    |
+| Icon bundle size       | Low    | ~15KB acceptable for DevTools extension       |
+| Visual inconsistency   | Low    | Reference prototype screenshot for validation |
+
+### Definition of Done
+
+- [ ] Icon imports added to FileTree.tsx (6 icons from 4 libraries)
+- [ ] getFileExtension() helper created with TSDoc
+- [ ] getFileIcon() helper created with switch statement for 6 types
+- [ ] Expansion state updated: useState(level === 0)
+- [ ] Auto-loading useEffect added for root directories
+- [ ] TreeLines styling updated to dotted border
+- [ ] Visual testing passed (all 6 icon types display correctly)
+- [ ] Functional testing passed (expand, lazy-load, download, delete)
+- [ ] Integration testing passed (F-012, F-013, F-014 compatibility)
+- [ ] Performance testing passed (< 100ms load time increase)
+- [ ] ESLint passed with no new warnings
+- [ ] Build passed with no errors
+- [ ] Type check passed with no errors
+- [ ] Feature spec marked complete
+- [ ] Documentation updated (HLD Section 20, LLD Section 13, status board)

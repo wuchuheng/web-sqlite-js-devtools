@@ -1401,3 +1401,114 @@ NOTES
       - [x] Documentation updated:
         - [x] Feature spec marked complete (F-014)
         - [x] Status board marked complete (F-014)
+
+---
+
+## Release v1.3.1 (Tree Enhancements) - Target: 2026-01-22
+
+- [x] **TASK-326**: Icon Imports and Helper Functions (F-015)
+  - **Priority**: P0 (Blocker)
+  - **Dependencies**: None
+  - **Boundary**: `src/devtools/components/OPFSBrowser/FileTree.tsx`
+  - **Maps to**: F-015: OPFS Tree Visual Enhancements
+  - **Feature**: [F-015: OPFS Tree Visual Enhancements](agent-docs/01-discovery/features/F-015-opfs-tree-enhancements.md)
+  - **Micro-Spec**: [complete](agent-docs/08-task/active/TASK-326.md)
+  - **Estimated**: 1 hour
+  - **DoD**:
+    - [x] **Add Icon Imports** (0.25 hours)
+      - [x] Import FaDatabase from react-icons/fa6
+      - [x] Import FaRegFileImage, FaFolder, FaFolderOpen, FaFile from react-icons/fa
+      - [x] Import TiDocumentText from react-icons/ti
+      - [x] Import LuFileJson from react-icons/lu
+      - [x] Verify no import errors
+    - [x] **Create Helper Functions** (0.5 hours)
+      - [x] Create getFileExtension(filename) helper
+      - [x] Create getFileIcon(entry, isExpanded) helper
+      - [x] Implement switch statement for 6 file types
+      - [x] Add TSDoc comments with @example
+      - [x] Test icon rendering for all 6 types
+    - [x] **Testing** (0.25 hours)
+      - [x] Test .sqlite3 files display FaDatabase (purple)
+      - [x] Test image files display FaRegFileImage (purple)
+      - [x] Test .txt files display TiDocumentText (gray)
+      - [x] Test .json/.json5 files display LuFileJson (yellow)
+      - [x] Test directories display FaFolder/FaFolderOpen
+      - [x] Test unknown files display FaFile (gray)
+      - [x] ESLint passed (no new warnings for FileTree.tsx)
+      - [x] Build passed (TypeScript compiles for FileTree.tsx)
+
+- [ ] **TASK-327**: Expansion State Update (F-015)
+  - **Priority**: P0 (Blocker)
+  - **Dependencies**: None
+  - **Boundary**: `src/devtools/components/OPFSBrowser/FileTree.tsx`
+  - **Maps to**: F-015: OPFS Tree Visual Enhancements
+  - **Feature**: [F-015: OPFS Tree Visual Enhancements](agent-docs/01-discovery/features/F-015-opfs-tree-enhancements.md)
+  - **Micro-Spec**: [pending](agent-docs/08-task/active/TASK-327.md)
+  - **Estimated**: 0.5 hours
+  - **DoD**:
+    - [ ] **Update Expansion State** (0.25 hours)
+      - [ ] Change useState(false) to useState(level === 0)
+      - [ ] Add useEffect hook for auto-loading root children
+      - [ ] Verify dependency array prevents infinite loops
+    - [ ] **Testing** (0.25 hours)
+      - [ ] Test root directories (level 0) auto-expand on load
+      - [ ] Test child directories (level > 0) remain collapsed
+      - [ ] Test expand/collapse behavior still works
+      - [ ] Test lazy-loading preserved for child directories
+      - [ ] ESLint passed (no new warnings)
+      - [ ] Build passed (no errors)
+
+- [ ] **TASK-328**: Tree Line Styling (F-015)
+  - **Priority**: P0 (Blocker)
+  - **Dependencies**: None
+  - **Boundary**: `src/devtools/components/OPFSBrowser/TreeLines.tsx`
+  - **Maps to**: F-015: OPFS Tree Visual Enhancements
+  - **Feature**: [F-015: OPFS Tree Visual Enhancements](agent-docs/01-discovery/features/F-015-opfs-tree-enhancements.md)
+  - **Micro-Spec**: [pending](agent-docs/08-task/active/TASK-328.md)
+  - **Estimated**: 0.5 hours
+  - **DoD**:
+    - [ ] **Update Tree Line Styling** (0.25 hours)
+      - [ ] Change className from bg-gray-200 to border-dotted border-gray-300
+      - [ ] Verify dotted lines display correctly
+      - [ ] Verify color is lighter (gray-300 vs gray-200)
+    - [ ] **Testing** (0.25 hours)
+      - [ ] Test dotted lines display at all hierarchy levels
+      - [ ] Test responsive hiding (sidebar collapse) still works
+      - [ ] Test visual consistency with prototype
+      - [ ] ESLint passed (no new warnings)
+      - [ ] Build passed (no errors)
+
+- [ ] **TASK-329**: Integration and Testing (F-015)
+  - **Priority**: P0 (Blocker)
+  - **Dependencies**: TASK-326, TASK-327, TASK-328
+  - **Boundary**: Full OPFS browser, manual testing
+  - **Maps to**: F-015: OPFS Tree Visual Enhancements
+  - **Feature**: [F-015: OPFS Tree Visual Enhancements](agent-docs/01-discovery/features/F-015-opfs-tree-enhancements.md)
+  - **Micro-Spec**: [pending](agent-docs/08-task/active/TASK-329.md)
+  - **Estimated**: 1 hour
+  - **DoD**:
+    - [ ] **Visual Testing** (0.25 hours)
+      - [ ] Verify all 6 icon types display correctly
+      - [ ] Verify root directories are expanded on load
+      - [ ] Verify dotted tree lines display correctly
+      - [ ] Verify visual consistency with prototype screenshot
+    - [ ] **Functional Testing** (0.25 hours)
+      - [ ] Test expand/collapse behavior works
+      - [ ] Test lazy-loading works for child directories
+      - [ ] Test download functionality works
+      - [ ] Test delete functionality works
+      - [ ] Test file selection works
+      - [ ] Test panel resize works
+    - [ ] **Integration Testing** (0.25 hours)
+      - [ ] Test compatibility with F-012 (delete, metadata, tree lines)
+      - [ ] Test compatibility with F-013 (two-panel layout, file preview)
+      - [ ] Test compatibility with F-014 (green theme, file counts, visible icons)
+    - [ ] **Performance Testing** (0.25 hours)
+      - [ ] Measure initial load time increase (< 100ms acceptable)
+      - [ ] Verify no render performance regression
+      - [ ] Verify bundle size increase (~15KB acceptable)
+      - [ ] ESLint passed (no new warnings)
+      - [ ] Build passed (no errors)
+      - [ ] Documentation updated:
+        - [ ] Feature spec marked complete (F-015)
+        - [ ] Status board marked complete (F-015)

@@ -1,6 +1,21 @@
-import { useState, useCallback, useEffect, useRef } from "react";
-import { FaFile, FaDownload } from "react-icons/fa";
+import {
+  useState,
+  useCallback,
+  useEffect,
+  useRef,
+  type ReactNode,
+} from "react";
+import { FaDatabase } from "react-icons/fa6";
+import {
+  FaFile,
+  FaDownload,
+  FaRegFileImage,
+  FaFolder,
+  FaFolderOpen,
+} from "react-icons/fa";
 import { IoMdTrash } from "react-icons/io";
+import { TiDocumentText } from "react-icons/ti";
+import { LuFileJson } from "react-icons/lu";
 import { databaseService } from "@/devtools/services/databaseService";
 import { useInspectedWindowRequest } from "@/devtools/hooks/useInspectedWindowRequest";
 import type { OpfsFileEntry } from "@/devtools/services/databaseService";
@@ -40,6 +55,96 @@ const getDirectoryCounts = (entry: OpfsFileEntry): string => {
     return `${counts.directories} dirs`;
   }
   return `${counts.files} files ${counts.directories} dirs`;
+};
+
+/**
+ * Get file extension from filename (TASK-326)
+ *
+ * @remarks
+ * - Pure function with no side effects
+ * - Extracts extension using lastIndexOf('.')
+ * - Returns lowercase extension with dot
+ * - Returns empty string if no extension found
+ *
+ * @param filename - File name to extract extension from
+ * @returns File extension with dot (e.g., ".txt") or empty string
+ *
+ * @example
+ * ```ts
+ * const ext = getFileExtension("database.sqlite3"); // ".sqlite3"
+ * const ext2 = getFileExtension("README"); // ""
+ * ```
+ */
+const getFileExtension = (filename: string): string => {
+  // 1. Find last dot position
+  const idx = filename.lastIndexOf(".");
+
+  // 2. Return empty string if no dot found
+  if (idx === -1) {
+    return "";
+  }
+
+  // 3. Return lowercase extension with dot
+  return filename.substring(idx).toLowerCase();
+};
+
+/**
+ * Get icon component based on file type and expansion state (TASK-326)
+ *
+ * @remarks
+ * - Pure function with no side effects
+ * - Returns icon component based on file extension
+ * - Directories use FaFolder/FaFolderOpen based on expansion state
+ * - Files use type-specific icons (sqlite3, images, txt, json, unknown)
+ * - Icon colors provide visual differentiation (purple, yellow, gray)
+ *
+ * @param entry - OpfsFileEntry to get icon for
+ * @param isExpanded - Whether directory is expanded (for folder icons)
+ * @returns ReactNode representing the icon
+ *
+ * @example
+ * ```ts
+ * const icon = getFileIcon(entry, true); // <FaFolderOpen />
+ * const icon2 = getFileIcon(fileEntry, false); // <FaDatabase />
+ * ```
+ */
+const getFileIcon = (entry: OpfsFileEntry, isExpanded: boolean): ReactNode => {
+  // 1. Handle directories - use folder icons based on expansion state
+  if (entry.type === "directory") {
+    return isExpanded ? (
+      <FaFolderOpen className="text-yellow-500" size={14} />
+    ) : (
+      <FaFolder className="text-gray-600" size={14} />
+    );
+  }
+
+  // 2. Get file extension
+  const ext = getFileExtension(entry.name);
+
+  // 3. Return icon based on file extension
+  switch (ext) {
+    case ".sqlite3":
+      return <FaDatabase className="text-purple-600" size={14} />;
+
+    case ".png":
+    case ".jpg":
+    case ".jpeg":
+    case ".webp":
+    case ".gif":
+    case ".svg":
+    case ".ico":
+      return <FaRegFileImage className="text-purple-500" size={12} />;
+
+    case ".txt":
+      return <TiDocumentText className="text-gray-600" size={14} />;
+
+    case ".json":
+    case ".json5":
+      return <LuFileJson className="text-yellow-600" size={14} />;
+
+    default:
+      return <FaFile className="text-gray-500" size={12} />;
+  }
 };
 
 /**

@@ -1396,3 +1396,382 @@ src/devtools/components/OPFSBrowser/
   PreviewHeader.tsx            # NEW - Green header component
   (Other files unchanged from F-012/F-013)
 ```
+
+### 12.12 Updated File Tree (F-015)
+
+```text
+agent-docs/05-design/03-modules/opfs-browser.md (UPDATED: Section 13 added)
+src/devtools/components/OPFSBrowser/
+  FileTree.tsx                 # MODIFIED - Add icon imports, getFileIcon helper, auto-expand
+  TreeLines.tsx                # MODIFIED - Dotted border styling
+```
+
+## 13) Tree Visual Enhancements (Feature F-015)
+
+**Purpose**: Enhance FileTree with default root expansion, dotted tree lines, and file type-specific icons for improved visual hierarchy and file recognition.
+
+**Dependencies**: F-012 (TreeLines component), F-014 (Green theme), Option A (Component-Based)
+
+### 13.1 Icon Mapping Architecture
+
+**File Type Detection**:
+
+```typescript
+// Helper function: Extract file extension
+const getFileExtension = (filename: string): string => {
+  const idx = filename.lastIndexOf('.');
+  return idx === -1 ? '' : filename.substring(idx).toLowerCase();
+};
+
+// Helper function: Get icon based on file type and expansion state
+const getFileIcon = (entry: OpfsFileEntry, isExpanded: boolean): ReactNode => {
+  // Directories: FaFolder (closed) or FaFolderOpen (expanded)
+  if (entry.type === 'directory') {
+    return isExpanded
+      ? <FaFolderOpen className="text-yellow-500" />
+      : <FaFolder className="text-gray-600" />;
+  }
+
+  // Files: Type-specific icons based on extension
+  const ext = getFileExtension(entry.name);
+
+  switch (ext) {
+    case '.sqlite3':
+      return <FaDatabase className="text-purple-600" />;
+
+    case '.png':
+    case '.jpg':
+    case '.jpeg':
+    case '.webp':
+    case '.gif':
+    case '.svg':
+    case '.ico':
+      return <FaRegFileImage className="text-purple-500" />;
+
+    case '.txt':
+      return <TiDocumentText className="text-gray-600" />;
+
+    case '.json':
+    case '.json5':
+      return <LuFileJson className="text-yellow-600" />;
+
+    default:
+      return <FaFile className="text-gray-500" />;
+  }
+};
+```
+
+**Icon Imports Required**:
+
+```typescript
+import { FaDatabase } from "react-icons/fa6";
+import { FaRegFileImage, FaFolder, FaFolderOpen, FaFile } from "react-icons/fa";
+import { TiDocumentText } from "react-icons/ti";
+import { LuFileJson } from "react-icons/lu";
+```
+
+**Icon Color Scheme**:
+
+| File Type            | Icon Component | Tailwind Color    | Hex Code | Rationale                          |
+| -------------------- | -------------- | ----------------- | -------- | ---------------------------------- |
+| Directories (closed) | FaFolder       | `text-gray-600`   | #4b5563  | Neutral collapsed state            |
+| Directories (open)   | FaFolderOpen   | `text-yellow-500` | #eab308  | Yellow indicates active/open       |
+| SQLite Database      | FaDatabase     | `text-purple-600` | #9333ea  | Purple for structured data         |
+| Images               | FaRegFileImage | `text-purple-500` | #a855f7  | Purple variant for visual assets   |
+| Text Files           | TiDocumentText | `text-gray-600`   | #4b5563  | Neutral for plain text             |
+| JSON Files           | LuFileJson     | `text-yellow-600` | #ca8a04  | Yellow indicates structured config |
+| Unknown Files        | FaFile         | `text-gray-500`   | #6b7280  | Lighter gray for unknown type      |
+
+### 13.2 Expansion State Architecture
+
+**Root Directory Auto-Expansion**:
+
+```typescript
+// BEFORE (F-012/F-013/F-014) - All directories collapsed
+const [isExpanded, setIsExpanded] = useState(false);
+
+// AFTER (F-015) - Root directories expand by default
+const [isExpanded, setIsExpanded] = useState(level === 0);
+
+// Auto-load root directory children on mount
+useEffect(() => {
+  if (level === 0 && !hasLoaded && !isLoading) {
+    loadChildren();
+  }
+}, [level, hasLoaded, isLoading, loadChildren]);
+```
+
+**Expansion Flow Diagram**:
+
+```mermaid
+flowchart TD
+    A[FileTree Mount] --> B{entry.level === 0?}
+    B -->|Yes| C[isExpanded = true]
+    B -->|No| D[isExpanded = false]
+    C --> E[useEffect triggers loadChildren]
+    D --> F[User clicks to expand]
+    E --> G[Root children loaded and displayed]
+    F --> H[Child children loaded on-demand]
+```
+
+**State Table**:
+
+| Property     | Type    | Default (pre-F-015) | Default (F-015) | Purpose                              |
+| ------------ | ------- | ------------------- | --------------- | ------------------------------------ |
+| `isExpanded` | boolean | `false`             | `level === 0`   | Root directories start expanded      |
+| `hasLoaded`  | boolean | `false`             | `false`         | (unchanged) Prevents duplicate loads |
+| `isLoading`  | boolean | `false`             | `false`         | (unchanged) Loading state            |
+
+### 13.3 Tree Line Styling Updates
+
+**Component**: `TreeLines.tsx`
+
+**Changes**:
+
+```typescript
+// BEFORE (F-012/F-013/F-014) - Solid gray line
+className = "absolute top-0 left-0 w-px bg-gray-200";
+
+// AFTER (F-015) - Dotted lighter line
+className = "absolute top-0 left-0 border-l border-dotted border-gray-300";
+```
+
+**Styling Comparison**:
+
+| Property       | Before (F-014)     | After (F-015)      | Rationale                      |
+| -------------- | ------------------ | ------------------ | ------------------------------ |
+| Implementation | Background width   | Border-left        | Semantically correct for lines |
+| Style          | Solid (default)    | Dotted             | Classic tree view aesthetic    |
+| Color          | gray-200 (#e5e7eb) | gray-300 (#d1d5db) | Lighter = more subtle          |
+
+**Responsive Behavior** (preserved from F-012):
+
+```typescript
+// ResizeObserver in FileTree.tsx - unchanged
+const observer = new ResizeObserver((entries) => {
+  for (const entry of entries) {
+    setShowLines(entry.contentRect.width >= 200); // Hide when sidebar collapsed
+  }
+});
+```
+
+### 13.4 Component Interface Updates
+
+**FileTreeItemProps** (unchanged - no new props):
+
+```typescript
+interface FileTreeItemProps {
+  entry: OpfsFileEntry;
+  level: number;
+  onDownload: (_path: string, name: string) => Promise<void>;
+  onDelete?: (entry: OpfsFileEntry) => void;
+  onFileSelect?: (entry: OpfsFileEntry) => void;
+  selectedFile?: OpfsFileEntry | null;
+  keyPrefix: string;
+  showLines: boolean;
+  isLast?: boolean;
+  fileCounts?: string;
+}
+```
+
+**Internal Helper Functions** (new in F-015):
+
+```typescript
+/**
+ * Get file extension from filename
+ * @param filename - File name to extract extension from
+ * @returns File extension with dot (e.g., ".txt") or empty string
+ */
+const getFileExtension = (filename: string): string => {
+  const idx = filename.lastIndexOf(".");
+  return idx === -1 ? "" : filename.substring(idx).toLowerCase();
+};
+
+/**
+ * Get icon component based on file type and expansion state
+ * @param entry - OpfsFileEntry to get icon for
+ * @param isExpanded - Whether directory is expanded (for folder icons)
+ * @returns ReactNode representing the icon
+ */
+const getFileIcon = (entry: OpfsFileEntry, isExpanded: boolean): ReactNode => {
+  // ... implementation (see 13.1)
+};
+```
+
+### 13.5 Render Logic Updates
+
+**Icon Rendering** (F-015):
+
+```typescript
+// BEFORE (F-012/F-013/F-014) - Generic icon for all files
+{isDirectory ? (
+  isLoading ? <Spinner /> : isExpanded ? <OpenFolderIcon /> : <FolderIcon />
+) : (
+  <FaFile className="text-gray-500" size={12} />
+)}
+
+// AFTER (F-015) - Type-specific icons
+{isDirectory ? (
+  isLoading ? <Spinner /> : isExpanded
+    ? <FaFolderOpen className="text-yellow-500" size={14} />
+    : <FaFolder className="text-gray-600" size={14} />
+) : (
+  {getFileIcon(entry, isExpanded)}
+)}
+```
+
+**Action Icons with File Type Icons** (F-015):
+
+```typescript
+// Layout: Icon | Name + Counts | Action Icons
+<div className="group flex items-center gap-2 py-1 px-2 cursor-pointer">
+  {/* File Type Icon (F-015) */}
+  {getFileIcon(entry, isExpanded)}
+
+  {/* Name + Counts */}
+  <span className="flex-1 text-sm text-gray-700 truncate">
+    {entry.name}
+  </span>
+  {entry.type === 'directory' && directoryCounts && (
+    <span className="text-xs text-gray-500 ml-2">{directoryCounts}</span>
+  )}
+
+  {/* Size or Action Icons */}
+  {!isDirectory && (
+    <span className="text-xs text-gray-500">{entry.sizeFormatted}</span>
+  )}
+  {!isDirectory && (
+    <div className="flex items-center gap-1 opacity-100"> {/* Always visible from F-014 */}
+      <DownloadButton />
+      <DeleteButton />
+    </div>
+  )}
+
+  {/* Chevron for directories */}
+  {isDirectory && (
+    <svg className={`w-4 h-4 ${isExpanded ? 'rotate-90' : ''}`}>
+      <path d="M7.293 14.707a1 1 0 010-1.414L10.586 10..." />
+    </svg>
+  )}
+</div>
+```
+
+### 13.6 Error Handling
+
+**Preserved Error Handling** (no changes from F-012/F-013/F-014):
+
+```typescript
+// Error state in FileTreeItem
+const [error, setError] = useState<string | null>(null);
+
+// Error display
+{error && (
+  <div className="px-2 text-xs text-red-600" style={{ paddingLeft: `${paddingLeft + 32}px` }}>
+    {error}
+  </div>
+)}
+```
+
+**New Error Scenarios** (F-015):
+
+| Scenario                   | Handling                                | Impact                       |
+| -------------------------- | --------------------------------------- | ---------------------------- |
+| Icon library missing       | Build error (caught at compile time)    | High - prevents build        |
+| Unknown file extension     | Fallback to FaFile icon                 | Low - acceptable default     |
+| useEffect dependency cycle | Dependency array prevents infinite loop | Low - standard React pattern |
+
+### 13.7 Performance Considerations
+
+**Bundle Size Impact**:
+
+| Addition                        | Size      | Tree-shakeable                    |
+| ------------------------------- | --------- | --------------------------------- |
+| react-icons/fa6 (FaDatabase)    | ~3KB      | Yes                               |
+| react-icons/fa (4 icons)        | ~8KB      | Partially (FaFile already exists) |
+| react-icons/ti (TiDocumentText) | ~2KB      | Yes                               |
+| react-icons/lu (LuFileJson)     | ~2KB      | Yes                               |
+| **Total**                       | **~15KB** | Yes                               |
+
+**Runtime Performance**:
+
+- **Initial Load**: +50-100ms for root directory auto-expansion
+  - Acceptable trade-off for improved discoverability
+  - Lazy-loading preserved for child directories
+- **Render Performance**: No change (icon selection is pure function)
+- **Memory**: No change (same number of components, different icons only)
+
+### 13.8 Testing Strategy
+
+**Visual Testing**:
+
+1. Verify all 6 icon types display correctly:
+   - .sqlite3 files → FaDatabase (purple)
+   - .png/.jpg/.webp files → FaRegFileImage (purple)
+   - .txt files → TiDocumentText (gray)
+   - .json/.json5 files → LuFileJson (yellow)
+   - Closed directories → FaFolder (gray)
+   - Open directories → FaFolderOpen (yellow)
+2. Verify unknown file types → FaFile (gray fallback)
+3. Verify dotted tree lines display correctly
+4. Verify root directories are expanded on load
+
+**Functional Testing**:
+
+1. Test expand/collapse behavior still works
+2. Test auto-expand only applies to root (level 0)
+3. Test child directories still lazy-load on demand
+4. Test download/delete functionality unchanged
+5. Test file selection unchanged
+
+**Integration Testing**:
+
+1. Test with existing F-012 (delete, metadata, tree lines)
+2. Test with existing F-013 (two-panel layout, file preview)
+3. Test with existing F-014 (green theme, file counts, visible icons)
+4. Test responsive tree line hiding (sidebar collapse)
+
+### 13.9 Implementation Phases
+
+**Phase 1: Icon Imports and Helper Functions** (1h)
+
+1. Add 6 icon imports to FileTree.tsx
+2. Implement `getFileExtension()` helper
+3. Implement `getFileIcon()` helper with switch statement
+4. Add TSDoc comments with @example
+
+**Phase 2: Expansion State Update** (0.5h)
+
+1. Update `useState(false)` → `useState(level === 0)`
+2. Add `useEffect` hook for auto-loading root children
+3. Test expand/collapse behavior
+
+**Phase 3: Tree Line Styling** (0.5h)
+
+1. Update TreeLines.tsx className
+2. Change `bg-gray-200` → `border-dotted border-gray-300`
+3. Test responsive hiding
+
+**Phase 4: Testing & Validation** (1h)
+
+1. Visual testing (all 6 icon types)
+2. Functional testing (expand, lazy-load, download, delete)
+3. Integration testing (F-012, F-013, F-014)
+4. ESLint and build verification
+
+### 13.10 File Structure (F-015)
+
+```text
+src/devtools/components/OPFSBrowser/
+  FileTree.tsx                 # MODIFIED - Add icon imports, getFileIcon, auto-expand
+  TreeLines.tsx                # MODIFIED - Dotted border styling
+  (Other files unchanged from F-012/F-013/F-014)
+```
+
+### 13.11 Dependencies
+
+- F-012 (TreeLines component) - Complete
+- F-013 (Two-panel layout) - Complete
+- F-014 (Green theme, file counts) - Complete
+- React 18+ (existing)
+- Tailwind CSS 4 (existing)
+- react-icons (existing)
