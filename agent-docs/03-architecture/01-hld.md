@@ -2629,3 +2629,939 @@ const handleDelete = async () => {
 - **Routing**: No changes to `/opfs` route
 - **State Management**: Local component state (no global state)
 - **Styling**: Tailwind CSS with existing theme tokens
+
+## 18) OPFS Browser Two-Panel Layout Architecture (F-013)
+
+### 18.1 Architecture Overview
+
+**Feature**: Transform OPFS browser into two-panel layout with file preview capability
+**Pattern**: Split-panel layout with resizable divider (similar to VSCode file explorer)
+**Dependencies**: F-012 (OPFS Browser Enhancement), F-006 (Resizable Vertical Dividers)
+
+```mermaid
+C4Component
+  title OPFS Browser Two-Panel Layout
+  Container(panel, "DevTools Panel", "React + TS", "OPFS Browser Route")
+  Component(gallery, "OPFSGallery", "Main Container", "Two-panel layout state")
+  Component(tree, "FileTree", "Left Panel", "File navigation")
+  Component(preview, "FilePreview", "Right Panel", "File content display")
+  Component(resize, "ResizeHandle", "Divider", "Panel width control")
+  Component(text, "TextPreview", "Preview Sub", "Text file display")
+  Component(image, "ImagePreview", "Preview Sub", "Image file display")
+  Component(empty, "EmptyPreview", "Preview Sub", "No selection state")
+  Component(unsupported, "UnsupportedPreview", "Preview Sub", "Binary file placeholder")
+
+  Rel(gallery, tree, "Renders")
+  Rel(gallery, preview, "Renders")
+  Rel(gallery, resize, "Renders")
+  Rel(tree, gallery, "onFileSelect")
+  Rel(preview, text, "Delegates")
+  Rel(preview, image, "Delegates")
+  Rel(preview, empty, "Delegates")
+  Rel(preview, unsupported, "Delegates")
+  Rel(resize, gallery, "onWidthChange")
+```
+
+### 18.2 Component Hierarchy
+
+```
+OPFSGallery (Main Container)
+├── Header (existing)
+├── Main Content Area (NEW: flex layout)
+│   ├── Left Panel (File Tree)
+│   │   └── FileTree (existing from F-012)
+│   │       └── FileNode (existing from F-012)
+│   │           └── MetadataPanel (existing from F-012)
+│   ├── ResizeHandle (existing from F-006)
+│   └── Right Panel (Preview Area)
+│       └── FilePreview (NEW)
+│           ├── TextPreview (NEW)
+│           ├── ImagePreview (NEW)
+│           ├── EmptyPreview (NEW)
+│           └── UnsupportedPreview (NEW)
+├── DeleteConfirmModal (existing from F-012)
+└── Toast (existing from F-012)
+```
+
+### 18.3 Data Flow for File Content Loading
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant FileTree
+    participant OPFSGallery
+    participant FilePreview
+    participant TextPreview
+    participant databaseService
+    participant OPFS
+
+    User->>FileTree: Click file
+    FileTree->>OPFSGallery: onFileSelect(entry)
+    OPFSGallery->>OPFSGallery: setSelectedFile(entry)
+    OPFSGallery->>FilePreview: file={selectedFile}
+    FilePreview->>databaseService: getFileContent(path)
+    databaseService->>OPFS: getFileHandle + getFile()
+    OPFS-->>databaseService: File object
+    databaseService->>databaseService: Detect type (text/image/binary)
+    databaseService-->>FilePreview: ServiceResponse<Content>
+    alt Text File
+        FilePreview->>TextPreview: Render
+        TextPreview->>TextPreview: Display text content
+    else Image File
+        FilePreview->>ImagePreview: Render
+        ImagePreview->>ImagePreview: Display image
+    else Binary File
+        FilePreview->>UnsupportedPreview: Render
+        UnsupportedPreview->>UnsupportedPreview: Show placeholder
+    end
+```
+
+### 18.4 Panel Resizing Architecture
+
+**Component**: ResizeHandle (reused from F-006)
+
+**State Management**:
+
+```typescript
+// In OPFSGallery component
+const [leftPanelWidth, setLeftPanelWidth] = useState<number>(350); // Default width
+const [selectedFile, setSelectedFile] = useState<OpfsFileEntry | null>(null);
+
+const handleResize = useCallback((width: number) => {
+  // Constrain between 200px and 600px
+  const constrainedWidth = Math.max(200, Math.min(600, width));
+  setLeftPanelWidth(constrainedWidth);
+}, []);
+```
+
+**Layout Structure**:
+
+```tsx
+<div className="flex flex-1 overflow-hidden">
+  {/* Left Panel: File Tree */}
+  <div
+    style={{ width: `${leftPanelWidth}px` }}
+    className="flex flex-col overflow-hidden"
+  >
+    <FileTree onFileSelect={setSelectedFile} selectedFile={selectedFile} />
+  </div>
+
+  {/* Resizable Divider */}
+  <ResizeHandle
+    direction="horizontal"
+    onResize={handleResize}
+    minSize={200}
+    maxSize={600}
+  />
+
+  {/* Right Panel: Preview */}
+  <div className="flex-1 flex flex-col overflow-hidden">
+    <FilePreview file={selectedFile} />
+  </div>
+</div>
+```
+
+### 18.5 State Management Approach
+
+**Component State** (OPFSGallery):
+
+```typescript
+interface OPFSGalleryState {
+  leftPanelWidth: number; // Panel width in pixels
+  selectedFile: OpfsFileEntry | null; // Currently selected file
+  isModalOpen: boolean; // Delete modal state (existing)
+  modalEntry: OpfsFileEntry | null; // Modal entry (existing)
+  toast: ToastState | null; // Toast state (existing)
+}
+```
+
+**Props Flow**:
+
+- `FileTree` receives `onFileSelect` callback and `selectedFile` prop
+- `FilePreview` receives `file` prop (OpfsFileEntry | null)
+- All preview components are props-driven (no internal state)
+- Loading/error state managed by `FilePreview` component
+
+### 18.6 File Content Loading Service
+
+**New Service Function**: `getFileContent(path)`
+
+```typescript
+/**
+ * Get file content from OPFS
+ * @param path - Full path to the file
+ * @returns ServiceResponse<{ type: FileType, content: string | Blob }>
+ */
+getFileContent: async (
+  path: string,
+): Promise<
+  ServiceResponse<{
+    type: "text" | "image" | "binary";
+    content: string | Blob;
+    metadata?: {
+      size: number;
+      lastModified: Date;
+      mimeType: string;
+    };
+  }>
+> => {
+  try {
+    const script = `
+      (async () => {
+        const root = await navigator.storage.getDirectory();
+        const pathParts = '${path}'.split('/').filter(Boolean);
+        let dir = root;
+
+        // Navigate to directory
+        for (let i = 0; i < pathParts.length - 1; i++) {
+          dir = await dir.getDirectoryHandle(pathParts[i]);
+        }
+
+        // Get file handle
+        const filename = pathParts[pathParts.length - 1];
+        const fileHandle = await dir.getFileHandle(filename);
+        const file = await fileHandle.getFile();
+
+        // Detect file type
+        const mimeType = file.type;
+        let type = 'binary';
+        
+        if (mimeType.startsWith('text/') || 
+            mimeType.endsWith('/json') ||
+            mimeType.endsWith('/xml') ||
+            filename.match(/\.(log|txt|md|csv|xml|json|yaml|yml)$/i)) {
+          type = 'text';
+        } else if (mimeType.startsWith('image/')) {
+          type = 'image';
+        }
+
+        // Read content based on type
+        let content;
+        if (type === 'text') {
+          content = await file.text();
+        } else {
+          content = file; // Blob for images
+        }
+
+        return { 
+          success: true, 
+          data: {
+            type,
+            content,
+            metadata: {
+              size: file.size,
+              lastModified: new Date(file.lastModified),
+              mimeType
+            }
+          }
+        };
+      })()
+    `;
+
+    return await inspectedWindowBridge.execute(script);
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+};
+```
+
+### 18.7 Preview Component Architecture
+
+**FilePreview Component** (Main Container):
+
+```typescript
+interface FilePreviewProps {
+  file: OpfsFileEntry | null;
+}
+
+// Renders appropriate preview component based on file state
+// States: null (empty), loading, error, loaded (text/image/binary)
+```
+
+**Preview Component Hierarchy**:
+
+```
+FilePreview (Container)
+├── EmptyPreview (no file selected)
+├── LoadingSpinner (file content loading)
+├── ErrorState (preview failed with retry)
+├── TextPreview (text files: .log, .txt, .json, .xml, .csv, .md)
+├── ImagePreview (image files: .jpg, .png, .gif, .svg, .webp)
+└── UnsupportedPreview (binary files: .sqlite, .db, etc.)
+```
+
+**TextPreview Component**:
+
+```typescript
+interface TextPreviewProps {
+  file: OpfsFileEntry;
+  content: string;
+  metadata: { size: number; lastModified: Date; mimeType: string };
+}
+
+// Displays text content in monospace font
+// Preserves line breaks and formatting
+// Optional: Syntax highlighting for JSON files
+```
+
+**ImagePreview Component**:
+
+```typescript
+interface ImagePreviewProps {
+  file: OpfsFileEntry;
+  content: Blob;
+  metadata: { size: number; lastModified: Date; mimeType: string };
+}
+
+// Displays image with object-fit: contain
+// Scales to fit within panel (max-width: 100%, max-height: 100%)
+// Maintains aspect ratio
+```
+
+**EmptyPreview Component**:
+
+```typescript
+interface EmptyPreviewProps {
+  // No props needed
+}
+
+// Displays "Select a file to preview its contents"
+// Shows helpful icon or illustration
+```
+
+**UnsupportedPreview Component**:
+
+```typescript
+interface UnsupportedPreviewProps {
+  file: OpfsFileEntry;
+}
+
+// Displays "Preview not available for this file type"
+// Shows file metadata (size, type, modified date)
+// Shows download button to download the file
+```
+
+### 18.8 Integration with Existing F-012 Components
+
+**Preserved Features** (from F-012):
+
+- **Tree Lines**: VSCode-style hierarchy (TreeLines component)
+- **Delete Confirmation Modal**: Metadata grid with warning (DeleteConfirmModal)
+- **Toast Notifications**: Success/error feedback (Toast component)
+- **Enhanced Metadata**: File type badges, timestamps (MetadataPanel component)
+- **Download/Delete Buttons**: Hover actions on file nodes (FileNode component)
+
+**Modified Components**:
+
+- **FileTree**: Add `onFileSelect` callback and `selectedFile` prop
+- **FileNode**: Add visual highlight for selected file
+- **OPFSGallery**: Add two-panel layout with ResizeHandle
+
+**New Components** (F-013):
+
+- **FilePreview**: Main preview container
+- **TextPreview**: Text file preview
+- **ImagePreview**: Image file preview
+- **EmptyPreview**: No selection state
+- **UnsupportedPreview**: Binary file placeholder
+
+### 18.9 Theme Colors (F-007 Integration)
+
+**Preview Panel Styling**:
+
+```typescript
+// Header: Emerald theme
+const previewHeader =
+  "bg-emerald-50 border-b border-emerald-200 text-emerald-700";
+
+// Selected file highlight in tree
+const selectedFileStyle =
+  "bg-emerald-50 text-emerald-600 border-l-4 border-emerald-600";
+
+// Loading spinner
+const loadingSpinner = "text-emerald-600 animate-spin";
+
+// Error state
+const errorState = "text-red-600 bg-red-50 border border-red-200";
+
+// Empty state
+const emptyState = "text-gray-500 bg-gray-50";
+```
+
+### 18.10 File Structure
+
+```
+/src/devtools
+  /components
+    /OPFSBrowser
+      OPFSGallery.tsx              # MODIFIED - Add two-panel layout
+      FileTree.tsx                 # MODIFIED - Add onFileSelect, selectedFile
+      FileNode.tsx                 # MODIFIED - Add selected state styling
+      FilePreview.tsx              # NEW - Preview container
+      TextPreview.tsx              # NEW - Text file preview
+      ImagePreview.tsx             # NEW - Image file preview
+      EmptyPreview.tsx             # NEW - Empty state
+      UnsupportedPreview.tsx       # NEW - Unsupported file placeholder
+      DeleteConfirmModal.tsx        # Existing (F-012)
+      MetadataPanel.tsx            # Existing (F-012)
+      TreeLines.tsx                # Existing (F-012)
+      Toast.tsx                    # Existing (F-012)
+  /services
+    databaseService.ts              # MODIFIED - Add getFileContent function
+  /shared
+    ResizeHandle.tsx                # Existing (F-006)
+```
+
+### 18.11 Accessibility
+
+**File Selection**:
+
+- Selected file has visual highlight (emerald-50 background)
+- Selected file has `aria-selected="true"` attribute
+- Keyboard navigation support (Enter to select)
+
+**Preview Panel**:
+
+- `role="region"` with `aria-label="File preview"`
+- `aria-live="polite"` for dynamic content changes
+- Image preview has `alt` text with filename
+
+**Divider**:
+
+- `role="separator"` and `aria-orientation="vertical"`
+- `aria-label="Resize panels"`
+- Keyboard navigation: Future enhancement
+
+### 18.12 Performance Considerations
+
+**File Size Limits**:
+
+- Text files: Warn if > 1MB, block if > 10MB
+- Images: Block if > 5MB
+- Binary files: No preview (show placeholder)
+
+**Optimization Strategies**:
+
+- Lazy loading: Load file content only when file is selected
+- Content caching: Cache loaded content in component state
+- Error boundaries: Wrap preview components in error boundaries
+- Cleanup: Revoke object URLs for images on unmount
+
+**Rendering Performance**:
+
+- Text preview: Use `<pre>` tag for monospace display (no virtual scrolling needed for < 1MB)
+- Image preview: Use `object-fit: contain` for responsive scaling
+- Panel resizing: 60fps smooth (proven in F-006)
+
+### 18.13 Error Handling
+
+**File Content Loading Errors**:
+
+```typescript
+// In FilePreview component
+const [loading, setLoading] = useState(false);
+const [error, setError] = useState<string | null>(null);
+
+useEffect(() => {
+  if (!file) return;
+
+  const loadContent = async () => {
+    setLoading(true);
+    setError(null);
+
+    const response = await databaseService.getFileContent(file.path);
+
+    if (response.success) {
+      setContent(response.data);
+    } else {
+      setError(response.error || "Failed to load file content");
+    }
+
+    setLoading(false);
+  };
+
+  loadContent();
+}, [file]);
+```
+
+**Error States**:
+
+- **Permission Denied**: Show error with "Access denied" message
+- **File Not Found**: Show error with "File not found" message
+- **Size Limit Exceeded**: Show error with file size warning
+- **Network Error**: Show error with retry button
+
+**Recovery Mechanisms**:
+
+- Retry button on error state
+- Clear selection on error
+- Show toast notification for errors
+
+### 18.14 Edge Cases
+
+1. **Very large text files (> 1MB)**: Show warning, truncate with "Show full file" button
+2. **Very large images (> 5MB)**: Block preview, show "Image too large" message
+3. **SQLite database files**: Show placeholder with download button
+4. **Binary files**: Show unsupported preview with download button
+5. **File deleted during preview**: Clear selection, show empty state
+6. **Panel width too narrow**: Hide preview panel, show "Resize to view preview" message
+7. **File encoding errors**: Show "Failed to decode file" error
+8. **Corrupted image data**: Show "Failed to load image" error
+
+### 18.15 Benefits
+
+- **Workflow Efficiency**: Preview files without downloading
+- **Improved UX**: Two-panel layout is industry standard (VSCode, file managers)
+- **Code Reusability**: 90% of components already exist (F-012, F-006)
+- **Performance**: Fast file loading (< 1s for text, < 2s for images)
+- **Extensibility**: Easy to add features later (syntax highlighting, search)
+- **Feature Preservation**: All F-012 features maintained
+
+### 18.16 Implementation Notes
+
+**Files Created**: 5 new components (FilePreview, TextPreview, ImagePreview, EmptyPreview, UnsupportedPreview)
+**Files Modified**: 4 existing files (OPFSGallery, FileTree, FileNode, databaseService)
+**Service Functions**: 1 new function (getFileContent)
+**Estimated Time**: 8-12 hours
+**Risk**: Low (proven patterns from F-006, F-012)
+
+**Dependencies**:
+
+- F-012 (OPFS Browser Enhancement) - Must be complete
+- F-006 (Resizable Vertical Dividers) - Reuse ResizeHandle component
+
+**Browser Compatibility**:
+
+- Chrome 111+ (OPFS File System Access stable)
+- Edge 111+ (same engine as Chrome)
+- Firefox: Not supported (OPFS not available)
+
+**Integration Points**:
+
+- Service Layer: Extends existing databaseService.ts
+- Type System: No changes to OpfsFileEntry (content loaded on-demand)
+- Routing: No changes to `/opfs` route
+- State Management: Local component state (OPFSGallery)
+
+## 19) OPFS UI Visual Redesign Architecture (Feature F-014)
+
+**Purpose**: Align OPFS File Browser visual design with product prototype, implementing green color theme, improved visual hierarchy, and removing unnecessary UI elements.
+
+**Dependencies**: F-012 (OPFS Browser Enhancement), F-013 (OPFS Two-Panel Preview)
+
+**Key Changes**:
+
+- Color scheme: Blue → Green (#4CAF50) for headers and primary elements
+- Preview panel: Emerald-50 background → White with green header
+- File tree: Add file/directory counts, make action icons always visible
+- Layout: Remove helper notice and footer tip sections
+
+**Rationale**:
+
+- **User Expectations**: Product prototype defines the visual language users expect
+- **Brand Consistency**: Green theme matches product branding guidelines
+- **Reduced Clutter**: Removing unnecessary UI elements improves focus on file operations
+
+### 19.1 C4 Component Diagram (F-014)
+
+```mermaid
+C4Component
+  title OPFS UI Visual Redesign (F-014)
+  Container_Boundary(opfsBrowser, "OPFS Browser Components") {
+    Component(gallery, "OPFSGallery", "Main Container", "Green header, white panels, no footer")
+    Component(fileTree, "FileTree", "File Browser", "File counts, visible action icons")
+    Component(preview, "FilePreview", "Preview Panel", "Green header, white bg, status badge")
+  }
+  Rel(gallery, fileTree, "Displays in left panel (40%)")
+  Rel(gallery, preview, "Displays in right panel (60%)")
+```
+
+### 19.2 Component Hierarchy (F-014)
+
+**Preserved Structure** (no changes to component hierarchy):
+
+```
+OPFSGallery (Main Container)
+├── Header (MODIFIED - F-014)
+│   ├── Icon: Green (#4CAF50)
+│   └── Title: "OPFS File Browser"
+├── FileTree (MODIFIED - F-014)
+│   └── FileNode
+│       ├── TreeLines (existing)
+│       ├── MetadataPanel (existing)
+│       └── Action Icons (MODIFIED - always visible)
+├── ResizeHandle (existing from F-013)
+├── FilePreview (MODIFIED - F-014)
+│   ├── PreviewHeader (NEW - F-014)
+│   │   ├── Title: "Preview: [filename]"
+│   │   └── StatusBadge: "started"
+│   └── PreviewContent
+│       ├── EmptyPreview (existing)
+│       ├── TextPreview (existing)
+│       ├── ImagePreview (existing)
+│       └── UnsupportedPreview (existing)
+├── DeleteConfirmModal (existing from F-012)
+└── Toast (existing from F-012)
+```
+
+**Removed Components** (F-014):
+
+- ~~HelperNotice~~ section (blue-50/Blue-200 banner)
+- ~~FooterTip~~ section (gray tip bar)
+
+### 19.3 Visual Design System (F-014)
+
+**Color Palette Updates**:
+
+| Usage               | Before         | After (F-014)   | Tailwind Class   |
+| ------------------- | -------------- | --------------- | ---------------- |
+| Main header icon    | Blue (#3B82F6) | Green (#4CAF50) | `text-green-600` |
+| Preview header bg   | None           | Green (#4CAF50) | `bg-green-600`   |
+| Preview header text | N/A            | White           | `text-white`     |
+| Preview panel bg    | Emerald-50     | White           | `bg-white`       |
+| Status badge bg     | None           | Green (#4CAF50) | `bg-green-600`   |
+| Status badge text   | N/A            | White           | `text-white`     |
+
+**Typography Changes**:
+
+| Element              | Font       | Size           | Weight   |
+| -------------------- | ---------- | -------------- | -------- |
+| Main header title    | Sans-serif | 18px (text-lg) | Semibold |
+| Preview header title | Sans-serif | 14px (text-sm) | Medium   |
+| Status badge         | Sans-serif | 12px (text-xs) | Medium   |
+| File counts          | Sans-serif | 11px (text-xs) | Regular  |
+
+**Spacing & Layout**:
+
+| Element        | Padding              | Notes                 |
+| -------------- | -------------------- | --------------------- |
+| Main header    | 12px vertical (py-3) | Reduced from 16px     |
+| Preview header | 12px vertical (py-3) | New in F-014          |
+| Panel divider  | 1px border           | Gray-200              |
+| Icon size      | 16-18px              | Consistent with F-012 |
+
+### 19.4 Component State Changes (F-014)
+
+**OPFSGallery State** (no changes - visual only):
+
+```typescript
+interface OPFSGalleryState {
+  leftPanelWidth: number; // Existing (F-013)
+  selectedFile: OpfsFileEntry | null; // Existing (F-013)
+  downloadStatus: DownloadStatus; // Existing
+  modalOpen: boolean; // Existing (F-012)
+  selectedEntry: OpfsFileEntry | null; // Existing (F-012)
+  toast: ToastState; // Existing (F-012)
+}
+```
+
+**FileTree Enhancements** (F-014):
+
+```typescript
+interface FileNodeProps {
+  entry: OpfsFileEntry;
+  level: number;
+  isLast: boolean;
+  showLines: boolean; // Existing (F-012)
+  onDownload: (path, name) => void; // Existing
+  onDelete: (entry) => void; // Existing (F-012)
+  onFileSelect: (entry) => void; // Existing (F-013)
+  selectedFile: OpfsFileEntry | null; // Existing (F-013)
+  showActionIcons?: boolean; // NEW - F-014 (default: true)
+  showFileCounts?: boolean; // NEW - F-014 (default: true)
+}
+```
+
+**FilePreview Enhancements** (F-014):
+
+```typescript
+interface FilePreviewProps {
+  file: OpfsFileEntry | null;
+  showStatus?: boolean; // NEW - F-014 (default: true)
+  statusText?: string; // NEW - F-014 (default: "started")
+}
+```
+
+### 19.5 Layout Changes (F-014)
+
+**Main Header Layout**:
+
+```
+┌────────────────────────────────────────────────────────┐
+│ OPFS File Browser                                     │
+│ [📁 Icon (green)]                                      │
+└────────────────────────────────────────────────────────┘
+```
+
+**Preview Header Layout** (NEW - F-014):
+
+```
+┌────────────────────────────────────────────────────────┐
+│ Preview: app.log            [started] (green badge)    │
+└────────────────────────────────────────────────────────┘
+```
+
+**Removed Sections**:
+
+```
+┌────────────────────────────────────────────────────────┐
+│ Origin Private File System          ← REMOVED (F-014)  │
+│ Browse and manage SQLite...                              │
+└────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────┐
+│ Tip: Click on directories...         ← REMOVED (F-014)  │
+└────────────────────────────────────────────────────────┘
+```
+
+### 19.6 File Tree Enhancements (F-014)
+
+**File/Directory Counts Display**:
+
+```typescript
+// Calculate counts for directories
+const getDirectoryCounts = (entry: OpfsFileEntry): string => {
+  if (entry.type !== "directory") return "";
+
+  const fileCount =
+    entry.children?.filter((c) => c.type === "file").length ?? 0;
+  const dirCount =
+    entry.children?.filter((c) => c.type === "directory").length ?? 0;
+
+  if (dirCount === 0) return `${fileCount} files`;
+  return `${fileCount} files ${dirCount} dirs`;
+};
+```
+
+**Action Icons Visibility** (F-014):
+
+```typescript
+// Before (F-012/F-013): Icons visible on group hover
+className = "opacity-0 group-hover:opacity-100";
+
+// After (F-014): Icons always visible
+className = "opacity-100";
+```
+
+**File Node Layout** (F-014):
+
+```
+┌─────────────────────────────────────────────────────────┐
+│ [▶] 📁 storage/                         120 files     │
+│   [▶] 📁 log/                          3 files 2 dirs │
+│     [📄] app.log          [⬇️ Download] [🗑️ Delete] │
+└─────────────────────────────────────────────────────────┘
+```
+
+### 19.7 Preview Panel Changes (F-014)
+
+**Preview Header Component** (NEW - F-014):
+
+```typescript
+interface PreviewHeaderProps {
+  fileName: string;
+  showStatus?: boolean;
+  statusText?: string;
+}
+
+export const PreviewHeader: React.FC<PreviewHeaderProps> = ({
+  fileName,
+  showStatus = true,
+  statusText = 'started'
+}) => {
+  return (
+    <div className="px-4 py-3 bg-green-600 text-white flex items-center justify-between">
+      <span className="text-sm font-medium">
+        Preview: {fileName}
+      </span>
+      {showStatus && (
+        <span className="px-2 py-1 bg-white text-green-600 text-xs font-medium rounded">
+          {statusText}
+        </span>
+      )}
+    </div>
+  );
+};
+```
+
+**Preview Panel Layout** (F-014):
+
+```
+┌────────────────────────────────────────────────────────┐
+│ Preview: app.log                [started] (white/green) │  ← NEW header
+├────────────────────────────────────────────────────────┤
+│                                                            │
+│  [Preview Content - white background]                     │
+│                                                            │
+│  2024-01-15 18:00:01 [INFO] Application started          │
+│  2024-01-15 18:00:02 [INFO] Connected to database       │
+│                                                            │
+└────────────────────────────────────────────────────────┘
+```
+
+### 19.8 CSS Styling Strategy (F-014)
+
+**Tailwind Class Updates**:
+
+| Component      | Before                              | After (F-014)                     |
+| -------------- | ----------------------------------- | --------------------------------- |
+| Header icon    | `text-blue-600`                     | `text-green-600`                  |
+| Helper notice  | `bg-blue-50 border-blue-200`        | ~~removed~~                       |
+| Preview panel  | `bg-emerald-50`                     | `bg-white`                        |
+| Preview header | N/A                                 | `bg-green-600 text-white`         |
+| Status badge   | N/A                                 | `bg-white text-green-600 rounded` |
+| Action icons   | `opacity-0 group-hover:opacity-100` | `opacity-100`                     |
+| Footer         | `bg-gray-50 border-gray-200`        | ~~removed~~                       |
+
+**Custom CSS for F-014**:
+
+```css
+/* File count badge styling */
+.file-count-badge {
+  @apply text-xs text-gray-500 ml-2;
+}
+
+/* Preview header - green background */
+.preview-header {
+  background-color: #4caf50; /* Green-600 */
+  color: white;
+}
+
+/* Status badge - white on green */
+.status-badge {
+  @apply px-2 py-1 bg-white text-green-600 text-xs font-medium rounded;
+}
+```
+
+### 19.9 Accessibility Considerations (F-014)
+
+**Color Contrast**:
+
+- Green header (#4CAF50) with white text: **WCAG AAA** (contrast ratio 7.1:1)
+- Status badge (white on green): **WCAG AA** (contrast ratio 4.8:1)
+- File count text (gray-500 on white): **WCAG AA** (contrast ratio 7.1:1)
+
+**ARIA Labels** (preserved from F-012/F-013):
+
+```typescript
+<button
+  aria-label="Download {filename}"
+  title="Download file"
+>
+  <FaDownload />
+</button>
+```
+
+**Keyboard Navigation** (no changes):
+
+- Tab order preserved
+- Enter/Space for actions
+- Escape to close modals
+
+### 19.10 Performance Optimizations (F-014)
+
+**Minimal Impact**:
+
+- **CSS-only changes**: No JavaScript logic changes
+- **No new re-renders**: File counts calculated from existing data
+- **No new API calls**: Uses existing `OpfsFileEntry.children`
+- **Bundle size**: Unchanged (no new dependencies)
+
+### 19.11 File Structure (F-014)
+
+```text
+src/devtools/components/OPFSBrowser/
+  OPFSGallery.tsx           # MODIFIED - Remove helper/footer, update colors
+  FileTree.tsx              # MODIFIED - Add file counts, always show icons
+  FileNode.tsx              # MODIFIED - Render file counts, update icon visibility
+  FilePreview.tsx           # MODIFIED - Add PreviewHeader, white background
+  PreviewHeader.tsx         # NEW - Green header with status badge
+  (HelperNotice removed)    # REMOVED - F-014
+  (Footer removed from OPFSGallery)  # REMOVED - F-014
+```
+
+### 19.12 Browser Compatibility (F-014)
+
+- Chrome 111+ (no changes - same as F-012/F-013)
+- Edge 111+ (same engine as Chrome)
+- Firefox: Not supported (OPFS not available)
+
+### 19.13 Benefits (F-014)
+
+1. **Visual Consistency**: Matches product prototype design language
+2. **Brand Alignment**: Green theme matches product branding
+3. **Reduced Clutter**: Removing helper/footer improves focus
+4. **Better Information Hierarchy**: Preview header with status improves UX
+5. **Improved Discoverability**: Always-visible action icons
+
+### 19.14 Implementation Notes (F-014)
+
+**Phase 1: Color Scheme Updates** (1.5h)
+
+1. Update main header icon: `text-blue-600` → `text-green-600`
+2. Remove helper notice section entirely
+3. Update preview panel background: `bg-emerald-50` → `bg-white`
+
+**Phase 2: Header Modifications** (1h)
+
+1. Create `PreviewHeader.tsx` component
+2. Add green header bar to preview panel
+3. Add "started" status badge
+
+**Phase 3: Preview Panel Styling** (1h)
+
+1. Update `FilePreview.tsx` to use `PreviewHeader`
+2. Change background to white
+3. Test all preview states (empty, text, image, unsupported)
+
+**Phase 4: File Tree Enhancements** (2h)
+
+1. Add `getDirectoryCounts()` helper function
+2. Update `FileNode.tsx` to display file counts
+3. Update action icons to be always visible
+4. Test expand/collapse behavior
+
+**Phase 5: Footer Removal** (0.5h)
+
+1. Remove footer tip section from `OPFSGallery.tsx`
+2. Verify layout remains stable
+
+**Phase 6: Testing & Validation** (1h)
+
+1. Visual regression testing vs prototype
+2. Functional testing (download, delete, preview)
+3. Accessibility testing (contrast, keyboard nav)
+4. Cross-browser testing (Chrome, Edge)
+
+### 19.15 Integration Points
+
+- **Service Layer**: No changes to `databaseService.ts`
+- **Type System**: No changes to `OpfsFileEntry`
+- **Routing**: No changes to `/opfs` route
+- **State Management**: No changes to component state
+
+### 19.16 Dependencies
+
+- F-012 (OPFS Browser Enhancement) - Complete
+- F-013 (OPFS Two-Panel Preview) - Complete
+- React 18+ (existing)
+- Tailwind CSS 4 (existing)
+
+### 19.17 Risk Assessment
+
+| Risk                 | Impact | Mitigation                                  |
+| -------------------- | ------ | ------------------------------------------- |
+| Color accessibility  | Low    | Use WCAG compliant green shades             |
+| Breaking existing UX | Low    | Only visual changes, no logic modifications |
+| Prototype ambiguity  | Low    | Reference screenshot for clarification      |
+
+### 19.18 Migration Strategy
+
+**No migration needed** - Visual-only changes with no data impact.
+
+### 19.19 Rollback Strategy
+
+**Instant rollback** - Revert CSS class changes if issues arise.

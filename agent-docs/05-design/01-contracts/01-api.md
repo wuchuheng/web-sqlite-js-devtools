@@ -471,6 +471,89 @@ agent-docs/05-design/
   - OPFS not supported
 - **Used By**: OPFSBrowser FileTree component (Feature F-012)
 
+#### Function: `getFileContent(path)`
+
+- **Summary**: Get file content from OPFS for preview (Feature F-013)
+- **Signature**:
+  ```typescript
+  getFileContent(path: string): Promise<ServiceResponse<{
+    type: 'text' | 'image' | 'binary';
+    content: string | Blob;
+    metadata: {
+      size: number;
+      lastModified: Date;
+      mimeType: string;
+    };
+  }>>
+  ```
+- **Response (200)**:
+  ```typescript
+  {
+    success: true,
+    data: {
+      type: "text",
+      content: "2024-01-15 18:01:22 [INFO] Application started\n...",
+      metadata: {
+        size: 1024,
+        lastModified: "2025-01-15T10:30:00Z",
+        mimeType: "text/plain"
+      }
+    }
+  }
+  ```
+- **Response (200) - Image**:
+  ```typescript
+  {
+    success: true,
+    data: {
+      type: "image",
+      content: Blob { size: 524288, type: "image/png" },
+      metadata: {
+        size: 524288,
+        lastModified: "2025-01-15T10:30:00Z",
+        mimeType: "image/png"
+      }
+    }
+  }
+  ```
+- **Response (200) - Binary**:
+  ```typescript
+  {
+    success: true,
+    data: {
+      type: "binary",
+      content: Blob { size: 1048576, type: "application/x-sqlite3" },
+      metadata: {
+        size: 1048576,
+        lastModified: "2025-01-15T10:30:00Z",
+        mimeType: "application/x-sqlite3"
+      }
+    }
+  }
+  ```
+- **Business Logic**:
+  - Navigates to parent directory using `getDirectoryHandle()`
+  - Retrieves file handle using `getFileHandle(filename)`
+  - Gets file object using `getFile()`
+  - Detects file type based on MIME type and file extension:
+    - Text files: MIME starts with `text/`, extensions: `.log`, `.txt`, `.md`, `.csv`, `.xml`, `.json`, `.yaml`, `.yml`
+    - Image files: MIME starts with `image/`
+    - Binary files: Everything else (SQLite, executables, etc.)
+  - Reads content based on type:
+    - Text files: Uses `file.text()` to get string content
+    - Image/Binary files: Returns file object as Blob
+  - Returns metadata (size, lastModified, mimeType)
+  - Enforces file size limits:
+    - Text files: Warn if > 1MB, block if > 10MB
+    - Images: Block if > 5MB
+- **Error Cases**:
+  - File not found
+  - Permission denied
+  - File too large (> 10MB for text, > 5MB for images)
+  - Encoding errors (text files)
+  - OPFS not supported
+- **Used By**: FilePreview component (Feature F-013 - OPFS Browser Two-Panel Layout)
+
 ## 3) Runtime Messaging (Icon State Only)
 
 > **Note**: Channel-based messaging is deprecated for data access. Use service layer functions above.

@@ -1,12 +1,17 @@
 import { FiFile } from "react-icons/fi";
 import type { OpfsFileEntry } from "@/devtools/services/databaseService";
+import { formatTimestamp } from "@/devtools/utils/timestampFormatting";
 
 /**
  * ContentMetadata interface
+ *
+ * @remarks
+ * lastModified can be Date | number because serialization through
+ * chrome.scripting.executeScript converts Date to timestamp number
  */
 interface ContentMetadata {
   size: number;
-  lastModified: Date;
+  lastModified: Date | number | string;
   mimeType: string;
 }
 
@@ -31,18 +36,6 @@ const formatFileSize = (bytes: number): string => {
   const sizes = ["B", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
-};
-
-/**
- * Format timestamp for display
- */
-const formatTimestamp = (date: Date): string => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  const hours = String(date.getHours()).padStart(2, "0");
-  const minutes = String(date.getMinutes()).padStart(2, "0");
-  return `${year}-${month}-${day} ${hours}:${minutes}`;
 };
 
 /**

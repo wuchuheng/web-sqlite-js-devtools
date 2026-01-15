@@ -25,7 +25,7 @@ interface UseQueryHistoryResult {
   /** Error message */
   error: string | null;
   /** Add query to history */
-  addQuery: (_sql: string, dbname: string) => Promise<void>;
+  addQuery: (sql: string, dbname: string) => Promise<void>;
   /** Remove specific entry from history */
   removeQuery: (timestamp: string) => Promise<void>;
   /** Clear all history for current database */
@@ -121,7 +121,7 @@ async function saveHistoryEntry(entry: QueryHistoryEntry): Promise<void> {
  * @returns Promise<void>
  */
 async function removeHistoryEntry(
-  _dbname: string,
+  dbname: string,
   timestamp: string,
 ): Promise<void> {
   const existing = await getHistoryForDb(dbname);
@@ -237,7 +237,7 @@ export const useQueryHistory = (dbname: string): UseQueryHistoryResult => {
    * Add query to history
    */
   const addQuery = useCallback(
-    async (_sql: string, dbName: string) => {
+    async (sql: string, dbName: string) => {
       // Skip empty or whitespace-only queries
       const trimmed = sql.trim();
       if (!trimmed) {

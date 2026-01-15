@@ -39,14 +39,27 @@ export const useInspectedWindowRequest = <T>(
     setError(null);
 
     try {
+      console.log("[useInspectedWindowRequest] Starting request...");
       const response = await request();
 
       if (!response.success) {
+        console.error(
+          "[useInspectedWindowRequest] Request failed:",
+          response.error,
+        );
         throw new Error(response.error || "Request failed");
       }
 
+      console.log(
+        "[useInspectedWindowRequest] Request succeeded:",
+        response.data,
+      );
       setData((current) => response.data ?? current);
     } catch (fetchError) {
+      console.error(
+        "[useInspectedWindowRequest] Exception caught:",
+        fetchError,
+      );
       setError(
         fetchError instanceof Error ? fetchError.message : String(fetchError),
       );

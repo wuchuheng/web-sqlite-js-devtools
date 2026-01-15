@@ -4,10 +4,14 @@ import { formatTimestamp } from "@/devtools/utils/timestampFormatting";
 
 /**
  * Content metadata from service layer
+ *
+ * @remarks
+ * lastModified can be Date | number | string because serialization through
+ * chrome.scripting.executeScript converts Date to timestamp number
  */
 interface ContentMetadata {
   size: number;
-  lastModified: Date;
+  lastModified: Date | number | string;
   mimeType: string;
   warning?: string;
 }

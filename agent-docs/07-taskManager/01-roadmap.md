@@ -230,6 +230,145 @@ NOTES
   - Test tree line rendering at various depths
   - ESLint and build verification
 
+#### Phase 10: OPFS Browser Two-Panel Layout (Days 18-20)
+
+**Milestone**: F-013 Complete - Two-panel layout with file preview
+
+**Target Date**: 2026-01-17 (3 days from 2026-01-15)
+**Dependencies**: F-012 (OPFS Browser Enhancement) - Must be complete
+
+**Feature Overview**: Transform OPFS browser into two-panel layout with file preview capability. Left panel shows file tree navigation (existing FileTree component), right panel shows selected file contents (new FilePreview components). Users can resize panels using draggable divider (reusing ResizeHandle from F-006).
+
+**Tasks Breakdown**:
+
+- [ ] **TASK-314**: Service Layer - File Content Loading (F-013)
+  - Add `getFileContent(path)` function to databaseService.ts
+  - Implement file type detection (text/image/binary)
+  - Read file content based on type (text() for text, Blob for images)
+  - Enforce file size limits (text: 10MB max, images: 5MB max)
+  - Return metadata (size, lastModified, mimeType)
+  - Error handling (file not found, permission denied, encoding errors)
+  - Three-phase comments for functions > 5 lines
+  - TSDoc comments on exported function
+  - Estimated time: 2 hours
+
+- [ ] **TASK-315**: File Preview Component Structure (F-013)
+  - Create `FilePreview.tsx` main container component
+  - Implement state management (loading, error, content)
+  - Add useEffect hook for file content loading
+  - Implement conditional rendering based on file state
+  - Add loading spinner with emerald theme
+  - Add error state with retry button
+  - Delegate to appropriate preview component (TextPreview, ImagePreview, UnsupportedPreview)
+  - Handle empty state (no file selected)
+  - TSDoc comments on component and interfaces
+  - Estimated time: 2 hours
+
+- [ ] **TASK-316**: Text Preview Implementation (F-013)
+  - Create `TextPreview.tsx` component
+  - Display text content in monospace font (<pre> tag)
+  - Show "Preview: {filename}" header with emerald theme
+  - Display metadata (size, modified date) in header
+  - Preserve line breaks and formatting (whitespace-pre-wrap)
+  - Optional: JSON syntax highlighting if feasible
+  - Handle large text files (> 1MB warning, > 10MB block)
+  - TSDoc comments on component and interfaces
+  - Estimated time: 1.5 hours
+
+- [ ] **TASK-317**: Image Preview Implementation (F-013)
+  - Create `ImagePreview.tsx` component
+  - Display image with responsive scaling (object-fit: contain)
+  - Show "Preview: {filename}" header with emerald theme
+  - Display metadata (size, modified date) in header
+  - Create object URL for image display
+  - Cleanup object URL on unmount (useEffect return)
+  - Handle large images (> 5MB block)
+  - Maintain aspect ratio (max-width: 100%, max-height: 100%)
+  - TSDoc comments on component and interfaces
+  - Estimated time: 1.5 hours
+
+- [ ] **TASK-318**: Panel Resizing Integration (F-013)
+  - Modify `OPFSGallery.tsx` to use two-panel flex layout
+  - Add `leftPanelWidth` state (default: 350px, range: 200-600px)
+  - Add `selectedFile` state for preview
+  - Add `handleResize` callback with width constraints
+  - Integrate `ResizeHandle` component from F-006
+  - Modify `FileTree.tsx` to accept `onFileSelect` and `selectedFile` props
+  - Modify `FileNode.tsx` to show selected state highlight (emerald-50 background)
+  - Add click handler to FileNode for file selection
+  - Test panel resizing smoothness (60fps target)
+  - Test minimum/maximum width constraints
+  - Estimated time: 2 hours
+
+- [ ] **TASK-319**: Integration & Testing (F-013)
+  - Create `EmptyPreview.tsx` component (no selection state)
+  - Create `UnsupportedPreview.tsx` component (binary files)
+  - Integrate all preview components with FilePreview
+  - Test file selection and preview updates
+  - Test text preview with various file types (.log, .txt, .json, .xml, .csv, .md)
+  - Test image preview with various formats (.jpg, .png, .gif, .svg, .webp)
+  - Test SQLite database placeholder (with download button)
+  - Test unsupported file placeholder (with download button)
+  - Test empty state (no file selected)
+  - Test loading state (large files)
+  - Test error state (file not found, permission denied)
+  - Test panel resizing at different widths
+  - Test that all F-012 features still work (tree lines, delete, metadata, toast)
+  - ESLint verification (no new warnings)
+  - Type check verification (no type errors)
+  - Build verification (bundle size check)
+  - Manual testing with 10+ test scenarios
+  - Update documentation (feature spec, status board)
+  - Estimated time: 2 hours
+
+**Success Criteria**:
+
+- **Two-Panel Layout**: [ ] File tree (left) and preview (right) displayed side by side
+- **Resizable Divider**: [ ] Panels resize smoothly with 200-600px constraints
+- **File Selection**: [ ] Clicking file updates preview panel with visual highlight
+- **Text Preview**: [ ] Text files displayed in monospace font with line breaks
+- **Image Preview**: [ ] Images displayed with responsive scaling
+- **SQLite Placeholder**: [ ] Database files show placeholder with download button
+- **Unsupported Placeholder**: [ ] Binary files show placeholder with download button
+- **Empty State**: [ ] Preview panel shows empty state when no file selected
+- **Loading State**: [ ] Preview panel shows loading spinner during file load
+- **Error State**: [ ] Preview panel shows error with retry button on failure
+- **Feature Preservation**: [ ] All F-012 features work (tree lines, delete, metadata, toast)
+
+**Risk Mitigation**:
+
+- **Complexity**: Medium (similar to F-012, reuses proven patterns)
+- **Files Modified**: 4 files (OPFSGallery, FileTree, FileNode, databaseService)
+- **New Components**: 5 components (FilePreview, TextPreview, ImagePreview, EmptyPreview, UnsupportedPreview)
+- **Breaking Changes**: None (additive changes only)
+- **Migration Path**: N/A (new feature, no existing data)
+- **Rollback Strategy**: Remove new components, revert modified files (git checkout)
+- **Performance**: File loading < 1s for text < 1MB, < 2s for images < 5MB, panel resize 60fps
+
+**Timeline**:
+
+- **Day 1 (2h)**: TASK-314 (Service Layer) + TASK-315 (FilePreview Container)
+- **Day 2 (3h)**: TASK-316 (TextPreview) + TASK-317 (ImagePreview)
+- **Day 3 (4h)**: TASK-318 (Panel Resizing) + TASK-319 (Integration & Testing)
+- **Total**: 9 hours (within 8-12 hour estimate from feasibility analysis)
+
+**Definition of Done**:
+
+- [ ] All 6 tasks complete (TASK-314 through TASK-319)
+- [ ] Two-panel layout implemented with resizable divider
+- [ ] File selection updates preview panel
+- [ ] Text preview working for all text file types
+- [ ] Image preview working for all image formats
+- [ ] SQLite and unsupported file placeholders working
+- [ ] Empty, loading, and error states working
+- [ ] All F-012 features preserved (tree lines, delete, metadata, toast)
+- [ ] ESLint passed with no new warnings
+- [ ] Type check passed with no errors
+- [ ] Build passed with no errors
+- [ ] Manual testing completed with 10+ scenarios
+- [ ] Documentation updated (feature spec, status board)
+- [ ] Bundle size impact assessed (< 100KB increase)
+
 ### Release v1.3.0 (Future Enhancements)
 
 **Target Date**: TBD
@@ -255,7 +394,8 @@ NOTES
 - [x] **v1.2.0 Phase 6 Complete**: 2026-01-14 (F-009)
 - [x] **v1.2.0 Phase 7 Complete**: 2026-01-14 (F-010)
 - [x] **v1.2.0 Phase 8 Complete**: 2026-01-15 (F-011)
-- [ ] **v1.2.0 Phase 9 Complete**: TBD (F-012)
+- [x] **v1.2.0 Phase 9 Complete**: 2026-01-15 (F-012)
+- [ ] **v1.2.0 Phase 10 Complete**: TBD (F-013)
 
 ## 4. Feature F-001: Service Layer Expansion
 
@@ -1222,6 +1362,141 @@ Enhance the OPFS File Browser with guided tree lines for visual hierarchy, delet
 - [ ] OPFSGallery.tsx updated with toast handling
 - [ ] All acceptance criteria met (8 categories above)
 - [ ] Manual testing complete (all scenarios)
+- [ ] ESLint passed with no new warnings
+- [ ] Build passed with no errors
+- [ ] Type check passed with no errors
+- [ ] Feature spec marked complete
+- [ ] Documentation updated (HLD, LLD, status board)
+
+---
+
+#### Phase 11: OPFS UI Visual Redesign (Days 21-22)
+
+**Milestone**: F-014 Complete - Visual redesign to match product prototype
+
+**Target Date**: 2026-01-21 (2 days from 2026-01-19)
+
+**Dependencies**: F-012 (OPFS Browser Enhancement) - Complete, F-013 (OPFS Two-Panel Preview) - Complete
+
+**Feature Overview**: Complete visual redesign of OPFS File Browser to match product prototype. Implement green color theme (#4CAF50), add preview header with status badge, display file/directory counts, make action icons always visible, and remove helper notice/footer sections. All changes are visual-only with no functional changes to existing behavior.
+
+**Tasks Breakdown**:
+
+- [ ] **TASK-320**: Color Scheme Updates (F-014)
+  - Update main header icon: `text-blue-600` → `text-green-600`
+  - Remove helper notice section entirely ("Origin Private File System" banner)
+  - Update preview panel background: `bg-emerald-50` → `bg-white`
+  - Update OPFSGallery.tsx styles
+  - Test color contrast for accessibility (WCAG AA)
+  - Estimated time: 1.5 hours
+
+- [ ] **TASK-321**: Preview Header Component (F-014)
+  - Create `PreviewHeader.tsx` component with green background (#4CAF50)
+  - Display "Preview: [filename]" title in white text
+  - Add status badge component (white background, green text, "started" text)
+  - Implement props interface (fileName, showStatus, statusText)
+  - Add TSDoc comments
+  - Integrate into FilePreview.tsx
+  - Estimated time: 1 hour
+
+- [ ] **TASK-322**: File Tree Enhancements - File Counts (F-014)
+  - Add `getDirectoryCounts(entry)` helper function to FileTree.tsx
+  - Calculate file and directory counts from `entry.children`
+  - Display counts in FileNode.tsx for directories only
+  - Format: "3 files", "2 dirs", or "3 files 2 dirs"
+  - Style: `text-xs text-gray-500 ml-2`
+  - Test with empty directories, large directories
+  - Estimated time: 1.5 hours
+
+- [ ] **TASK-323**: File Tree Enhancements - Icon Visibility (F-014)
+  - Update FileNode.tsx action icons: `opacity-0 group-hover:opacity-100` → `opacity-100`
+  - Make download and delete icons always visible (not hover-only)
+  - Test icon positioning and spacing
+  - Ensure icons remain clickable and accessible
+  - Estimated time: 0.5 hours
+
+- [ ] **TASK-324**: Footer Removal (F-014)
+  - Remove footer tip section from OPFSGallery.tsx
+  - Verify layout stability without footer
+  - Test panel resize behavior
+  - Estimated time: 0.5 hours
+
+- [ ] **TASK-325**: Integration & Testing (F-014)
+  - Visual regression testing vs prototype screenshot
+  - Functional testing: download, delete, preview all work
+  - Test all preview states: empty, text, image, unsupported
+  - Test file count display accuracy
+  - Test action icon visibility and accessibility
+  - Test color contrast with accessibility tools
+  - Keyboard navigation testing (Tab, Enter, Escape)
+  - ESLint verification (no new warnings)
+  - Build verification (no errors)
+  - Estimated time: 1 hour
+
+**Total**: 6 hours (2 days)
+
+### Acceptance Criteria
+
+**Visual Design**:
+
+- [ ] Main header icon is green (#4CAF50)
+- [ ] Helper notice section removed
+- [ ] Preview panel has green header bar
+- [ ] Preview panel has white background
+- [ ] Preview header shows "Preview: [filename]"
+- [ ] Preview header has "started" status badge (white/green)
+- [ ] Footer tip section removed
+- [ ] Visual design matches prototype screenshot
+
+**File Tree Enhancements**:
+
+- [ ] Directory nodes show file/directory counts
+- [ ] File count format is correct ("3 files 2 dirs")
+- [ ] Action icons (download/delete) are always visible
+- [ ] Action icons remain functional and accessible
+
+**Functionality**:
+
+- [ ] All existing features work: expand/collapse, download, delete, preview
+- [ ] File preview loads and displays correctly
+- [ ] Panel resize works correctly
+- [ ] Delete confirmation modal works
+- [ ] Toast notifications work
+
+**Accessibility**:
+
+- [ ] Color contrast meets WCAG AA standards
+- [ ] Keyboard navigation works (Tab, Enter, Escape)
+- [ ] ARIA labels preserved on all interactive elements
+- [ ] Screen reader testing passes
+
+**Code Quality**:
+
+- [ ] ESLint passed with no new warnings
+- [ ] Build passed with no errors
+- [ ] Type check passed with no errors
+- [ ] TSDoc comments added to new components
+- [ ] Code follows S8 quality rules (functional components, hooks)
+
+### Risk Mitigation
+
+| Risk                       | Impact | Mitigation                                         |
+| -------------------------- | ------ | -------------------------------------------------- |
+| Color accessibility issues | Medium | Use WCAG compliant green shades (#4CAF50, #16A34A) |
+| Breaking existing UX       | Low    | Visual-only changes, no logic modifications        |
+| Prototype ambiguity        | Low    | Reference screenshot for clarification             |
+| File count performance     | Low    | Calculate from existing data, no new API calls     |
+
+### Definition of Done
+
+- [ ] Color scheme updated (green theme)
+- [ ] PreviewHeader component created and integrated
+- [ ] File counts display implemented
+- [ ] Action icons always visible
+- [ ] Helper notice and footer removed
+- [ ] Visual regression testing passed
+- [ ] Functional testing passed (all features work)
+- [ ] Accessibility testing passed (WCAG AA)
 - [ ] ESLint passed with no new warnings
 - [ ] Build passed with no errors
 - [ ] Type check passed with no errors
