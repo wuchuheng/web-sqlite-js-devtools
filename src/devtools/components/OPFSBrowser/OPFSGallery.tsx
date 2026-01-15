@@ -268,16 +268,7 @@ export const OPFSGallery = () => {
         </div>
       </div>
 
-      {/* Footer Info */}
-      <div className="px-4 py-2 bg-gray-50 border-t border-gray-200">
-        <p className="text-xs text-gray-500">
-          <strong>Tip:</strong> Click on directories to expand them. Click the
-          download icon next to files to save them to your computer. Click the
-          delete icon to remove files.
-        </p>
-      </div>
-
-      {/* Delete Confirmation Modal (TASK-313) */}
+      {/* Delete Confirmation Modal (TASK-313, TASK-324: footer removed) */}
       <DeleteConfirmModal
         isOpen={isModalOpen}
         entry={selectedEntry}
