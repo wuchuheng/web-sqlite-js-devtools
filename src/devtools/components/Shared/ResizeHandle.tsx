@@ -146,7 +146,7 @@ export const ResizeHandle = ({
       className={`
         absolute top-0 bottom-0 z-10 transition-all duration-150
         ${position === "left" ? "-left-2" : "-right-2"}
-        ${isDragging ? "w-2 bg-blue-300" : "w-1 hover:bg-blue-200 hover:w-2"}
+        ${isDragging ? "w-2 bg-gray-300" : "w-1 hover:bg-gray-200 hover:w-2"}
       `}
       style={{ cursor: "col-resize" }}
       onMouseDown={handleMouseDown}

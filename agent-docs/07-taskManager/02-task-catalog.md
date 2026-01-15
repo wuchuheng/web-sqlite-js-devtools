@@ -1512,3 +1512,23 @@ NOTES
       - [x] Documentation updated:
         - [x] Feature spec marked complete (F-015)
         - [x] Status board marked complete (F-015)
+
+- [x] **TASK-330**: Separator Line Color Consistency (Visual Fix)
+  - **Priority**: P1 (High) - Visual Polish
+  - **Dependencies**: None
+  - **Boundary**: `src/devtools/components/Shared/ResizeHandle.tsx`
+  - **Maps to**: Visual Fix - OPFS Browser Separator Line
+  - **Feature**: N/A (Visual fix)
+  - **Micro-Spec**: [complete](agent-docs/08-task/active/TASK-330.md)
+  - **Estimated**: 0.5 hours
+  - **DoD**:
+    - [x] **Update Separator Colors** (0.25 hours)
+      - [x] Change bg-blue-300 to bg-gray-300
+      - [x] Change bg-blue-200 to bg-gray-200
+      - [x] Verify gray colors match UI theme
+    - [x] **Testing** (0.25 hours)
+      - [x] Visual test: Verify separator is gray
+      - [x] Test hover state shows gray highlight
+      - [x] Test drag state shows darker gray
+      - [x] ESLint passed (no new warnings)
+      - [x] Build passed (no errors)
