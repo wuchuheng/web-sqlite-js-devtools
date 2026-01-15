@@ -1437,26 +1437,26 @@ NOTES
       - [x] ESLint passed (no new warnings for FileTree.tsx)
       - [x] Build passed (TypeScript compiles for FileTree.tsx)
 
-- [ ] **TASK-327**: Expansion State Update (F-015)
+- [x] **TASK-327**: Expansion State Update (F-015)
   - **Priority**: P0 (Blocker)
-  - **Dependencies**: None
+  - **Dependencies**: TASK-326
   - **Boundary**: `src/devtools/components/OPFSBrowser/FileTree.tsx`
   - **Maps to**: F-015: OPFS Tree Visual Enhancements
   - **Feature**: [F-015: OPFS Tree Visual Enhancements](agent-docs/01-discovery/features/F-015-opfs-tree-enhancements.md)
-  - **Micro-Spec**: [pending](agent-docs/08-task/active/TASK-327.md)
+  - **Micro-Spec**: [complete](agent-docs/08-task/active/TASK-327.md)
   - **Estimated**: 0.5 hours
   - **DoD**:
-    - [ ] **Update Expansion State** (0.25 hours)
-      - [ ] Change useState(false) to useState(level === 0)
-      - [ ] Add useEffect hook for auto-loading root children
-      - [ ] Verify dependency array prevents infinite loops
-    - [ ] **Testing** (0.25 hours)
-      - [ ] Test root directories (level 0) auto-expand on load
-      - [ ] Test child directories (level > 0) remain collapsed
-      - [ ] Test expand/collapse behavior still works
-      - [ ] Test lazy-loading preserved for child directories
-      - [ ] ESLint passed (no new warnings)
-      - [ ] Build passed (no errors)
+    - [x] **Update Expansion State** (0.25 hours)
+      - [x] Change useState(false) to useState(level === 0)
+      - [x] Add useEffect hook for auto-loading root children
+      - [x] Verify dependency array prevents infinite loops
+    - [x] **Testing** (0.25 hours)
+      - [x] Test root directories (level 0) auto-expand on load
+      - [x] Test child directories (level > 0) remain collapsed
+      - [x] Test expand/collapse behavior still works
+      - [x] Test lazy-loading preserved for child directories
+      - [x] ESLint passed (no new warnings for FileTree.tsx)
+      - [x] Build passed (TypeScript compiles for FileTree.tsx)
 
 - [ ] **TASK-328**: Tree Line Styling (F-015)
   - **Priority**: P0 (Blocker)

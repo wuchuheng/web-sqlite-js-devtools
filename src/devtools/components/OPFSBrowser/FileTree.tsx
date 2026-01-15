@@ -187,7 +187,8 @@ const FileTreeItem = ({
   showLines,
   isLast = false,
 }: FileTreeItemProps) => {
-  const [isExpanded, setIsExpanded] = useState(false);
+  // TASK-327: Root directories (level 0) start expanded
+  const [isExpanded, setIsExpanded] = useState(level === 0);
   const [isDownloading, setIsDownloading] = useState(false);
   const [children, setChildren] = useState<OpfsFileEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -225,6 +226,16 @@ const FileTreeItem = ({
       setIsLoading(false);
     }
   }, [entry.path, hasLoaded, isLoading, isDirectory]);
+
+  // TASK-327: Auto-load root directories on mount
+  // 1. Load children when directory is expanded and not yet loaded
+  // 2. Dependency array prevents infinite loops
+  // 3. Only runs for directories (checked inside)
+  useEffect(() => {
+    if (isExpanded && !hasLoaded && isDirectory) {
+      loadChildren();
+    }
+  }, [isExpanded, hasLoaded, isDirectory, loadChildren]);
 
   const handleClick = useCallback(() => {
     if (!isDirectory) {

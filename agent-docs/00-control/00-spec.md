@@ -38,10 +38,10 @@ NOTES
 
 ## 3) Current stage
 
-- **Current stage (1-8)**: Stage 8 - Worker (F-015: TASK-326 Icon Imports & Helper Functions complete)
+- **Current stage (1-8)**: Stage 8 - Worker (F-015: TASK-326 & TASK-327 complete, TASK-328/329 pending)
 - **Active release**: v1.3.1 (Tree Enhancements) - Target: 2026-01-22
-- **Status summary**: F-015 In Progress (TASK-326 complete, TASK-327/328/329 pending). F-014 Complete (TASK-320 through TASK-325). F-013 Complete, F-012 Complete, F-011 Complete, F-010 Complete, F-009 Complete, F-008 Complete.
-- **Last updated (YYYY-MM-DD)**: 2026-01-16 (F-015: TASK-326 Icon Imports & Helper Functions complete)
+- **Status summary**: F-015 In Progress (TASK-326/327 complete, TASK-328/329 pending). F-014 Complete (TASK-320 through TASK-325). F-013 Complete, F-012 Complete, F-011 Complete, F-010 Complete, F-009 Complete, F-008 Complete.
+- **Last updated (YYYY-MM-DD)**: 2026-01-16 (F-015: TASK-327 Expansion State Update complete)
 
 ## 4) Technology stack (chosen in Stage 2)
 
