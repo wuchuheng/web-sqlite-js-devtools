@@ -38,10 +38,10 @@ NOTES
 
 ## 3) Current stage
 
-- **Current stage (1-8)**: Stage 8 - Implementation Worker (F-013 Complete)
-- **Active release**: v1.2.0 (Enhancements) - Target: 2026-01-21
-- **Status summary**: F-013 Complete - All 6 tasks complete (TASK-314 through TASK-319). Two-panel layout with file preview, EmptyPreview and UnsupportedPreview components, all FR-OPFS-* requirements satisfied. F-012 Complete (TASK-308 through TASK-313), F-011 Complete (TASK-307), F-010 Complete (TASK-306), F-009 Complete (TASK-305), F-008 Complete (TASK-304), TASK-303 Complete (Integration), TASK-302 Complete (F-006), TASK-301 Complete (F-005)
-- **Last updated (YYYY-MM-DD)**: 2026-01-15 (F-013: Complete - All 6 tasks (TASK-314 through TASK-319) finished. Two-panel layout with file preview including EmptyPreview and UnsupportedPreview components)
+- **Current stage (1-8)**: Stage 8 - Implementation Worker (F-014 in Progress)
+- **Active release**: v1.3.0 (UI Polish) - Target: 2026-01-21
+- **Status summary**: F-014 In Progress - TASK-320 Complete (Color Scheme Updates: green icon, removed helper notice, white preview background). F-013 Complete (TASK-314 through TASK-319), F-012 Complete (TASK-308 through TASK-313), F-011 Complete (TASK-307), F-010 Complete (TASK-306), F-009 Complete (TASK-305), F-008 Complete (TASK-304), TASK-303 Complete (Integration), TASK-302 Complete (F-006), TASK-301 Complete (F-005)
+- **Last updated (YYYY-MM-DD)**: 2026-01-16 (TASK-320: Complete - Color Scheme Updates applied to OPFSGallery.tsx. Green header icon, removed helper notice, white preview background)
 
 ## 4) Technology stack (chosen in Stage 2)
 
@@ -77,7 +77,8 @@ NOTES
 - `agent-docs/01-discovery/features/F-010-database-refresh-coordination.md` (NEW - Feature F-010)
 - `agent-docs/01-discovery/features/F-011-eslint-integration.md` (NEW - Feature F-011)
 - `agent-docs/01-discovery/features/F-012-opfs-browser-enhancement.md` (COMPLETED - Feature F-012)
-- `agent-docs/01-discovery/features/F-013-opfs-two-panel-preview.md` (NEW - Feature F-013)
+- `agent-docs/01-discovery/features/F-013-opfs-two-panel-preview.md` (COMPLETED - Feature F-013)
+- `agent-docs/01-discovery/features/F-014-opfs-ui-redesign.md` (NEW - Feature F-014)
 - `agent-docs/02-feasibility/01-options.md`
 - `agent-docs/02-feasibility/02-risk-assessment.md`
 - `agent-docs/02-feasibility/03-spike-plan.md`

@@ -1236,3 +1236,171 @@ NOTES
       - [x] Update status board (agent-docs/00-control/01-status.md)
       - [x] Mark F-013 as complete in Stage 8
     - [x] Feature F-013 complete (all FR-OPFS-\* requirements satisfied)
+
+---
+
+### Release v1.3.0 (UI Polish)
+
+**Target Date**: 2026-01-21
+
+- [x] **TASK-320**: Color Scheme Updates (F-014)
+  - **Priority**: P0 (Blocker)
+  - **Dependencies**: F-012, F-013 (must be complete)
+  - **Boundary**: `src/devtools/components/OPFSBrowser/OPFSGallery.tsx`
+  - **Maps to**: F-014: OPFS UI Visual Redesign
+  - **Feature**: [F-014: OPFS UI Visual Redesign](agent-docs/01-discovery/features/F-014-opfs-ui-redesign.md)
+  - **Micro-Spec**: [complete](agent-docs/08-task/active/TASK-320.md)
+  - **Estimated**: 1.5 hours
+  - **Completed**: 2026-01-16
+  - **DoD**:
+    - [ ] **OPFSGallery Header Icon** (0.25 hours)
+      - [ ] Update `FaFile` icon: `text-blue-600` → `text-green-600`
+      - [ ] Verify green color matches prototype (#4CAF50)
+    - [ ] **Remove Helper Notice** (0.25 hours)
+      - [ ] Remove helper notice section entirely from OPFSGallery.tsx
+      - [ ] Remove: `<div className="px-4 py-3 bg-blue-50 border-b border-blue-200">`
+      - [ ] Verify layout stability after removal
+    - [ ] **Update Preview Background** (0.25 hours)
+      - [ ] Change preview panel: `bg-emerald-50` → `bg-white`
+      - [ ] Verify white background matches prototype
+    - [ ] **Test Color Accessibility** (0.5 hours)
+      - [ ] Test green header + white text (contrast ratio should be >= 4.5:1)
+      - [ ] Test status badge contrast
+      - [ ] Use browser accessibility tools or manual verification
+    - [ ] ESLint passed (no new warnings)
+    - [ ] Build passed (no errors)
+
+- [ ] **TASK-321**: Preview Header Component (F-014)
+  - **Priority**: P0 (Blocker)
+  - **Dependencies**: F-013 (FilePreview must exist)
+  - **Boundary**: `src/devtools/components/OPFSBrowser/PreviewHeader.tsx`, `src/devtools/components/OPFSBrowser/FilePreview.tsx`
+  - **Maps to**: F-014: OPFS UI Visual Redesign
+  - **Feature**: [F-014: OPFS UI Visual Redesign](agent-docs/01-discovery/features/F-014-opfs-ui-redesign.md)
+  - **Micro-Spec**: [pending](agent-docs/08-task/active/TASK-321.md)
+  - **Estimated**: 1 hour
+  - **DoD**:
+    - [ ] **Create PreviewHeader Component** (0.5 hours)
+      - [ ] Create `src/devtools/components/OPFSBrowser/PreviewHeader.tsx` file
+      - [ ] Define interface: `fileName: string`, `showStatus?: boolean`, `statusText?: string`
+      - [ ] Implement green header: `px-4 py-3 bg-green-600 text-white flex items-center justify-between`
+      - [ ] Display "Preview: {fileName}" title (text-sm font-medium)
+      - [ ] Add status badge (conditional render): `px-2 py-1 bg-white text-green-600 text-xs font-medium rounded`
+      - [ ] Add TSDoc comments with @example
+      - [ ] Export component
+    - [ ] **Integrate into FilePreview** (0.25 hours)
+      - [ ] Import PreviewHeader in FilePreview.tsx
+      - [ ] Add header above preview content when file selected
+      - [ ] Pass `file.name` as fileName prop
+      - [ ] Set `showStatus={true}` and `statusText="started"`
+    - [ ] **Testing** (0.25 hours)
+      - [ ] Test header displays correctly for text files
+      - [ ] Test header displays correctly for images
+      - [ ] Test status badge visibility and styling
+      - [ ] ESLint passed (no new warnings)
+      - [ ] Build passed (no errors)
+
+- [ ] **TASK-322**: File Tree Enhancements - File Counts (F-014)
+  - **Priority**: P1 (High)
+  - **Dependencies**: F-012 (FileTree must exist)
+  - **Boundary**: `src/devtools/components/OPFSBrowser/FileTree.tsx`, `src/devtools/components/OPFSBrowser/FileNode.tsx`
+  - **Maps to**: F-014: OPFS UI Visual Redesign
+  - **Feature**: [F-014: OPFS UI Visual Redesign](agent-docs/01-discovery/features/F-014-opfs-ui-redesign.md)
+  - **Micro-Spec**: [pending](agent-docs/08-task/active/TASK-322.md)
+  - **Estimated**: 1.5 hours
+  - **DoD**:
+    - [ ] **Add getDirectoryCounts Helper** (0.5 hours)
+      - [ ] Add function to FileTree.tsx or separate utility
+      - [ ] Accept `OpfsFileEntry` as parameter
+      - [ ] Return empty string for files
+      - [ ] Calculate file count from `entry.children` (filter by `type === 'file'`)
+      - [ ] Calculate directory count from `entry.children` (filter by `type === 'directory'`)
+      - [ ] Return formatted string: "3 files", "2 dirs", or "3 files 2 dirs"
+      - [ ] Add TSDoc comments
+    - [ ] **Display Counts in FileNode** (0.5 hours)
+      - [ ] Update FileNode.tsx to call getDirectoryCounts for directories
+      - [ ] Display count span next to directory name
+      - [ ] Style: `text-xs text-gray-500 ml-2`
+      - [ ] Only display for directories (not files)
+      - [ ] Handle empty directories (show "0 files" or nothing)
+    - [ ] **Testing** (0.5 hours)
+      - [ ] Test counts display correctly for various directory sizes
+      - [ ] Test empty directories
+      - [ ] Test directories with only files, only dirs, or both
+      - [ ] Test that counts update after delete operations
+      - [ ] ESLint passed (no new warnings)
+      - [ ] Build passed (no errors)
+
+- [ ] **TASK-323**: File Tree Enhancements - Icon Visibility (F-014)
+  - **Priority**: P1 (High)
+  - **Dependencies**: F-012 (FileNode must exist)
+  - **Boundary**: `src/devtools/components/OPFSBrowser/FileNode.tsx`
+  - **Maps to**: F-014: OPFS UI Visual Redesign
+  - **Feature**: [F-014: OPFS UI Visual Redesign](agent-docs/01-discovery/features/F-014-opfs-ui-redesign.md)
+  - **Micro-Spec**: [pending](agent-docs/08-task/active/TASK-323.md)
+  - **Estimated**: 0.5 hours
+  - **DoD**:
+    - [ ] **Update Action Icons Visibility** (0.25 hours)
+      - [ ] Find action icons container in FileNode.tsx
+      - [ ] Change: `opacity-0 group-hover:opacity-100` → `opacity-100`
+      - [ ] Remove hover-only behavior
+      - [ ] Ensure icons remain positioned correctly
+    - [ ] **Testing** (0.25 hours)
+      - [ ] Test icons are always visible
+      - [ ] Test icons remain clickable
+      - [ ] Test icon hover states still work
+      - [ ] ESLint passed (no new warnings)
+      - [ ] Build passed (no errors)
+
+- [ ] **TASK-324**: Footer Removal (F-014)
+  - **Priority**: P0 (Blocker)
+  - **Dependencies**: None
+  - **Boundary**: `src/devtools/components/OPFSBrowser/OPFSGallery.tsx`
+  - **Maps to**: F-014: OPFS UI Visual Redesign
+  - **Feature**: [F-014: OPFS UI Visual Redesign](agent-docs/01-discovery/features/F-014-opfs-ui-redesign.md)
+  - **Micro-Spec**: [pending](agent-docs/08-task/active/TASK-324.md)
+  - **Estimated**: 0.5 hours
+  - **DoD**:
+    - [ ] **Remove Footer Section** (0.25 hours)
+      - [ ] Find footer tip section in OPFSGallery.tsx
+      - [ ] Remove: `<div className="px-4 py-2 bg-gray-50 border-t border-gray-200">` containing tip
+      - [ ] Verify layout remains stable
+    - [ ] **Testing** (0.25 hours)
+      - [ ] Test panel resize works without footer
+      - [ ] Test no visual gaps or layout issues
+      - [ ] ESLint passed (no new warnings)
+      - [ ] Build passed (no errors)
+
+- [ ] **TASK-325**: Integration & Testing (F-014)
+  - **Priority**: P0 (Blocker)
+  - **Dependencies**: TASK-320, TASK-321, TASK-322, TASK-323, TASK-324
+  - **Boundary**: Full OPFS browser, manual testing
+  - **Maps to**: F-014: OPFS UI Visual Redesign
+  - **Feature**: [F-014: OPFS UI Visual Redesign](agent-docs/01-discovery/features/F-014-opfs-ui-redesign.md)
+  - **Micro-Spec**: [pending](agent-docs/08-task/active/TASK-325.md)
+  - **Estimated**: 1 hour
+  - **DoD**:
+    - [ ] **Visual Regression Testing** (0.25 hours)
+      - [ ] Compare UI to prototype screenshot
+      - [ ] Verify green color theme applied consistently
+      - [ ] Verify preview header matches design
+      - [ ] Verify file counts display correctly
+      - [ ] Verify action icons always visible
+      - [ ] Verify helper notice and footer removed
+    - [ ] **Functional Testing** (0.25 hours)
+      - [ ] Test all existing features still work: expand/collapse, download, delete, preview
+      - [ ] Test file preview loads and displays correctly (all types: text, image, unsupported)
+      - [ ] Test panel resize works correctly
+      - [ ] Test delete confirmation modal works
+      - [ ] Test toast notifications work
+    - [ ] **Accessibility Testing** (0.25 hours)
+      - [ ] Test color contrast with accessibility tools (WCAG AA)
+      - [ ] Test keyboard navigation (Tab, Enter, Escape)
+      - [ ] Verify ARIA labels preserved on all interactive elements
+    - [ ] **Code Quality Verification** (0.25 hours)
+      - [ ] ESLint passed (no new warnings)
+      - [ ] Build passed (no errors)
+      - [ ] Type check passed (no errors)
+      - [ ] TSDoc comments added to PreviewHeader.tsx
+      - [ ] Update documentation:
+        - [ ] Update feature spec (mark F-014 complete)
+        - [ ] Update status board (mark F-014 complete)

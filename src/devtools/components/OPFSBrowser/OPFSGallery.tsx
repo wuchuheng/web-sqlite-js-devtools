@@ -17,9 +17,9 @@ import type { OpfsFileEntry } from "@/devtools/services/databaseService";
  * - Handles file and directory deletion with confirmation modal
  * - Displays toast notifications for success/error feedback
  * - Displays file tree with lazy-loading
- * - Shows helper notice about OPFS
  * - TASK-313: Integrated DeleteConfirmModal and Toast components
  * - TASK-318: Two-panel layout with resizable divider and file preview
+ * - TASK-320: Updated to green color theme, removed helper notice, white preview background
  *
  * @returns JSX.Element - OPFS file browser layout
  */
@@ -201,23 +201,11 @@ export const OPFSGallery = () => {
       {/* Header */}
       <div className="px-4 py-3 border-b border-gray-200 bg-white">
         <div className="flex items-center gap-2">
-          <FaFile className="text-blue-600" size={18} />
+          <FaFile className="text-green-600" size={18} />
           <h2 className="text-lg font-semibold text-gray-800">
             OPFS File Browser
           </h2>
         </div>
-      </div>
-
-      {/* Helper Notice */}
-      <div className="px-4 py-3 bg-blue-50 border-b border-blue-200">
-        <h3 className="text-sm font-medium text-blue-800 mb-1">
-          Origin Private File System
-        </h3>
-        <p className="text-xs text-blue-600">
-          Browse and manage SQLite database files stored in the Origin Private
-          File System. Files are organized in a tree structure with lazy-loaded
-          directories.
-        </p>
       </div>
 
       {/* Download Status */}
@@ -275,7 +263,7 @@ export const OPFSGallery = () => {
         />
 
         {/* Right Panel: Preview (TASK-318: FilePreview) */}
-        <div className="flex-1 flex flex-col overflow-hidden bg-emerald-50">
+        <div className="flex-1 flex flex-col overflow-hidden bg-white">
           <FilePreview file={selectedFile} />
         </div>
       </div>
