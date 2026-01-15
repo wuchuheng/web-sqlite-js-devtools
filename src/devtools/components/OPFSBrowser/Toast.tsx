@@ -80,13 +80,13 @@ export const Toast: React.FC<ToastProps> = ({
   message,
   onDismiss,
   onRetry,
-  itemName,
+  _itemName,
 }) => {
   // 1. Auto-dismiss after duration based on variant
   useEffect(() => {
     // 1a. Return early if not visible
     if (!isVisible) {
-      return;
+      return undefined;
     }
 
     // 1b. Set duration based on variant (3s for success, 5s for error)
@@ -98,7 +98,9 @@ export const Toast: React.FC<ToastProps> = ({
     }, duration);
 
     // 1d. Cleanup timeout on unmount or visibility change
-    return () => clearTimeout(timer);
+    return function cleanup() {
+      clearTimeout(timer);
+    };
   }, [isVisible, variant, onDismiss]);
 
   // 2. Don't render if not visible

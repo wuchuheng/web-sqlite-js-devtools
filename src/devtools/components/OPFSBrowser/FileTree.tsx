@@ -291,7 +291,7 @@ export const FileTree = ({ onDownload, onDelete }: FileTreeProps) => {
   useEffect(() => {
     const container = containerRef.current;
     if (!container) {
-      return;
+      return undefined;
     }
 
     const observer = new ResizeObserver((entries) => {
@@ -302,7 +302,9 @@ export const FileTree = ({ onDownload, onDelete }: FileTreeProps) => {
     });
 
     observer.observe(container);
-    return () => observer.disconnect();
+    return function cleanup() {
+      observer.disconnect();
+    };
   }, []);
 
   // Fetch root level files
