@@ -40,8 +40,8 @@ NOTES
 
 - **Current stage (1-8)**: Stage 8 - Implementation Worker (F-014 in Progress)
 - **Active release**: v1.3.0 (UI Polish) - Target: 2026-01-21
-- **Status summary**: F-014 In Progress - TASK-320 Complete (Color Scheme Updates: green icon, removed helper notice, white preview background). F-013 Complete (TASK-314 through TASK-319), F-012 Complete (TASK-308 through TASK-313), F-011 Complete (TASK-307), F-010 Complete (TASK-306), F-009 Complete (TASK-305), F-008 Complete (TASK-304), TASK-303 Complete (Integration), TASK-302 Complete (F-006), TASK-301 Complete (F-005)
-- **Last updated (YYYY-MM-DD)**: 2026-01-16 (TASK-320: Complete - Color Scheme Updates applied to OPFSGallery.tsx. Green header icon, removed helper notice, white preview background)
+- **Status summary**: F-014 In Progress - TASK-320, TASK-321 Complete (Color Scheme Updates + Preview Header Component). F-013 Complete (TASK-314 through TASK-319), F-012 Complete (TASK-308 through TASK-313), F-011 Complete (TASK-307), F-010 Complete (TASK-306), F-009 Complete (TASK-305), F-008 Complete (TASK-304), TASK-303 Complete (Integration), TASK-302 Complete (F-006), TASK-301 Complete (F-005)
+- **Last updated (YYYY-MM-DD)**: 2026-01-16 (TASK-321: Complete - Preview Header Component with green bar and status badge)
 
 ## 4) Technology stack (chosen in Stage 2)
 

@@ -3,6 +3,7 @@ import { databaseService } from "@/devtools/services/databaseService";
 import type { OpfsFileEntry } from "@/devtools/services/databaseService";
 import { FiAlertCircle } from "react-icons/fi";
 import { EmptyPreview } from "./EmptyPreview";
+import { PreviewHeader } from "./PreviewHeader";
 import { TextPreview } from "./TextPreview";
 import { ImagePreview } from "./ImagePreview";
 import { UnsupportedPreview } from "./UnsupportedPreview";
@@ -34,7 +35,8 @@ interface FilePreviewProps {
  * 1. Load file content when file prop changes
  * 2. Display loading state with emerald spinner
  * 3. Display error state with retry button
- * 4. Delegate to appropriate preview component based on file type
+ * 4. Display green header bar with filename and status badge (TASK-321)
+ * 5. Delegate to appropriate preview component based on file type
  *
  * @param props.file - Selected file entry to preview
  * @returns Preview panel content
@@ -99,30 +101,54 @@ export const FilePreview = ({ file }: FilePreviewProps): JSX.Element => {
 
   // 6. Delegate to appropriate preview component based on file type
   // NOTE: Child components implemented in TASK-316, TASK-317, and TASK-319
+  // NOTE: PreviewHeader added in TASK-321
   switch (data.type) {
     case "text":
       // TextPreview component (TASK-316)
       return (
-        <TextPreview
-          file={file}
-          content={data.content as string}
-          metadata={data.metadata}
-        />
+        <>
+          <PreviewHeader
+            fileName={file.name}
+            showStatus={true}
+            statusText="started"
+          />
+          <TextPreview
+            file={file}
+            content={data.content as string}
+            metadata={data.metadata}
+          />
+        </>
       );
 
     case "image":
       // ImagePreview component (TASK-317)
       return (
-        <ImagePreview
-          file={file}
-          content={data.content as Blob}
-          metadata={data.metadata}
-        />
+        <>
+          <PreviewHeader
+            fileName={file.name}
+            showStatus={true}
+            statusText="started"
+          />
+          <ImagePreview
+            file={file}
+            content={data.content as Blob}
+            metadata={data.metadata}
+          />
+        </>
       );
 
     case "binary":
       // UnsupportedPreview - Binary files cannot be previewed (TASK-319)
-      return <UnsupportedPreview file={file} metadata={data.metadata} />;
+      return (
+        <>
+          <PreviewHeader
+            fileName={file.name}
+            showStatus={true}
+            statusText="started"
+          />
+          <UnsupportedPreview file={file} metadata={data.metadata} />
+        </>
+      );
 
     default:
       // Fallback for unknown types

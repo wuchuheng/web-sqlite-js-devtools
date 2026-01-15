@@ -1270,14 +1270,15 @@ NOTES
     - [ ] ESLint passed (no new warnings)
     - [ ] Build passed (no errors)
 
-- [ ] **TASK-321**: Preview Header Component (F-014)
+- [x] **TASK-321**: Preview Header Component (F-014)
   - **Priority**: P0 (Blocker)
   - **Dependencies**: F-013 (FilePreview must exist)
   - **Boundary**: `src/devtools/components/OPFSBrowser/PreviewHeader.tsx`, `src/devtools/components/OPFSBrowser/FilePreview.tsx`
   - **Maps to**: F-014: OPFS UI Visual Redesign
   - **Feature**: [F-014: OPFS UI Visual Redesign](agent-docs/01-discovery/features/F-014-opfs-ui-redesign.md)
-  - **Micro-Spec**: [pending](agent-docs/08-task/active/TASK-321.md)
+  - **Micro-Spec**: [complete](agent-docs/08-task/active/TASK-321.md)
   - **Estimated**: 1 hour
+  - **Completed**: 2026-01-16
   - **DoD**:
     - [ ] **Create PreviewHeader Component** (0.5 hours)
       - [ ] Create `src/devtools/components/OPFSBrowser/PreviewHeader.tsx` file
