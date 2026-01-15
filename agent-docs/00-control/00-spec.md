@@ -40,8 +40,8 @@ NOTES
 
 - **Current stage (1-8)**: Stage 8 - Implementation Worker (S8:worker - F-013)
 - **Active release**: v1.2.0 (Enhancements) - Target: 2026-01-21
-- **Status summary**: F-013 Implementation In Progress - TASK-314 complete (Service Layer), TASK-315 complete (File Preview Component Structure); TASK-313 complete (F-012 Integration), TASK-312 complete (F-012 Toast), TASK-311 complete (F-012 Metadata), TASK-310 complete (F-012 Delete Modal), TASK-309 complete (F-012 Tree Lines), TASK-308 complete (F-012 Service Layer), TASK-307 complete (F-011), TASK-306 complete (F-010), TASK-305 complete (F-009), TASK-304 complete (F-008), TASK-303 complete (Integration), TASK-302 complete (F-006), TASK-301 complete (F-005)
-- **Last updated (YYYY-MM-DD)**: 2026-01-15 (F-013: TASK-315 Complete - FilePreview.tsx container component with loading/error states, conditional rendering, and useInspectedWindowRequest hook integration)
+- **Status summary**: F-013 Implementation In Progress - TASK-314 complete (Service Layer), TASK-315 complete (File Preview Component Structure), TASK-316 complete (Text Preview Implementation); TASK-313 complete (F-012 Integration), TASK-312 complete (F-012 Toast), TASK-311 complete (F-012 Metadata), TASK-310 complete (F-012 Delete Modal), TASK-309 complete (F-012 Tree Lines), TASK-308 complete (F-012 Service Layer), TASK-307 complete (F-011), TASK-306 complete (F-010), TASK-305 complete (F-009), TASK-304 complete (F-008), TASK-303 complete (Integration), TASK-302 complete (F-006), TASK-301 complete (F-005)
+- **Last updated (YYYY-MM-DD)**: 2026-01-15 (F-013: TASK-316 Complete - TextPreview.tsx component with emerald header, monospace font, large file warning, formatFileSize helper)
 
 ## 4) Technology stack (chosen in Stage 2)
 

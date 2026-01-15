@@ -1073,31 +1073,32 @@ NOTES
     - [x] Type check passed with no errors (pre-existing Input.tsx error unrelated to this change)
     - [x] ESLint passed with no new warnings
 
-- [ ] **TASK-316**: Text Preview Implementation (F-013)
+- [x] **TASK-316**: Text Preview Implementation (F-013)
   - **Priority**: P1 (High)
   - **Dependencies**: TASK-315 (File Preview Component Structure)
   - **Boundary**: `src/devtools/components/OPFSBrowser/TextPreview.tsx` (NEW)
   - **Maps to**: F-013, FR-OPFS-004
   - **Feature**: [F-013: OPFS Browser Two-Panel Layout with File Preview](agent-docs/01-discovery/features/F-013-opfs-two-panel-preview.md)
-  - **Micro-Spec**: TBD
+  - **Micro-Spec**: [complete](agent-docs/08-task/active/TASK-316.md)
   - **Estimated**: 1.5 hours
+  - **Completed**: 2026-01-15
   - **DoD**:
-    - [ ] Create `TextPreview.tsx` component
-    - [ ] Define TextPreviewProps interface (file: OpfsFileEntry, content: string, metadata: ContentMetadata)
-    - [ ] Define ContentMetadata interface (size: number, lastModified: Date, mimeType: string)
-    - [ ] Implement header component with emerald theme (bg-emerald-50 border-b border-emerald-200)
-    - [ ] Display "Preview: {filename}" title in header (text-emerald-700 font-semibold)
-    - [ ] Display metadata in header (formatFileSize(metadata.size), formatTimestamp(metadata.lastModified))
-    - [ ] Implement content area with flex-1 and overflow-auto
-    - [ ] Display text content in `<pre>` tag (font-mono text-sm)
-    - [ ] Preserve line breaks and formatting (whitespace-pre-wrap CSS class)
-    - [ ] Handle large text files (> 1MB): Show warning message in header
-    - [ ] Handle very large text files (> 10MB): Blocked in service layer, show error state
-    - [ ] Optional: JSON syntax highlighting if feasible (use react-syntax-highlighter or plain text)
-    - [ ] TSDoc comments on component and interfaces
-    - [ ] Export component and types
-    - [ ] Type check passed with no errors
-    - [ ] ESLint passed with no new warnings
+    - [x] Create `TextPreview.tsx` component
+    - [x] Define TextPreviewProps interface (file: OpfsFileEntry, content: string, metadata: ContentMetadata)
+    - [x] Define ContentMetadata interface (size: number, lastModified: Date, mimeType: string)
+    - [x] Implement header component with emerald theme (bg-emerald-50 border-b border-emerald-200)
+    - [x] Display "Preview: {filename}" title in header (text-emerald-700 font-semibold)
+    - [x] Display metadata in header (formatFileSize(metadata.size), formatTimestamp(metadata.lastModified))
+    - [x] Implement content area with flex-1 and overflow-auto
+    - [x] Display text content in `<pre>` tag (font-mono text-sm)
+    - [x] Preserve line breaks and formatting (whitespace-pre-wrap CSS class)
+    - [x] Handle large text files (> 1MB): Show warning message in header
+    - [x] Handle very large text files (> 10MB): Blocked in service layer, show error state
+    - [x] Optional: JSON syntax highlighting if feasible (use react-syntax-highlighter or plain text) - Deferred to future enhancement
+    - [x] TSDoc comments on component and interfaces
+    - [x] Export component and types
+    - [x] Type check passed with no errors (pre-existing Input.tsx error unrelated to this change)
+    - [x] ESLint passed with no new warnings
 
 - [ ] **TASK-317**: Image Preview Implementation (F-013)
   - **Priority**: P1 (High)
