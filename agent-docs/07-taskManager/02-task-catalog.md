@@ -1458,25 +1458,25 @@ NOTES
       - [x] ESLint passed (no new warnings for FileTree.tsx)
       - [x] Build passed (TypeScript compiles for FileTree.tsx)
 
-- [ ] **TASK-328**: Tree Line Styling (F-015)
+- [x] **TASK-328**: Tree Line Styling (F-015)
   - **Priority**: P0 (Blocker)
-  - **Dependencies**: None
+  - **Dependencies**: TASK-326, TASK-327
   - **Boundary**: `src/devtools/components/OPFSBrowser/TreeLines.tsx`
   - **Maps to**: F-015: OPFS Tree Visual Enhancements
   - **Feature**: [F-015: OPFS Tree Visual Enhancements](agent-docs/01-discovery/features/F-015-opfs-tree-enhancements.md)
-  - **Micro-Spec**: [pending](agent-docs/08-task/active/TASK-328.md)
+  - **Micro-Spec**: [complete](agent-docs/08-task/active/TASK-328.md)
   - **Estimated**: 0.5 hours
   - **DoD**:
-    - [ ] **Update Tree Line Styling** (0.25 hours)
-      - [ ] Change className from bg-gray-200 to border-dotted border-gray-300
-      - [ ] Verify dotted lines display correctly
-      - [ ] Verify color is lighter (gray-300 vs gray-200)
-    - [ ] **Testing** (0.25 hours)
-      - [ ] Test dotted lines display at all hierarchy levels
-      - [ ] Test responsive hiding (sidebar collapse) still works
-      - [ ] Test visual consistency with prototype
-      - [ ] ESLint passed (no new warnings)
-      - [ ] Build passed (no errors)
+    - [x] **Update Tree Line Styling** (0.25 hours)
+      - [x] Change className from bg-gray-200 to border-dotted border-gray-300
+      - [x] Verify dotted lines display correctly
+      - [x] Verify color is lighter (gray-300 vs gray-200)
+    - [x] **Testing** (0.25 hours)
+      - [x] Test dotted lines display at all hierarchy levels
+      - [x] Test responsive hiding (sidebar collapse) still works
+      - [x] Test visual consistency with prototype
+      - [x] ESLint passed (no new warnings)
+      - [x] Build passed (no errors)
 
 - [ ] **TASK-329**: Integration and Testing (F-015)
   - **Priority**: P0 (Blocker)

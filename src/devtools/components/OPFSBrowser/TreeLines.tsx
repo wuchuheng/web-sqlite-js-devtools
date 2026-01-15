@@ -55,11 +55,11 @@ export const TreeLines = ({
 
   return (
     <div className="relative" style={{ paddingLeft: `${indent}px` }}>
-      {/* Phase 2: Render vertical line (parent connection) */}
+      {/* Phase 2: Render vertical line (parent connection) - TASK-328: dotted border style */}
       {/* Vertical line extends from top to bottom of container */}
       {/* For last child, we only extend to middle (handled by CSS in children) */}
       <div
-        className="tree-line-vertical absolute top-0 w-px bg-gray-200 pointer-events-none"
+        className="tree-line-vertical absolute top-0 border-l border-dotted border-gray-300 pointer-events-none"
         style={{
           left: "12px",
           // For non-last children: line goes full height
