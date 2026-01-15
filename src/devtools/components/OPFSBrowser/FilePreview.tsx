@@ -2,8 +2,10 @@ import { useInspectedWindowRequest } from "@/devtools/hooks/useInspectedWindowRe
 import { databaseService } from "@/devtools/services/databaseService";
 import type { OpfsFileEntry } from "@/devtools/services/databaseService";
 import { FiAlertCircle } from "react-icons/fi";
+import { EmptyPreview } from "./EmptyPreview";
 import { TextPreview } from "./TextPreview";
 import { ImagePreview } from "./ImagePreview";
+import { UnsupportedPreview } from "./UnsupportedPreview";
 
 // Type alias for file content data returned from service layer (for documentation)
 type _FileContentData = {
@@ -50,21 +52,9 @@ export const FilePreview = ({ file }: FilePreviewProps): JSX.Element => {
     null,
   );
 
-  // 2. No file selected - show empty state
+  // 2. No file selected - show empty state (TASK-319)
   if (!file) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full text-center p-8">
-        <div className="text-gray-400 mb-4">
-          <FiAlertCircle size={64} />
-        </div>
-        <h3 className="text-gray-600 text-lg font-semibold mb-2">
-          No file selected
-        </h3>
-        <p className="text-gray-500 text-sm">
-          Select a file from the tree to preview its contents
-        </p>
-      </div>
-    );
+    return <EmptyPreview />;
   }
 
   // 3. Loading state - show emerald spinner
@@ -108,7 +98,7 @@ export const FilePreview = ({ file }: FilePreviewProps): JSX.Element => {
   }
 
   // 6. Delegate to appropriate preview component based on file type
-  // NOTE: Child components implemented in TASK-316 and TASK-317
+  // NOTE: Child components implemented in TASK-316, TASK-317, and TASK-319
   switch (data.type) {
     case "text":
       // TextPreview component (TASK-316)
@@ -131,31 +121,8 @@ export const FilePreview = ({ file }: FilePreviewProps): JSX.Element => {
       );
 
     case "binary":
-      // UnsupportedPreview - Binary files cannot be previewed
-      return (
-        <div className="flex flex-col h-full">
-          {/* Header */}
-          <div className="bg-gray-50 border-b border-gray-200 px-4 py-2">
-            <h3 className="text-gray-700 font-semibold">{file.name}</h3>
-            <div className="text-xs text-gray-600 mt-1">
-              {data.metadata.size} bytes • {data.metadata.mimeType}
-            </div>
-          </div>
-
-          {/* Content */}
-          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-            <div className="text-gray-400 mb-4">
-              <FiAlertCircle size={64} />
-            </div>
-            <h3 className="text-gray-600 text-lg font-semibold mb-2">
-              Preview not available
-            </h3>
-            <p className="text-gray-500 text-sm">
-              This file type ({data.metadata.mimeType}) cannot be previewed
-            </p>
-          </div>
-        </div>
-      );
+      // UnsupportedPreview - Binary files cannot be previewed (TASK-319)
+      return <UnsupportedPreview file={file} metadata={data.metadata} />;
 
     default:
       // Fallback for unknown types
