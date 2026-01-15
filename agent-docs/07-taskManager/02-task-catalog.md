@@ -1100,32 +1100,33 @@ NOTES
     - [x] Type check passed with no errors (pre-existing Input.tsx error unrelated to this change)
     - [x] ESLint passed with no new warnings
 
-- [ ] **TASK-317**: Image Preview Implementation (F-013)
+- [x] **TASK-317**: Image Preview Implementation (F-013)
   - **Priority**: P1 (High)
   - **Dependencies**: TASK-315 (File Preview Component Structure)
   - **Boundary**: `src/devtools/components/OPFSBrowser/ImagePreview.tsx` (NEW)
   - **Maps to**: F-013, FR-OPFS-005
   - **Feature**: [F-013: OPFS Browser Two-Panel Layout with File Preview](agent-docs/01-discovery/features/F-013-opfs-two-panel-preview.md)
-  - **Micro-Spec**: TBD
+  - **Micro-Spec**: [complete](agent-docs/08-task/active/TASK-317.md)
   - **Estimated**: 1.5 hours
+  - **Completed**: 2026-01-15
   - **DoD**:
-    - [ ] Create `ImagePreview.tsx` component
-    - [ ] Define ImagePreviewProps interface (file: OpfsFileEntry, content: Blob, metadata: ContentMetadata)
-    - [ ] Define ContentMetadata interface (size: number, lastModified: Date, mimeType: string)
-    - [ ] Implement header component with emerald theme (bg-emerald-50 border-b border-emerald-200)
-    - [ ] Display "Preview: {filename}" title in header (text-emerald-700 font-semibold)
-    - [ ] Display metadata in header (formatFileSize(metadata.size), formatTimestamp(metadata.lastModified))
-    - [ ] Implement content area with flex-1, flex items-center, justify-center, bg-gray-50
-    - [ ] Create object URL from Blob content using `URL.createObjectURL(content)`
-    - [ ] Display image in `<img>` tag with src={imageUrl}, alt={file.name}
-    - [ ] Apply responsive CSS classes: max-w-full max-h-full object-contain
-    - [ ] Maintain aspect ratio (object-fit: contain)
-    - [ ] Cleanup object URL on unmount (useEffect return: `URL.revokeObjectURL(url)`)
-    - [ ] Handle large images (> 5MB): Blocked in service layer, show error state
-    - [ ] TSDoc comments on component and interfaces
-    - [ ] Export component and types
-    - [ ] Type check passed with no errors
-    - [ ] ESLint passed with no new warnings
+    - [x] Create `ImagePreview.tsx` component
+    - [x] Define ImagePreviewProps interface (file: OpfsFileEntry, content: Blob, metadata: ContentMetadata)
+    - [x] Define ContentMetadata interface (size: number, lastModified: Date, mimeType: string)
+    - [x] Implement header component with emerald theme (bg-emerald-50 border-b border-emerald-200)
+    - [x] Display "Preview: {filename}" title in header (text-emerald-700 font-semibold)
+    - [x] Display metadata in header (formatFileSize(metadata.size), formatTimestamp(metadata.lastModified))
+    - [x] Implement content area with flex-1, flex items-center, justify-center, bg-gray-50
+    - [x] Create object URL from Blob content using `URL.createObjectURL(content)`
+    - [x] Display image in `<img>` tag with src={imageUrl}, alt={file.name}
+    - [x] Apply responsive CSS classes: max-w-full max-h-full object-contain
+    - [x] Maintain aspect ratio (object-fit: contain)
+    - [x] Cleanup object URL on unmount (useEffect return: `URL.revokeObjectURL(url)`)
+    - [x] Handle large images (> 5MB): Blocked in service layer, show error state
+    - [x] TSDoc comments on component and interfaces
+    - [x] Export component and types
+    - [x] Type check passed with no errors (pre-existing Input.tsx error unrelated to this change)
+    - [x] ESLint passed with no new warnings
 
 - [ ] **TASK-318**: Panel Resizing Integration (F-013)
   - **Priority**: P1 (High)
