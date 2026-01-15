@@ -7,6 +7,42 @@ import type { OpfsFileEntry } from "@/devtools/services/databaseService";
 import { TreeLines } from "./TreeLines";
 
 /**
+ * Get directory counts for display (TASK-322)
+ *
+ * @remarks
+ * - Pure function with no side effects
+ * - Uses entry.itemCount for file/directory counts
+ * - Returns formatted string for display
+ * - Returns empty string for files (not directories)
+ *
+ * @param entry - OpfsFileEntry to calculate counts for
+ * @returns Formatted count string (e.g., "3 files 2 dirs") or empty string for files
+ *
+ * @example
+ * ```ts
+ * const counts = getDirectoryCounts(entry); // "3 files 2 dirs"
+ * ```
+ */
+const getDirectoryCounts = (entry: OpfsFileEntry): string => {
+  // 1. Only directories have itemCount to display
+  if (entry.type !== "directory") {
+    return "";
+  }
+
+  // 2. Get itemCount or default to zeros
+  const counts = entry.itemCount ?? { files: 0, directories: 0 };
+
+  // 3. Return formatted string based on counts
+  if (counts.directories === 0) {
+    return `${counts.files} files`;
+  }
+  if (counts.files === 0) {
+    return `${counts.directories} dirs`;
+  }
+  return `${counts.files} files ${counts.directories} dirs`;
+};
+
+/**
  * FileTree component props
  */
 interface FileTreeProps {
@@ -29,6 +65,7 @@ interface FileTreeItemProps {
   keyPrefix: string;
   showLines: boolean;
   isLast?: boolean;
+  fileCounts?: string; // NEW - TASK-322
 }
 
 /**
@@ -54,7 +91,10 @@ const FileTreeItem = ({
 
   const isDirectory = entry.type === "directory";
 
-  // 10. Selection state (TASK-318: Two-panel layout)
+  // 11. Calculate directory counts for display (TASK-322)
+  const directoryCounts = getDirectoryCounts(entry);
+
+  // 12. Selection state (TASK-318: Two-panel layout)
   const isSelected = selectedFile?.path === entry.path;
 
   const loadChildren = useCallback(async () => {
@@ -93,7 +133,7 @@ const FileTreeItem = ({
     }
   }, [isDirectory, hasLoaded, loadChildren]);
 
-  // 11. Handle file selection (TASK-318: Two-panel layout)
+  // 13. Handle file selection (TASK-318: Two-panel layout)
   const handleFileSelect = useCallback(() => {
     if (entry.type === "file" && onFileSelect) {
       onFileSelect(entry);
@@ -187,6 +227,11 @@ const FileTreeItem = ({
         >
           {entry.name}
         </span>
+
+        {/* Directory counts (TASK-322) */}
+        {isDirectory && directoryCounts && (
+          <span className="text-xs text-gray-500 ml-2">{directoryCounts}</span>
+        )}
 
         {/* Size (only for files) */}
         {!isDirectory && (
@@ -344,7 +389,10 @@ export const FileTree = ({
     error,
     reload,
   } = useInspectedWindowRequest<OpfsFileEntry[]>(
-    () => databaseService.getOpfsFiles(),
+    () => {
+      console.log("[FileTree] Fetching OPFS files...");
+      return databaseService.getOpfsFiles();
+    },
     [],
     [],
   );
