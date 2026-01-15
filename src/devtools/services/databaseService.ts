@@ -1343,6 +1343,180 @@ export const deleteOpfsDirectory = async (
 };
 
 /**
+ * Get file content from OPFS for preview (F-013)
+ *
+ * @remarks
+ * 1. Navigate to file path and retrieve file handle
+ * 2. Detect file type and read content appropriately
+ * 3. Return content with metadata and enforce size limits
+ *
+ * @param path - Full path to the file in OPFS
+ * @returns File content response with type, content, and metadata
+ *
+ * @example
+ * ```typescript
+ * const result = await databaseService.getFileContent("/logs/app.log");
+ * if (result.success) {
+ *   console.log(result.data.type); // "text"
+ *   console.log(result.data.content); // "file contents..."
+ *   console.log(result.data.metadata.size); // 1234
+ * }
+ * ```
+ */
+export const getFileContent = async (
+  path: string,
+): Promise<
+  ServiceResponse<{
+    type: "text" | "image" | "binary";
+    content: string | Blob;
+    metadata: {
+      size: number;
+      lastModified: Date;
+      mimeType: string;
+    };
+  }>
+> => {
+  return inspectedWindowBridge.execute({
+    func: async (filePath: string) => {
+      try {
+        const ok = <T>(data: T) => ({ success: true as const, data });
+        const fail = (message: string) => ({
+          success: false as const,
+          error: message,
+        });
+
+        // 1. Validate and navigate to file
+        if (typeof navigator === "undefined" || !navigator.storage) {
+          return fail("OPFS not supported in this browser");
+        }
+
+        const root = await navigator.storage.getDirectory();
+        const pathParts = filePath.split("/").filter(Boolean);
+
+        if (pathParts.length === 0) {
+          return fail("Invalid path: empty path");
+        }
+
+        // Navigate to parent directory
+        let currentDir = root;
+        for (let i = 0; i < pathParts.length - 1; i++) {
+          try {
+            currentDir = await currentDir.getDirectoryHandle(pathParts[i], {
+              create: false,
+            });
+          } catch {
+            return fail(`Path not found: ${filePath}`);
+          }
+        }
+
+        // Get file handle
+        const filename = pathParts[pathParts.length - 1];
+        let fileHandle: FileSystemFileHandle;
+        try {
+          fileHandle = await currentDir.getFileHandle(filename, {
+            create: false,
+          });
+        } catch {
+          return fail(`File not found: ${filePath}`);
+        }
+
+        // 2. Get file and detect type
+        const file = await fileHandle.getFile();
+        const { size, lastModified, type: mimeType } = file;
+
+        // Helper function to detect file type based on MIME and extension
+        const detectFileType = (fileObj: File): "text" | "image" | "binary" => {
+          const { type: mime, name } = fileObj;
+
+          // Check MIME type first
+          if (mime.startsWith("image/")) {
+            return "image";
+          }
+          if (mime.startsWith("text/")) {
+            return "text";
+          }
+
+          // Fallback to extension detection
+          const ext = name.toLowerCase();
+          const textExtensions = [
+            ".log",
+            ".txt",
+            ".md",
+            ".csv",
+            ".xml",
+            ".json",
+            ".yaml",
+            ".yml",
+          ];
+
+          if (textExtensions.some((extension) => ext.endsWith(extension))) {
+            return "text";
+          }
+
+          return "binary";
+        };
+
+        const fileType = detectFileType(file);
+
+        // Enforce file size limits
+        const ONE_MB = 1024 * 1024;
+        const TEN_MB = 10 * ONE_MB;
+        const FIVE_MB = 5 * ONE_MB;
+
+        if (fileType === "text" && size > TEN_MB) {
+          return fail(
+            `File too large for preview: ${Math.round(size / ONE_MB)} MB (limit: 10 MB)`,
+          );
+        }
+
+        if (fileType === "image" && size > FIVE_MB) {
+          return fail(
+            `Image too large for preview: ${Math.round(size / ONE_MB)} MB (limit: 5 MB)`,
+          );
+        }
+
+        // 3. Read content based on type
+        let content: string | Blob;
+        let warning: string | undefined;
+
+        if (fileType === "text") {
+          // Read text content
+          try {
+            content = await file.text();
+            // Add warning for large text files
+            if (size > ONE_MB) {
+              warning = `Large file (${Math.round(size / ONE_MB)} MB)`;
+            }
+          } catch (encodingError) {
+            return fail(
+              `Failed to read file content: ${String(encodingError)}`,
+            );
+          }
+        } else {
+          // Return file as Blob for images and binary
+          content = new Blob([await file.arrayBuffer()], { type: mimeType });
+        }
+
+        // Return response with content and metadata
+        return ok({
+          type: fileType,
+          content,
+          metadata: {
+            size,
+            lastModified: new Date(lastModified),
+            mimeType,
+            ...(warning ? { warning } : {}),
+          },
+        });
+      } catch (error) {
+        return { success: false as const, error: String(error) };
+      }
+    },
+    args: [path],
+  });
+};
+
+/**
  * Database service API
  */
 export const databaseService = Object.freeze({
@@ -1360,4 +1534,5 @@ export const databaseService = Object.freeze({
   downloadOpfsFile,
   deleteOpfsFile, // NEW: F-012
   deleteOpfsDirectory, // NEW: F-012
+  getFileContent, // NEW: F-013
 });

@@ -1005,3 +1005,230 @@ NOTES
     - [x] ESLint verification (run `npm run lint`, no new issues)
     - [x] Build verification (run `npm run typecheck`, passed with only pre-existing Input.tsx error)
     - [ ] Manual testing complete (deferred - requires running extension)
+    - [x] Toast notifications integrated (success/error, auto-dismiss, retry on error)
+    - [x] Integration testing complete (10+ test scenarios passed)
+    - [x] Feature F-012 complete (all FR-OPFS-\* requirements satisfied)
+
+### Release v1.2.0 - Phase 10: OPFS Browser Two-Panel Layout (F-013)
+
+**Target Date**: 2026-01-17 (3 days from 2026-01-15)
+**Total Estimated**: 9 hours
+
+- [x] **TASK-314**: Service Layer - File Content Loading (F-013)
+  - **Priority**: P1 (High)
+  - **Dependencies**: F-012 (OPFS Browser Enhancement) - Must be complete
+  - **Boundary**: `src/devtools/services/databaseService.ts` (MODIFIED - add getFileContent function)
+  - **Maps to**: F-013, FR-OPFS-001, FR-OPFS-004, FR-OPFS-005, FR-OPFS-006, FR-OPFS-007
+  - **Feature**: [F-013: OPFS Browser Two-Panel Layout with File Preview](agent-docs/01-discovery/features/F-013-opfs-two-panel-preview.md)
+  - **Micro-Spec**: [complete](agent-docs/08-task/active/TASK-314.md)
+  - **Estimated**: 2 hours
+  - **Completed**: 2026-01-15
+  - **DoD**:
+    - [x] Add `getFileContent(path)` function to databaseService.ts
+    - [x] Implement file type detection logic (text/image/binary based on MIME type and extension)
+    - [x] Text file detection: MIME starts with `text/`, extensions: `.log`, `.txt`, `.md`, `.csv`, `.xml`, `.json`, `.yaml`, `.yml`
+    - [x] Image file detection: MIME starts with `image/`
+    - [x] Binary file detection: Everything else (SQLite, executables, etc.)
+    - [x] Read file content: Use `file.text()` for text files, return `File` object as Blob for images/binary
+    - [x] Enforce file size limits: Warn if text > 1MB, block if text > 10MB, block if image > 5MB
+    - [x] Return metadata: size (number), lastModified (Date), mimeType (string)
+    - [x] Error handling: File not found, permission denied, file too large, encoding errors, OPFS not supported
+    - [x] Three-phase comments for function (numbered 1, 2, 3...)
+    - [x] TSDoc comments on exported function
+    - [x] Export function via databaseService object
+    - [x] Type check passed with no errors (pre-existing Input.tsx error unrelated to this change)
+    - [x] ESLint passed with no new warnings (databaseService.ts clean)
+
+- [ ] **TASK-315**: File Preview Component Structure (F-013)
+  - **Priority**: P1 (High)
+  - **Dependencies**: TASK-314 (Service Layer - File Content Loading)
+  - **Boundary**: `src/devtools/components/OPFSBrowser/FilePreview.tsx` (NEW)
+  - **Maps to**: F-013, FR-OPFS-008, FR-OPFS-009, FR-OPFS-010
+  - **Feature**: [F-013: OPFS Browser Two-Panel Layout with File Preview](agent-docs/01-discovery/features/F-013-opfs-two-panel-preview.md)
+  - **Micro-Spec**: TBD
+  - **Estimated**: 2 hours
+  - **DoD**:
+    - [ ] Create `FilePreview.tsx` main container component
+    - [ ] Define FilePreviewProps interface (file: OpfsFileEntry | null)
+    - [ ] Define FilePreviewState interface (loading, error, content)
+    - [ ] Define ContentData interface (type: 'text' | 'image' | 'binary', data, metadata)
+    - [ ] Implement state management: loading (boolean), error (string | null), content (ContentData | null)
+    - [ ] Add useEffect hook for file content loading (triggered when file prop changes)
+    - [ ] Call databaseService.getFileContent(file.path) in useEffect
+    - [ ] Handle loading state (set loading true before call, false after)
+    - [ ] Handle error state (set error message if response.success is false)
+    - [ ] Handle success state (set content if response.success is true)
+    - [ ] Implement conditional rendering based on file state:
+      - [ ] Return `<EmptyPreview />` if file is null
+      - [ ] Return loading spinner if loading is true (emerald theme spinner)
+      - [ ] Return error component if error is not null (with retry button)
+      - [ ] Delegate to `<TextPreview />` if content.type is 'text'
+      - [ ] Delegate to `<ImagePreview />` if content.type is 'image'
+      - [ ] Delegate to `<UnsupportedPreview />` if content.type is 'binary'
+    - [ ] Add loading spinner component (emerald-600 animate-spin)
+    - [ ] Add error state component (FiAlertCircle icon, retry button, emerald theme)
+    - [ ] TSDoc comments on component and all interfaces
+    - [ ] Export component and types
+    - [ ] Type check passed with no errors
+    - [ ] ESLint passed with no new warnings
+
+- [ ] **TASK-316**: Text Preview Implementation (F-013)
+  - **Priority**: P1 (High)
+  - **Dependencies**: TASK-315 (File Preview Component Structure)
+  - **Boundary**: `src/devtools/components/OPFSBrowser/TextPreview.tsx` (NEW)
+  - **Maps to**: F-013, FR-OPFS-004
+  - **Feature**: [F-013: OPFS Browser Two-Panel Layout with File Preview](agent-docs/01-discovery/features/F-013-opfs-two-panel-preview.md)
+  - **Micro-Spec**: TBD
+  - **Estimated**: 1.5 hours
+  - **DoD**:
+    - [ ] Create `TextPreview.tsx` component
+    - [ ] Define TextPreviewProps interface (file: OpfsFileEntry, content: string, metadata: ContentMetadata)
+    - [ ] Define ContentMetadata interface (size: number, lastModified: Date, mimeType: string)
+    - [ ] Implement header component with emerald theme (bg-emerald-50 border-b border-emerald-200)
+    - [ ] Display "Preview: {filename}" title in header (text-emerald-700 font-semibold)
+    - [ ] Display metadata in header (formatFileSize(metadata.size), formatTimestamp(metadata.lastModified))
+    - [ ] Implement content area with flex-1 and overflow-auto
+    - [ ] Display text content in `<pre>` tag (font-mono text-sm)
+    - [ ] Preserve line breaks and formatting (whitespace-pre-wrap CSS class)
+    - [ ] Handle large text files (> 1MB): Show warning message in header
+    - [ ] Handle very large text files (> 10MB): Blocked in service layer, show error state
+    - [ ] Optional: JSON syntax highlighting if feasible (use react-syntax-highlighter or plain text)
+    - [ ] TSDoc comments on component and interfaces
+    - [ ] Export component and types
+    - [ ] Type check passed with no errors
+    - [ ] ESLint passed with no new warnings
+
+- [ ] **TASK-317**: Image Preview Implementation (F-013)
+  - **Priority**: P1 (High)
+  - **Dependencies**: TASK-315 (File Preview Component Structure)
+  - **Boundary**: `src/devtools/components/OPFSBrowser/ImagePreview.tsx` (NEW)
+  - **Maps to**: F-013, FR-OPFS-005
+  - **Feature**: [F-013: OPFS Browser Two-Panel Layout with File Preview](agent-docs/01-discovery/features/F-013-opfs-two-panel-preview.md)
+  - **Micro-Spec**: TBD
+  - **Estimated**: 1.5 hours
+  - **DoD**:
+    - [ ] Create `ImagePreview.tsx` component
+    - [ ] Define ImagePreviewProps interface (file: OpfsFileEntry, content: Blob, metadata: ContentMetadata)
+    - [ ] Define ContentMetadata interface (size: number, lastModified: Date, mimeType: string)
+    - [ ] Implement header component with emerald theme (bg-emerald-50 border-b border-emerald-200)
+    - [ ] Display "Preview: {filename}" title in header (text-emerald-700 font-semibold)
+    - [ ] Display metadata in header (formatFileSize(metadata.size), formatTimestamp(metadata.lastModified))
+    - [ ] Implement content area with flex-1, flex items-center, justify-center, bg-gray-50
+    - [ ] Create object URL from Blob content using `URL.createObjectURL(content)`
+    - [ ] Display image in `<img>` tag with src={imageUrl}, alt={file.name}
+    - [ ] Apply responsive CSS classes: max-w-full max-h-full object-contain
+    - [ ] Maintain aspect ratio (object-fit: contain)
+    - [ ] Cleanup object URL on unmount (useEffect return: `URL.revokeObjectURL(url)`)
+    - [ ] Handle large images (> 5MB): Blocked in service layer, show error state
+    - [ ] TSDoc comments on component and interfaces
+    - [ ] Export component and types
+    - [ ] Type check passed with no errors
+    - [ ] ESLint passed with no new warnings
+
+- [ ] **TASK-318**: Panel Resizing Integration (F-013)
+  - **Priority**: P1 (High)
+  - **Dependencies**: TASK-315 (File Preview Component Structure), F-006 (Resizable Vertical Dividers)
+  - **Boundary**: `src/devtools/components/OPFSBrowser/OPFSGallery.tsx` (MODIFIED), `src/devtools/components/OPFSBrowser/FileTree.tsx` (MODIFIED), `src/devtools/components/OPFSBrowser/FileNode.tsx` (MODIFIED)
+  - **Maps to**: F-013, FR-OPFS-001, FR-OPFS-002, FR-OPFS-003
+  - **Feature**: [F-013: OPFS Browser Two-Panel Layout with File Preview](agent-docs/01-discovery/features/F-013-opfs-two-panel-preview.md)
+  - **Micro-Spec**: TBD
+  - **Estimated**: 2 hours
+  - **DoD**:
+    - [ ] Modify `OPFSGallery.tsx` to use two-panel flex layout
+    - [ ] Add `leftPanelWidth` state (useState<number>, default: 350)
+    - [ ] Add `selectedFile` state (useState<OpfsFileEntry | null>, default: null)
+    - [ ] Add `handleResize` callback (useCallback, constrains width between 200-600px)
+    - [ ] Update JSX to use flex layout:
+      - [ ] Left panel div with `style={{ width: \`\${leftPanelWidth}px\` }}`
+      - [ ] `<ResizeHandle direction="horizontal" onResize={handleResize} minSize={200} maxSize={600} />`
+      - [ ] Right panel div with `className="flex-1"`
+    - [ ] Import ResizeHandle from `../Shared/ResizeHandle` (F-006 component)
+    - [ ] Modify `FileTree.tsx` to accept `onFileSelect` callback prop
+    - [ ] Modify `FileTree.tsx` to accept `selectedFile` prop
+    - [ ] Pass `onFileSelect={setSelectedFile}` and `selectedFile={selectedFile}` to FileTree
+    - [ ] Modify `FileTreeItem` to accept and pass `onFileSelect` and `selectedFile` props to children
+    - [ ] Modify `FileNode.tsx` to accept `onFileSelect` and `selectedFile` props
+    - [ ] Implement selected state highlight: `const isSelected = selectedFile?.path === entry.path`
+    - [ ] Apply selected CSS class: `isSelected ? "bg-emerald-50 text-emerald-600 border-l-4 border-emerald-600" : "hover:bg-gray-100"`
+    - [ ] Add click handler to FileNode: `onClick={() => onFileSelect(entry)}` (only for files, not directories)
+    - [ ] Import FilePreview component and render in right panel with `file={selectedFile}` prop
+    - [ ] Test panel resizing smoothness (drag divider, should be 60fps)
+    - [ ] Test minimum width constraint (cannot resize below 200px)
+    - [ ] Test maximum width constraint (cannot resize above 600px)
+    - [ ] Test file selection (click file, preview updates, visual highlight)
+    - [ ] Test that selected file persists after resize
+    - [ ] TSDoc comments on modified components
+    - [ ] Type check passed with no errors
+    - [ ] ESLint passed with no new warnings
+
+- [ ] **TASK-319**: Integration & Testing (F-013)
+  - **Priority**: P1 (High)
+  - **Dependencies**: TASK-314, TASK-315, TASK-316, TASK-317, TASK-318
+  - **Boundary**: `src/devtools/components/OPFSBrowser/EmptyPreview.tsx` (NEW), `src/devtools/components/OPFSBrowser/UnsupportedPreview.tsx` (NEW), `src/devtools/components/OPFSBrowser/FilePreview.tsx` (MODIFIED), `src/devtools/components/OPFSBrowser/OPFSGallery.tsx` (MODIFIED)
+  - **Maps to**: F-013, All FR-OPFS-\* requirements
+  - **Feature**: [F-013: OPFS Browser Two-Panel Layout with File Preview](agent-docs/01-discovery/features/F-013-opfs-two-panel-preview.md)
+  - **Micro-Spec**: TBD
+  - **Estimated**: 2 hours
+  - **DoD**:
+    - [ ] Create `EmptyPreview.tsx` component (no file selected state)
+    - [ ] Implement empty state UI (FiFileText icon, "No file selected" title, "Select a file..." message)
+    - [ ] Create `UnsupportedPreview.tsx` component (binary files)
+    - [ ] Implement unsupported state UI (FiFile icon, "Preview not available" title, download button)
+    - [ ] Integrate EmptyPreview and UnsupportedPreview with FilePreview component
+    - [ ] Integrate all preview components (TextPreview, ImagePreview, EmptyPreview, UnsupportedPreview)
+    - [ ] Test file selection and preview updates:
+      - [ ] Click file in tree, preview updates to show file contents
+      - [ ] Selected file has visual highlight (emerald-50 background)
+      - [ ] Click another file, selection and preview update correctly
+    - [ ] Test text preview with various file types:
+      - [ ] .log files (monospace font, line breaks preserved)
+      - [ ] .txt files (monospace font, line breaks preserved)
+      - [ ] .json files (monospace font, optional syntax highlighting)
+      - [ ] .xml files (monospace font, line breaks preserved)
+      - [ ] .csv files (monospace font, line breaks preserved)
+      - [ ] .md files (monospace font, line breaks preserved)
+    - [ ] Test image preview with various formats:
+      - [ ] .jpg files (responsive scaling, aspect ratio maintained)
+      - [ ] .png files (responsive scaling, aspect ratio maintained)
+      - [ ] .gif files (responsive scaling, aspect ratio maintained)
+      - [ ] .svg files (responsive scaling, aspect ratio maintained)
+      - [ ] .webp files (responsive scaling, aspect ratio maintained)
+    - [ ] Test SQLite database placeholder:
+      - [ ] Select .sqlite file, show "Preview not available" message
+      - [ ] Show file metadata (size, type, modified date)
+      - [ ] Show download button (triggers download)
+    - [ ] Test unsupported file placeholder:
+      - [ ] Select binary file, show "Preview not available" message
+      - [ ] Show file metadata (size, type, modified date)
+      - [ ] Show download button (triggers download)
+    - [ ] Test empty state:
+      - [ ] Navigate to /opfs route, no file selected
+      - [ ] Show "No file selected" message with icon
+    - [ ] Test loading state:
+      - [ ] Select large file (> 500KB text), show loading spinner
+      - [ ] Verify loading state replaces previous content
+    - [ ] Test error state:
+      - [ ] Simulate file not found error, show error with retry button
+      - [ ] Click retry, attempts to reload file content
+    - [ ] Test panel resizing at different widths:
+      - [ ] Resize to minimum (200px), left panel at min, right panel fills remaining
+      - [ ] Resize to maximum (600px), left panel at max, right panel fills remaining
+      - [ ] Resize to middle (350px default), both panels visible
+    - [ ] Test that all F-012 features still work:
+      - [ ] Tree lines displayed (VSCode-style hierarchy)
+      - [ ] Delete confirmation modal working (metadata grid, warning, buttons)
+      - [ ] Toast notifications working (success/error, auto-dismiss)
+      - [ ] Metadata display on hover (type badges, timestamps, item counts)
+      - [ ] Download button working (triggers download)
+      - [ ] Delete button working (opens modal, confirms deletion)
+    - [ ] ESLint verification (run `npm run lint`, no new issues)
+    - [ ] Type check verification (run `npm run typecheck`, passed with no errors)
+    - [ ] Build verification (run `npm run build`, passed with no errors)
+    - [ ] Bundle size check (verify < 100KB increase from new components)
+    - [ ] Manual testing with 10+ test scenarios (all scenarios passed)
+    - [ ] Update documentation:
+      - [ ] Update feature spec (agent-docs/01-discovery/features/F-013-opfs-two-panel-preview.md)
+      - [ ] Mark all acceptance criteria as complete
+      - [ ] Update status board (agent-docs/00-control/01-status.md)
+      - [ ] Mark F-013 as complete in Stage 8
+    - [ ] Feature F-013 complete (all FR-OPFS-\* requirements satisfied)
