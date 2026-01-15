@@ -80,7 +80,7 @@ export const Toast: React.FC<ToastProps> = ({
   message,
   onDismiss,
   onRetry,
-  _itemName,
+  itemName: _itemName,
 }) => {
   // 1. Auto-dismiss after duration based on variant
   useEffect(() => {

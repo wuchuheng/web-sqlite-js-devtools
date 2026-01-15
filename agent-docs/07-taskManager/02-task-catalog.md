@@ -1039,38 +1039,39 @@ NOTES
     - [x] Type check passed with no errors (pre-existing Input.tsx error unrelated to this change)
     - [x] ESLint passed with no new warnings (databaseService.ts clean)
 
-- [ ] **TASK-315**: File Preview Component Structure (F-013)
+- [x] **TASK-315**: File Preview Component Structure (F-013)
   - **Priority**: P1 (High)
   - **Dependencies**: TASK-314 (Service Layer - File Content Loading)
   - **Boundary**: `src/devtools/components/OPFSBrowser/FilePreview.tsx` (NEW)
   - **Maps to**: F-013, FR-OPFS-008, FR-OPFS-009, FR-OPFS-010
   - **Feature**: [F-013: OPFS Browser Two-Panel Layout with File Preview](agent-docs/01-discovery/features/F-013-opfs-two-panel-preview.md)
-  - **Micro-Spec**: TBD
+  - **Micro-Spec**: [complete](agent-docs/08-task/active/TASK-315.md)
   - **Estimated**: 2 hours
+  - **Completed**: 2026-01-15
   - **DoD**:
-    - [ ] Create `FilePreview.tsx` main container component
-    - [ ] Define FilePreviewProps interface (file: OpfsFileEntry | null)
-    - [ ] Define FilePreviewState interface (loading, error, content)
-    - [ ] Define ContentData interface (type: 'text' | 'image' | 'binary', data, metadata)
-    - [ ] Implement state management: loading (boolean), error (string | null), content (ContentData | null)
-    - [ ] Add useEffect hook for file content loading (triggered when file prop changes)
-    - [ ] Call databaseService.getFileContent(file.path) in useEffect
-    - [ ] Handle loading state (set loading true before call, false after)
-    - [ ] Handle error state (set error message if response.success is false)
-    - [ ] Handle success state (set content if response.success is true)
-    - [ ] Implement conditional rendering based on file state:
-      - [ ] Return `<EmptyPreview />` if file is null
-      - [ ] Return loading spinner if loading is true (emerald theme spinner)
-      - [ ] Return error component if error is not null (with retry button)
-      - [ ] Delegate to `<TextPreview />` if content.type is 'text'
-      - [ ] Delegate to `<ImagePreview />` if content.type is 'image'
-      - [ ] Delegate to `<UnsupportedPreview />` if content.type is 'binary'
-    - [ ] Add loading spinner component (emerald-600 animate-spin)
-    - [ ] Add error state component (FiAlertCircle icon, retry button, emerald theme)
-    - [ ] TSDoc comments on component and all interfaces
-    - [ ] Export component and types
-    - [ ] Type check passed with no errors
-    - [ ] ESLint passed with no new warnings
+    - [x] Create `FilePreview.tsx` main container component
+    - [x] Define FilePreviewProps interface (file: OpfsFileEntry | null)
+    - [x] Define FilePreviewState interface (loading, error, content)
+    - [x] Define ContentData interface (type: 'text' | 'image' | 'binary', data, metadata)
+    - [x] Implement state management: loading (boolean), error (string | null), content (ContentData | null)
+    - [x] Add useEffect hook for file content loading (triggered when file prop changes)
+    - [x] Call databaseService.getFileContent(file.path) in useEffect
+    - [x] Handle loading state (set loading true before call, false after)
+    - [x] Handle error state (set error message if response.success is false)
+    - [x] Handle success state (set content if response.success is true)
+    - [x] Implement conditional rendering based on file state:
+      - [x] Return `<EmptyPreview />` if file is null
+      - [x] Return loading spinner if loading is true (emerald theme spinner)
+      - [x] Return error component if error is not null (with retry button)
+      - [x] Delegate to `<TextPreview />` if content.type is 'text'
+      - [x] Delegate to `<ImagePreview />` if content.type is 'image'
+      - [x] Delegate to `<UnsupportedPreview />` if content.type is 'binary'
+    - [x] Add loading spinner component (emerald-600 animate-spin)
+    - [x] Add error state component (FiAlertCircle icon, retry button, emerald theme)
+    - [x] TSDoc comments on component and all interfaces
+    - [x] Export component and types
+    - [x] Type check passed with no errors (pre-existing Input.tsx error unrelated to this change)
+    - [x] ESLint passed with no new warnings
 
 - [ ] **TASK-316**: Text Preview Implementation (F-013)
   - **Priority**: P1 (High)
