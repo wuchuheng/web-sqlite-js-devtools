@@ -16,10 +16,10 @@ NOTES
 
 - **Feature ID**: F-015
 - **Title**: OPFS Tree Visual Enhancements - Default Expand, Dotted Lines, File Type Icons
-- **Status**: Discovery
+- **Status**: Complete
 - **Priority**: P1 (High) - User Experience
 - **Created**: 2026-01-16
-- **Completed**: TBD
+- **Completed**: 2026-01-16
 - **Requester**: User request via `/s1-iterationLead` with screenshot comparison
 - **Source Screenshots**:
   - Current: `screenshots/image.png`

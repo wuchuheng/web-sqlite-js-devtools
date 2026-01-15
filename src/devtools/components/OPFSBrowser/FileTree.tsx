@@ -308,32 +308,11 @@ const FileTreeItem = ({
             aria-hidden="true"
           />
         )}
-        {/* Icon */}
-        {isDirectory ? (
-          isLoading ? (
-            <div className="animate-spin h-3 w-3 border-2 border-yellow-600 border-t-transparent rounded-full" />
-          ) : isExpanded ? (
-            <svg
-              className="w-3 h-3 text-yellow-500"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fillRule="evenodd"
-                d="M2 6a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1H8a2 2 0 100 4h8a2 2 0 002-2V6a2 2 0 00-2-2H4a2 2 0 00-2 2zm2 10a2 2 0 100-4H8a2 2 0 000 4h8z"
-              />
-            </svg>
-          ) : (
-            <svg
-              className="w-3 h-3 text-yellow-500"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path d="M2 6a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1H8a2 2 0 100 4h8a2 2 0 002-2V6a2 2 0 00-2-2H4a2 2 0 00-2 2z" />
-            </svg>
-          )
+        {/* Icon - TASK-326: Use getFileIcon helper for type-specific icons */}
+        {isDirectory && isLoading ? (
+          <div className="animate-spin h-3 w-3 border-2 border-yellow-600 border-t-transparent rounded-full" />
         ) : (
-          <FaFile className="text-gray-500" size={12} />
+          getFileIcon(entry, isExpanded)
         )}
 
         {/* Name */}
