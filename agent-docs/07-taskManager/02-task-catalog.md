@@ -1329,26 +1329,26 @@ NOTES
       - [x] ESLint passed (no new warnings)
       - [x] TypeScript compilation successful (pre-existing errors in other files unrelated to this task)
 
-- [ ] **TASK-323**: File Tree Enhancements - Icon Visibility (F-014)
+- [x] **TASK-323**: File Tree Enhancements - Icon Visibility (F-014)
   - **Priority**: P1 (High)
-  - **Dependencies**: F-012 (FileNode must exist)
-  - **Boundary**: `src/devtools/components/OPFSBrowser/FileNode.tsx`
+  - **Dependencies**: F-012 (FileTree must exist)
+  - **Boundary**: `src/devtools/components/OPFSBrowser/FileTree.tsx`
   - **Maps to**: F-014: OPFS UI Visual Redesign
   - **Feature**: [F-014: OPFS UI Visual Redesign](agent-docs/01-discovery/features/F-014-opfs-ui-redesign.md)
-  - **Micro-Spec**: [pending](agent-docs/08-task/active/TASK-323.md)
+  - **Micro-Spec**: [complete](agent-docs/08-task/active/TASK-323.md)
   - **Estimated**: 0.5 hours
   - **DoD**:
-    - [ ] **Update Action Icons Visibility** (0.25 hours)
-      - [ ] Find action icons container in FileNode.tsx
-      - [ ] Change: `opacity-0 group-hover:opacity-100` → `opacity-100`
-      - [ ] Remove hover-only behavior
-      - [ ] Ensure icons remain positioned correctly
-    - [ ] **Testing** (0.25 hours)
-      - [ ] Test icons are always visible
-      - [ ] Test icons remain clickable
-      - [ ] Test icon hover states still work
-      - [ ] ESLint passed (no new warnings)
-      - [ ] Build passed (no errors)
+    - [x] **Update Action Icons Visibility** (0.25 hours)
+      - [x] Found action icons container in FileTree.tsx (line ~243)
+      - [x] Changed: `opacity-0 group-hover:opacity-100 transition-opacity duration-150` → `opacity-100`
+      - [x] Removed hover-only behavior
+      - [x] Icons remain positioned correctly (flex gap-1 unchanged)
+    - [x] **Testing** (0.25 hours)
+      - [x] Icons always visible (className updated)
+      - [x] Icons remain clickable (button handlers unchanged)
+      - [x] Icon hover states still work (button hover classes unchanged)
+      - [x] ESLint passed (no new warnings)
+      - [x] TypeScript compilation successful (pre-existing errors in other files unrelated to this task)
 
 - [ ] **TASK-324**: Footer Removal (F-014)
   - **Priority**: P0 (Blocker)
