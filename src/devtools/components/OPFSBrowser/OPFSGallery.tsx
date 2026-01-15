@@ -3,6 +3,8 @@ import { FaFile, FaExclamationTriangle } from "react-icons/fa";
 import { FileTree } from "./FileTree";
 import { DeleteConfirmModal } from "./DeleteConfirmModal";
 import { Toast, type ToastProps } from "./Toast";
+import { FilePreview } from "./FilePreview";
+import { ResizeHandle } from "@/devtools/components/Shared/ResizeHandle";
 import { databaseService } from "@/devtools/services/databaseService";
 import type { OpfsFileEntry } from "@/devtools/services/databaseService";
 
@@ -17,10 +19,16 @@ import type { OpfsFileEntry } from "@/devtools/services/databaseService";
  * - Displays file tree with lazy-loading
  * - Shows helper notice about OPFS
  * - TASK-313: Integrated DeleteConfirmModal and Toast components
+ * - TASK-318: Two-panel layout with resizable divider and file preview
  *
  * @returns JSX.Element - OPFS file browser layout
  */
 export const OPFSGallery = () => {
+  // 8. Panel width state (TASK-318: Two-panel layout)
+  const [leftPanelWidth, setLeftPanelWidth] = useState<number>(350);
+
+  // 9. Selected file state (TASK-318: File preview)
+  const [selectedFile, setSelectedFile] = useState<OpfsFileEntry | null>(null);
   // Download state
   const [downloadStatus, setDownloadStatus] = useState<{
     isDownloading: boolean;
@@ -170,6 +178,13 @@ export const OPFSGallery = () => {
     }
   }, [toast.variant, handleDeleteConfirm]);
 
+  // 10. Handle panel drag (TASK-318: Two-panel layout)
+  // 1. ResizeHandle provides delta X from drag operation
+  // 2. Apply delta to current width and update state
+  const handleDrag = useCallback((deltaX: number) => {
+    setLeftPanelWidth((prevWidth) => prevWidth + deltaX);
+  }, []);
+
   // 7. Clear download status on mount
   useEffect(() => {
     return () => {
@@ -235,9 +250,34 @@ export const OPFSGallery = () => {
         </div>
       )}
 
-      {/* File Tree */}
-      <div className="flex-1 overflow-auto bg-white">
-        <FileTree onDownload={handleDownload} onDelete={handleDeleteClick} />
+      {/* File Tree (TASK-318: Two-panel layout) */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Left Panel: File Tree */}
+        <div
+          style={{ width: `${leftPanelWidth}px` }}
+          className="relative flex flex-col overflow-hidden bg-white"
+        >
+          <FileTree
+            onDownload={handleDownload}
+            onDelete={handleDeleteClick}
+            onFileSelect={setSelectedFile}
+            selectedFile={selectedFile}
+          />
+        </div>
+
+        {/* Divider (TASK-318: ResizeHandle) */}
+        <ResizeHandle
+          position="right"
+          onDrag={handleDrag}
+          minWidth={200}
+          maxWidth={600}
+          currentWidth={leftPanelWidth}
+        />
+
+        {/* Right Panel: Preview (TASK-318: FilePreview) */}
+        <div className="flex-1 flex flex-col overflow-hidden bg-emerald-50">
+          <FilePreview file={selectedFile} />
+        </div>
       </div>
 
       {/* Footer Info */}

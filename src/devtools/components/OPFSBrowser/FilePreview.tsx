@@ -2,6 +2,8 @@ import { useInspectedWindowRequest } from "@/devtools/hooks/useInspectedWindowRe
 import { databaseService } from "@/devtools/services/databaseService";
 import type { OpfsFileEntry } from "@/devtools/services/databaseService";
 import { FiAlertCircle } from "react-icons/fi";
+import { TextPreview } from "./TextPreview";
+import { ImagePreview } from "./ImagePreview";
 
 // Type alias for file content data returned from service layer (for documentation)
 type _FileContentData = {
@@ -106,60 +108,30 @@ export const FilePreview = ({ file }: FilePreviewProps): JSX.Element => {
   }
 
   // 6. Delegate to appropriate preview component based on file type
-  // NOTE: Child components will be implemented in subsequent tasks:
-  //   - TextPreview (TASK-316)
-  //   - ImagePreview (TASK-317)
-  //   - EmptyPreview (will be part of this component's no-file state)
-  //   - UnsupportedPreview (will be part of this component's binary state)
+  // NOTE: Child components implemented in TASK-316 and TASK-317
   switch (data.type) {
     case "text":
-      // TextPreview will be implemented in TASK-316
+      // TextPreview component (TASK-316)
       return (
-        <div className="flex flex-col h-full bg-emerald-50">
-          {/* Header */}
-          <div className="bg-emerald-50 border-b border-emerald-200 px-4 py-2">
-            <h3 className="text-emerald-700 font-semibold">{file.name}</h3>
-            <div className="text-xs text-emerald-600 mt-1">
-              {data.metadata.size} bytes •{" "}
-              {new Date(data.metadata.lastModified).toLocaleString()}
-            </div>
-          </div>
-
-          {/* Content placeholder */}
-          <div className="flex-1 p-4 bg-white overflow-auto">
-            <pre className="text-sm font-mono text-gray-700 whitespace-pre-wrap">
-              {data.content as string}
-            </pre>
-          </div>
-        </div>
+        <TextPreview
+          file={file}
+          content={data.content as string}
+          metadata={data.metadata}
+        />
       );
 
     case "image":
-      // ImagePreview will be implemented in TASK-317
+      // ImagePreview component (TASK-317)
       return (
-        <div className="flex flex-col h-full bg-emerald-50">
-          {/* Header */}
-          <div className="bg-emerald-50 border-b border-emerald-200 px-4 py-2">
-            <h3 className="text-emerald-700 font-semibold">{file.name}</h3>
-            <div className="text-xs text-emerald-600 mt-1">
-              {data.metadata.size} bytes • {data.metadata.mimeType}
-            </div>
-          </div>
-
-          {/* Content placeholder */}
-          <div className="flex-1 flex items-center justify-center p-4 bg-gray-50">
-            <div className="text-gray-500 text-sm text-center">
-              <p>Image preview will be implemented in TASK-317</p>
-              <p className="text-xs mt-2">
-                MIME type: {data.metadata.mimeType}
-              </p>
-            </div>
-          </div>
-        </div>
+        <ImagePreview
+          file={file}
+          content={data.content as Blob}
+          metadata={data.metadata}
+        />
       );
 
     case "binary":
-      // UnsupportedPreview
+      // UnsupportedPreview - Binary files cannot be previewed
       return (
         <div className="flex flex-col h-full">
           {/* Header */}

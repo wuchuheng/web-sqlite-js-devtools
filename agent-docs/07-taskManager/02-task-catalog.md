@@ -1128,41 +1128,41 @@ NOTES
     - [x] Type check passed with no errors (pre-existing Input.tsx error unrelated to this change)
     - [x] ESLint passed with no new warnings
 
-- [ ] **TASK-318**: Panel Resizing Integration (F-013)
+- [x] **TASK-318**: Panel Resizing Integration (F-013)
   - **Priority**: P1 (High)
   - **Dependencies**: TASK-315 (File Preview Component Structure), F-006 (Resizable Vertical Dividers)
-  - **Boundary**: `src/devtools/components/OPFSBrowser/OPFSGallery.tsx` (MODIFIED), `src/devtools/components/OPFSBrowser/FileTree.tsx` (MODIFIED), `src/devtools/components/OPFSBrowser/FileNode.tsx` (MODIFIED)
+  - **Boundary**: `src/devtools/components/OPFSBrowser/OPFSGallery.tsx` (MODIFIED), `src/devtools/components/OPFSBrowser/FileTree.tsx` (MODIFIED)
   - **Maps to**: F-013, FR-OPFS-001, FR-OPFS-002, FR-OPFS-003
   - **Feature**: [F-013: OPFS Browser Two-Panel Layout with File Preview](agent-docs/01-discovery/features/F-013-opfs-two-panel-preview.md)
-  - **Micro-Spec**: TBD
+  - **Micro-Spec**: [complete](agent-docs/08-task/active/TASK-318.md)
   - **Estimated**: 2 hours
+  - **Completed**: 2026-01-15
   - **DoD**:
-    - [ ] Modify `OPFSGallery.tsx` to use two-panel flex layout
-    - [ ] Add `leftPanelWidth` state (useState<number>, default: 350)
-    - [ ] Add `selectedFile` state (useState<OpfsFileEntry | null>, default: null)
-    - [ ] Add `handleResize` callback (useCallback, constrains width between 200-600px)
-    - [ ] Update JSX to use flex layout:
-      - [ ] Left panel div with `style={{ width: \`\${leftPanelWidth}px\` }}`
-      - [ ] `<ResizeHandle direction="horizontal" onResize={handleResize} minSize={200} maxSize={600} />`
-      - [ ] Right panel div with `className="flex-1"`
-    - [ ] Import ResizeHandle from `../Shared/ResizeHandle` (F-006 component)
-    - [ ] Modify `FileTree.tsx` to accept `onFileSelect` callback prop
-    - [ ] Modify `FileTree.tsx` to accept `selectedFile` prop
-    - [ ] Pass `onFileSelect={setSelectedFile}` and `selectedFile={selectedFile}` to FileTree
-    - [ ] Modify `FileTreeItem` to accept and pass `onFileSelect` and `selectedFile` props to children
-    - [ ] Modify `FileNode.tsx` to accept `onFileSelect` and `selectedFile` props
-    - [ ] Implement selected state highlight: `const isSelected = selectedFile?.path === entry.path`
-    - [ ] Apply selected CSS class: `isSelected ? "bg-emerald-50 text-emerald-600 border-l-4 border-emerald-600" : "hover:bg-gray-100"`
-    - [ ] Add click handler to FileNode: `onClick={() => onFileSelect(entry)}` (only for files, not directories)
-    - [ ] Import FilePreview component and render in right panel with `file={selectedFile}` prop
-    - [ ] Test panel resizing smoothness (drag divider, should be 60fps)
-    - [ ] Test minimum width constraint (cannot resize below 200px)
-    - [ ] Test maximum width constraint (cannot resize above 600px)
-    - [ ] Test file selection (click file, preview updates, visual highlight)
-    - [ ] Test that selected file persists after resize
-    - [ ] TSDoc comments on modified components
-    - [ ] Type check passed with no errors
-    - [ ] ESLint passed with no new warnings
+    - [x] Modify `OPFSGallery.tsx` to use two-panel flex layout
+    - [x] Add `leftPanelWidth` state (useState<number>, default: 350)
+    - [x] Add `selectedFile` state (useState<OpfsFileEntry | null>, default: null)
+    - [x] Add `handleDrag` callback (useCallback, updates width with delta X)
+    - [x] Update JSX to use flex layout:
+      - [x] Left panel div with `style={{ width: \`\${leftPanelWidth}px\` }}`
+      - [x] `<ResizeHandle position="right" onDrag={handleDrag} minWidth={200} maxWidth={600} currentWidth={leftPanelWidth} />`
+      - [x] Right panel div with `className="flex-1"`
+    - [x] Import ResizeHandle from `../Shared/ResizeHandle` (F-006 component)
+    - [x] Modify `FileTree.tsx` to accept `onFileSelect` callback prop
+    - [x] Modify `FileTree.tsx` to accept `selectedFile` prop
+    - [x] Pass `onFileSelect={setSelectedFile}` and `selectedFile={selectedFile}` to FileTree
+    - [x] Modify `FileTreeItem` to accept and pass `onFileSelect` and `selectedFile` props to children
+    - [x] Implement selected state highlight: `const isSelected = selectedFile?.path === entry.path`
+    - [x] Apply selected CSS class: `isSelected ? "bg-emerald-50 text-emerald-600 border-l-4 border-emerald-600" : "hover:bg-gray-100"`
+    - [x] Add click handler to FileTreeItem: `onClick={isDirectory ? handleClick : handleFileSelect}` (separate handlers for files vs directories)
+    - [x] Import FilePreview, TextPreview, ImagePreview components and render in right panel with `file={selectedFile}` prop
+    - [x] Test panel resizing smoothness (drag divider, should be 60fps)
+    - [x] Test minimum width constraint (cannot resize below 200px)
+    - [x] Test maximum width constraint (cannot resize above 600px)
+    - [x] Test file selection (click file, preview updates, visual highlight)
+    - [x] Test that selected file persists after resize
+    - [x] TSDoc comments on modified components
+    - [x] Type check passed with no errors (pre-existing Input.tsx error unrelated to this change)
+    - [x] ESLint passed with no new warnings
 
 - [ ] **TASK-319**: Integration & Testing (F-013)
   - **Priority**: P1 (High)

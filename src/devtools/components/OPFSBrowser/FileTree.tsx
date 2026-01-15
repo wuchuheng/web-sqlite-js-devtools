@@ -12,6 +12,8 @@ import { TreeLines } from "./TreeLines";
 interface FileTreeProps {
   onDownload: (_path: string, name: string) => Promise<void>;
   onDelete?: (entry: OpfsFileEntry) => void;
+  onFileSelect?: (entry: OpfsFileEntry) => void; // NEW (TASK-318)
+  selectedFile?: OpfsFileEntry | null; // NEW (TASK-318)
 }
 
 /**
@@ -22,19 +24,23 @@ interface FileTreeItemProps {
   level: number;
   onDownload: (_path: string, name: string) => Promise<void>;
   onDelete?: (entry: OpfsFileEntry) => void;
+  onFileSelect?: (entry: OpfsFileEntry) => void; // NEW (TASK-318)
+  selectedFile?: OpfsFileEntry | null; // NEW (TASK-318)
   keyPrefix: string;
   showLines: boolean;
   isLast?: boolean;
 }
 
 /**
- * FileTreeItem - Internal component for tree items with lazy-loading (F-012 enhanced, TASK-313 delete button)
+ * FileTreeItem - Internal component for tree items with lazy-loading (F-012 enhanced, TASK-313 delete button, TASK-318 selection)
  */
 const FileTreeItem = ({
   entry,
   level,
   onDownload,
   onDelete,
+  onFileSelect,
+  selectedFile,
   keyPrefix,
   showLines,
   isLast = false,
@@ -47,6 +53,9 @@ const FileTreeItem = ({
   const [error, setError] = useState<string | null>(null);
 
   const isDirectory = entry.type === "directory";
+
+  // 10. Selection state (TASK-318: Two-panel layout)
+  const isSelected = selectedFile?.path === entry.path;
 
   const loadChildren = useCallback(async () => {
     if (!isDirectory || hasLoaded || isLoading) {
@@ -84,6 +93,13 @@ const FileTreeItem = ({
     }
   }, [isDirectory, hasLoaded, loadChildren]);
 
+  // 11. Handle file selection (TASK-318: Two-panel layout)
+  const handleFileSelect = useCallback(() => {
+    if (entry.type === "file" && onFileSelect) {
+      onFileSelect(entry);
+    }
+  }, [entry, onFileSelect]);
+
   const handleDownload = useCallback(async () => {
     if (isDirectory || isDownloading) {
       return;
@@ -117,9 +133,13 @@ const FileTreeItem = ({
     <div>
       {/* Parent Node with horizontal connector (F-012) */}
       <div
-        className={`group flex items-center gap-2 py-1 px-2 hover:bg-gray-100 cursor-pointer select-none relative`}
+        className={`group flex items-center gap-2 py-1 px-2 cursor-pointer select-none relative ${
+          isSelected
+            ? "bg-emerald-50 text-emerald-600 border-l-4 border-emerald-600"
+            : "hover:bg-gray-100"
+        }`}
         style={{ paddingLeft: `${paddingLeft + 16}px` }}
-        onClick={handleClick}
+        onClick={isDirectory ? handleClick : handleFileSelect}
       >
         {/* Horizontal connector line (F-012) */}
         {level > 0 && showLines && (
@@ -235,7 +255,7 @@ const FileTreeItem = ({
         </div>
       )}
 
-      {/* Children (when expanded) - F-012 enhanced with TreeLines, TASK-313 pass onDelete */}
+      {/* Children (when expanded) - F-012 enhanced with TreeLines, TASK-313 pass onDelete, TASK-318 pass selection props */}
       {isExpanded && hasLoaded && children.length > 0 && (
         <TreeLines depth={level + 1} isLast={isLast} isCollapsed={!showLines}>
           {children.map((child, index) => (
@@ -245,6 +265,8 @@ const FileTreeItem = ({
               level={level + 1}
               onDownload={onDownload}
               onDelete={onDelete}
+              onFileSelect={onFileSelect}
+              selectedFile={selectedFile}
               keyPrefix={`${keyPrefix}/${child.name}`}
               showLines={showLines}
               isLast={index === children.length - 1}
@@ -267,7 +289,7 @@ const FileTreeItem = ({
 };
 
 /**
- * FileTree component (F-012 enhanced with responsive tree lines, TASK-313 delete functionality)
+ * FileTree component (F-012 enhanced with responsive tree lines, TASK-313 delete functionality, TASK-318 selection)
  *
  * @remarks
  * - Displays OPFS file tree with lazy-loaded directories
@@ -276,13 +298,21 @@ const FileTreeItem = ({
  * - Supports file download via callback
  * - VSCode-style tree lines with responsive hiding (F-012)
  * - Delete button for files (TASK-313)
+ * - File selection with visual highlight (TASK-318)
  *
  * @param props.onDownload - Callback for downloading files
  * @param props.onDelete - Callback for delete button click (TASK-313)
+ * @param props.onFileSelect - Callback for file selection (TASK-318)
+ * @param props.selectedFile - Currently selected file (TASK-318)
  *
  * @returns JSX.Element - File tree display
  */
-export const FileTree = ({ onDownload, onDelete }: FileTreeProps) => {
+export const FileTree = ({
+  onDownload,
+  onDelete,
+  onFileSelect,
+  selectedFile,
+}: FileTreeProps) => {
   // F-012: Track container width for responsive tree lines
   const containerRef = useRef<HTMLDivElement>(null);
   const [showLines, setShowLines] = useState(true);
@@ -361,6 +391,8 @@ export const FileTree = ({ onDownload, onDelete }: FileTreeProps) => {
           level={0}
           onDownload={onDownload}
           onDelete={onDelete}
+          onFileSelect={onFileSelect}
+          selectedFile={selectedFile}
           keyPrefix={entry.name}
           showLines={showLines}
           isLast={index === entries.length - 1}
