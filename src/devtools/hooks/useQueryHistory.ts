@@ -124,7 +124,7 @@ async function removeHistoryEntry(
   _dbname: string,
   timestamp: string,
 ): Promise<void> {
-  const existing = await getHistoryForDb(dbname);
+  const existing = await getHistoryForDb(_dbname);
 
   // 2. Filter out entry
   const filtered = existing.filter((entry) => entry.timestamp !== timestamp);
@@ -135,9 +135,9 @@ async function removeHistoryEntry(
 
   if (filtered.length === 0) {
     // Remove database key if empty
-    delete storage[dbname];
+    delete storage[_dbname];
   } else {
-    storage[dbname] = filtered;
+    storage[_dbname] = filtered;
   }
 
   await chrome.storage.local.set({
@@ -239,7 +239,7 @@ export const useQueryHistory = (dbname: string): UseQueryHistoryResult => {
   const addQuery = useCallback(
     async (_sql: string, dbName: string) => {
       // Skip empty or whitespace-only queries
-      const trimmed = sql.trim();
+      const trimmed = _sql.trim();
       if (!trimmed) {
         return;
       }

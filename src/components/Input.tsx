@@ -2,13 +2,13 @@ type SwitchProps = {
   _enabled: boolean;
   onChange: (enabled: boolean) => void;
 };
-export const Switch: React.FC<SwitchProps> = ({ enabled, onChange }) => {
+export const Switch: React.FC<SwitchProps> = ({ _enabled, onChange }) => {
   return (
     <label className="relative inline-flex cursor-pointer items-center">
       <input
         type="checkbox"
         className="peer sr-only"
-        checked={enabled}
+        checked={_enabled}
         onChange={(event) => onChange(event.target.checked)}
       />
       <div className="h-5 w-9 rounded-full bg-gray-200 transition peer-checked:bg-blue-500" />

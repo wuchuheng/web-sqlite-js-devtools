@@ -16,7 +16,7 @@ export default [
       "node_modules/**",
       "*.config.js",
       "*.config.ts",
-      ".chromuimCache/**",
+      ".chromiumCache/**",
       "src/types/**", // Type definition files - unused vars are expected
     ],
   },

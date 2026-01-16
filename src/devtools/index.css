@@ -153,7 +153,9 @@ Reset styles for all common HTML elements
 */
 
 /* 1. Use a more-intuitive box-sizing model */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
@@ -169,9 +171,6 @@ Reset styles for all common HTML elements
   }
 }
 
-
 main {
   padding: 0%;
 }
-
-

@@ -316,18 +316,13 @@ const FileTreeItem = ({
         )}
 
         {/* Name */}
-        <span
-          className="flex-1 text-sm truncate"
-          title={entry.name}
-        >
+        <span className="flex-1 text-sm truncate" title={entry.name}>
           {entry.name}
         </span>
 
         {/* Directory counts (TASK-322) */}
         {isDirectory && directoryCounts && (
-          <span className="text-xs text-slate-500 ml-2">
-            {directoryCounts}
-          </span>
+          <span className="text-xs text-slate-500 ml-2">{directoryCounts}</span>
         )}
 
         {/* Size (only for files) */}

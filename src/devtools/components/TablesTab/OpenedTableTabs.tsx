@@ -30,7 +30,7 @@ interface OpenedTableTabsProps {
   /** Currently active tab (selected) */
   activeTab: TableTab | null;
   /** Callback when user clicks a table in sidebar to open it */
-  _onOpenTable: (tableName: string) => void;
+  onOpenTable: (tableName: string) => void;
   /** Callback when user clicks a tab to select it */
   onSelectTab: (tab: TableTab) => void;
   /** Callback when user clicks close button on a tab */
