@@ -125,7 +125,7 @@ C4Container
       /bridge           # Bridge Layer (Chrome API wrapper)
         inspectedWindow.ts    # chrome.scripting.executeScript wrapper
       /services         # Service Layer (Business Logic)
-        databaseService.ts    # All database operations (10 functions)
+        databaseService.ts    # All database operations (12 functions)
       /components       # React components
         /Shared         # Shared components (F-006)
           ResizeHandle.tsx    # Reusable resize handle
@@ -155,6 +155,12 @@ C4Container
         /SeedTab        # Seed playground
         /AboutTab       # Database info
         /OPFSBrowser    # OPFS file tree
+          FileTree.tsx         # File tree with guided lines (F-012 MODIFIED)
+          FileNode.tsx         # File/directory node (F-012 MODIFIED)
+          DeleteConfirmModal.tsx # Delete confirmation (F-012 NEW)
+          MetadataPanel.tsx    # Metadata display (F-012 NEW)
+          TreeLines.tsx        # Guide line connectors (F-012 NEW)
+          Toast.tsx            # Toast notifications (F-012 NEW)
       /hooks            # Custom React hooks
       /utils            # Utilities
       inspectedWindow.ts # Public API re-exports
@@ -212,6 +218,8 @@ C4Container
 8. **Version Control**: `devRollback(dbname, toVersion)` - Rollback to previous version
 9. **Version Query**: `getDbVersion(dbname)` - Get current database version
 10. **OPFS Access**: `getOpfsFiles(path?, dbname?)` / `downloadOpfsFile(path)` - File system operations
+11. **OPFS Delete**: `deleteOpfsFile(path)` - Delete file from OPFS (F-012 NEW)
+12. **OPFS Delete**: `deleteOpfsDirectory(path)` - Delete directory recursively (F-012 NEW)
 
 ## 7) Component Hierarchy (DevTools Panel)
 
@@ -286,8 +294,13 @@ DevTools (Root)
 │           └── DatabaseMetadata
 │       └── OPFSView (/opfs)
 │           └── FileTree
+│               ├── TreeLines (F-012 NEW - guided connectors)
 │               ├── FileNode (Lazy-loaded)
-│               └── DownloadButton
+│               │   ├── MetadataPanel (F-012 NEW - hover display)
+│               │   ├── Delete Button (F-012 NEW - with confirmation)
+│               │   └── Download Button
+│               └── DeleteConfirmModal (F-012 NEW)
+│               └── Toast (F-012 NEW - success/error notifications)
 ```
 
 ## 8) Service Layer Architecture (Feature F-001)
@@ -345,9 +358,11 @@ DevTools (Root)
    - `devRollback(dbname, toVersion)` - Rollback version
    - `getDbVersion(dbname)` - Query current version
 
-5. **OPFS** (2 functions):
+5. **OPFS** (4 functions):
    - `getOpfsFiles(path?, dbname?)` - List OPFS files
    - `downloadOpfsFile(path)` - Download file
+   - `deleteOpfsFile(path)` - Delete file (F-012 NEW)
+   - `deleteOpfsDirectory(path)` - Delete directory recursively (F-012 NEW)
 
 **Benefits**:
 
@@ -2155,3 +2170,1804 @@ export default [
 
 - **Estimated Time**: 1-2 hours
 - **Risk**: Low (well-established pattern, isolated changes)
+
+## 17) OPFS File Browser Enhancement Architecture (Feature F-012)
+
+**Purpose**: Enhance the OPFS File Browser with guided tree lines, delete operations, and enhanced metadata display to improve visual clarity, workflow efficiency, and information discovery.
+
+**Problem Solved**:
+
+- **Current Issue**: OPFS browser has basic functionality with simple indentation, no delete operations, and limited metadata display. Users cannot clean up OPFS without switching to browser DevTools or console.
+- **Solution**: Add VSCode-style guided tree lines, delete operations with confirmation, and enhanced metadata display (file type badges, timestamps, item counts).
+
+**Architecture Overview**:
+
+```mermaid
+C4Component
+  title OPFS Browser Enhancement Architecture
+  Container_Boundary(opfsBrowser, "OPFS Browser Components") {
+    Component(fileTree, "FileTree", "Main tree container", "Manages tree state and operations")
+    Component(treeLines, "TreeLines", "Visual connectors", "CSS-based guide lines")
+    Component(fileNode, "FileNode", "File/directory node", "Displays item with metadata")
+    Component(metadataPanel, "MetadataPanel", "Metadata display", "Hover/click metadata panel")
+    Component(deleteModal, "DeleteConfirmModal", "Delete confirmation", "Modal with item details")
+    Component(toast, "Toast", "Notification system", "Success/error toasts")
+  }
+  Container_Boundary(serviceLayer, "Service Layer") {
+    Component(deleteFile, "deleteOpfsFile", "File deletion", "Delete single file from OPFS")
+    Component(deleteDir, "deleteOpfsDirectory", "Directory deletion", "Recursive directory delete")
+    Component(getFiles, "getOpfsFiles", "File listing", "Enhanced with metadata")
+  }
+  Rel(fileTree, treeLines, "Renders")
+  Rel(fileTree, fileNode, "Renders (lazy)")
+  Rel(fileNode, metadataPanel, "Shows on hover")
+  Rel(fileNode, deleteModal, "Triggers on delete click")
+  Rel(deleteModal, deleteFile, "Calls (file)")
+  Rel(deleteModal, deleteDir, "Calls (directory)")
+  Rel(deleteModal, toast, "Shows result")
+  Rel(fileTree, getFiles, "Fetches")
+```
+
+**Component Hierarchy** (F-012):
+
+```
+OPFSView (/opfs)
+├── FileTree (MODIFIED - F-012)
+│   ├── TreeLines (NEW - F-012)
+│   │   ├── Vertical guide lines (CSS)
+│   │   ├── Horizontal connectors (CSS ::before)
+│   │   └── Responsive visibility toggle
+│   └── FileNode (MODIFIED - F-012)
+│       ├── Icon (folder/file)
+│       ├── Name
+│       ├── MetadataPanel (NEW - F-012)
+│       │   ├── File type badge (SQLite, JSON, etc.)
+│       │   ├── Last modified timestamp
+│       │   ├── Size (files) / Item count (directories)
+│       │   └── Full path
+│       ├── Actions
+│       │   ├── Chevron (expand/collapse - directories)
+│       │   ├── Download button (existing)
+│       │   └── Delete button (NEW - F-012)
+│       └── Children (lazy-loaded)
+│           └── FileNode (recursive)
+├── DeleteConfirmModal (NEW - F-012)
+│   ├── Header
+│   │   ├── Title: "Delete {item.name}?"
+│   │   └── Close button
+│   ├── Metadata Grid
+│   │   ├── Type badge (File/Directory)
+│   │   ├── Size
+│   │   ├── Last modified
+│   │   └── Full path
+│   ├── Warning Text (red)
+│   │   └── "This action cannot be undone."
+│   └── Actions
+│       ├── Cancel button (secondary)
+│       └── Delete button (danger, red)
+└── Toast (NEW - F-012)
+    ├── Success toast (green checkmark)
+    ├── Error toast (red error icon)
+    └── Auto-dismiss (3-5 seconds)
+```
+
+**Guided Tree Lines Design** (F-012):
+
+**Visual Pattern** (VSCode-style):
+
+```
+┌── Root Directory/
+│   ├── Subdirectory 1/
+│   │   ├── File 1.txt
+│   │   └── File 2.txt
+│   ├── Subdirectory 2/
+│   │   └── Nested/
+│   │       └── Deep File.db
+│   └── File 3.txt
+```
+
+**CSS Implementation**:
+
+```css
+/* Vertical line container */
+.tree-node-children {
+  position: relative;
+}
+
+/* Vertical guide line */
+.tree-node-children::before {
+  content: "";
+  position: absolute;
+  left: 12px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: #e5e7eb; /* gray-200 */
+}
+
+/* Horizontal connector */
+.tree-node-item::before {
+  content: "";
+  position: absolute;
+  left: -12px;
+  top: 50%;
+  width: 12px;
+  height: 1px;
+  background: #e5e7eb;
+}
+
+/* Last child adjustment */
+.tree-node-item:last-child::before {
+  /* Extend horizontal line from vertical */
+}
+```
+
+**Responsive Behavior**:
+
+- Tree lines visible when sidebar width >= 200px
+- Tree lines hidden when sidebar collapsed (< 200px)
+- Adjust line position based on indentation level (16px per level)
+
+**Delete Operation Flow** (F-012):
+
+```
+┌──────────────────┐
+│  User clicks     │
+│  delete icon     │ → IoMdTrash icon on hover
+└────────┬─────────┘
+         │
+         ▼
+┌──────────────────┐
+│  Show confirm    │ → Modal dialog with:
+│  dialog          │ → • "Delete {name}?"
+│  (DeleteConfirm- │ → • Type badge (File/Directory)
+│   Modal)         │ → • Metadata grid (size, type, modified, path)
+└────────┬─────────┘ → • Warning: "This action cannot be undone."
+         │             → • Confirm / Cancel buttons
+         ▼
+┌──────────────────┐
+│  User confirms   │ → Delete button (red, loading state)
+└────────┬─────────┘
+         │
+         ▼
+┌──────────────────┐     ┌──────────────────┐
+│  Delete success  │     │  Delete failed   │
+│  • Remove from   │     │  • Show error    │
+│    tree state    │     │    toast         │
+│  • Show success  │     │  • Keep item in  │
+│    toast         │     │    tree          │
+└──────────────────┘     └──────────────────┘
+```
+
+**Delete Confirmation Modal** (F-012):
+
+**Props**:
+
+```typescript
+interface DeleteConfirmModalProps {
+  item: OpfsFileEntry;
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => Promise<void>;
+}
+```
+
+**Content**:
+
+- **Title**: "Delete {item.name}?"
+- **Type Badge**: File / Directory (color-coded)
+- **Metadata Grid**:
+  - Size: {size_formatted}
+  - Type: {file_type}
+  - Modified: {last_modified}
+  - Path: {full_path}
+- **Warning Text** (red): "This action cannot be undone."
+- **Buttons**:
+  - Cancel: Gray secondary button
+  - Delete: Red danger button with trash icon
+
+**Behavior**:
+
+- Modal backdrop: `bg-gray-900 bg-opacity-50`
+- Close on: Cancel button, backdrop click, Escape key
+- Delete button: Loading state during deletion
+- Focus trap: Tab cycles within modal
+
+**Enhanced Metadata Display** (F-012):
+
+**File Metadata**:
+| Field | Display Format | Example |
+| --------------- | ----------------------- | ---------------- |
+| Name | Bold, primary text | `database.sqlite` |
+| Type | Badge, color-coded | `SQLite Database` |
+| Size | Secondary text, right | `1.2 MB` |
+| Modified | Tertiary text | `2025-01-15 14:30` |
+| Full Path | Monospace, small | `/data/databases/database.sqlite` |
+
+**Directory Metadata**:
+| Field | Display Format | Example |
+| --------------- | ----------------------- | ---------------- |
+| Name | Bold, primary text | `databases` |
+| Type | Badge | `Directory` |
+| Item Count | Secondary text | `3 files, 2 dirs` |
+| Modified | Tertiary text | `2025-01-15 14:30` |
+| Full Path | Monospace, small | `/data/databases` |
+
+**File Type Badges** (F-012):
+
+- **SQLite Database**: `.sqlite`, `.db`, `.sqlite3` → `bg-blue-100 text-blue-700`
+- **JSON Data**: `.json` → `bg-yellow-100 text-yellow-700`
+- **Text File**: `.txt`, `.md` → `bg-gray-100 text-gray-700`
+- **Image File**: `.png`, `.jpg`, `.svg` → `bg-purple-100 text-purple-700`
+- **Unknown**: Use extension or "File" → Default gray badge
+
+**Toast Notifications** (F-012):
+
+**Success Toast**:
+
+- **Title**: "Deleted successfully"
+- **Message**: "{item_name} has been deleted."
+- **Icon**: Green checkmark (`FaCheck`)
+- **Duration**: 3 seconds (auto-dismiss)
+- **Style**: `bg-green-50 border-green-200 text-green-700`
+
+**Error Toast**:
+
+- **Title**: "Delete failed"
+- **Message**: {error_message}
+- **Icon**: Red error icon (`FaExclamationCircle`)
+- **Duration**: 5 seconds (auto-dismiss)
+- **Action**: "Retry" button (reopens modal)
+- **Style**: `bg-red-50 border-red-200 text-red-700`
+
+**Position**: Top-right corner (fixed)
+
+**Service Layer Functions** (F-012 NEW):
+
+```typescript
+// databaseService.ts - NEW FUNCTIONS
+
+/**
+ * Delete a file from OPFS
+ * @param path - Full path to the file
+ * @returns ServiceResponse<void>
+ */
+deleteOpfsFile: async (path: string): Promise<ServiceResponse<void>> => {
+  try {
+    const script = `
+      (async () => {
+        const root = await navigator.storage.getDirectory();
+        const pathParts = '${path}'.split('/').filter(Boolean);
+        let dir = root;
+
+        for (let i = 0; i < pathParts.length - 1; i++) {
+          dir = await dir.getDirectoryHandle(pathParts[i]);
+        }
+
+        const filename = pathParts[pathParts.length - 1];
+        await dir.removeEntry(filename);
+
+        return { success: true };
+      })()
+    `;
+
+    return await inspectedWindowBridge.execute(script);
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+};
+
+/**
+ * Delete a directory and all contents from OPFS
+ * @param path - Full path to the directory
+ * @returns ServiceResponse<{ itemCount: number }>
+ */
+deleteOpfsDirectory: async (
+  path: string,
+): Promise<ServiceResponse<{ itemCount: number }>> => {
+  try {
+    const script = `
+      (async () => {
+        const root = await navigator.storage.getDirectory();
+        const pathParts = '${path}'.split('/').filter(Boolean);
+        let dir = root;
+
+        for (let i = 0; i < pathParts.length - 1; i++) {
+          dir = await dir.getDirectoryHandle(pathParts[i]);
+        }
+
+        const dirname = pathParts[pathParts.length - 1];
+        const targetDir = await dir.getDirectoryHandle(dirname);
+
+        // Count items before delete
+        let itemCount = 0;
+        for await (const _ of targetDir.values()) {
+          itemCount++;
+        }
+
+        // Delete recursively
+        await dir.removeEntry(dirname, { recursive: true });
+
+        return { success: true, data: { itemCount } };
+      })()
+    `;
+
+    return await inspectedWindowBridge.execute(script);
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+};
+```
+
+**Enhanced OpfsFileEntry Type** (F-012):
+
+```typescript
+// Enhanced OpfsFileEntry type
+interface OpfsFileEntry {
+  name: string;
+  path: string;
+  type: "file" | "directory";
+  size: number; // bytes
+  sizeFormatted: string; // e.g., "1.2 MB"
+  lastModified?: Date; // NEW
+  fileType?: string; // NEW: "SQLite Database", "JSON Data", etc.
+  itemCount?: {
+    files: number; // NEW: for directories
+    directories: number; // NEW: for directories
+  };
+}
+```
+
+**Icon Integration** (F-012):
+
+- **Delete**: `IoMdTrash` (react-icons/io) - Delete button
+- **Warning**: `FaExclamationTriangle` (react-icons/fa) - Modal warning
+- **Success**: `FaCheck` (react-icons/fa) - Toast success
+- **Error**: `FaExclamationCircle` (react-icons/fa) - Toast error
+
+**Theme Colors** (F-012):
+
+- **Tree Lines**: `border-gray-200` (#e5e7eb)
+- **Delete Button**: `text-red-500 hover:text-red-600`
+- **Danger Button**: `bg-red-600 hover:bg-red-700 text-white`
+- **Success Toast**: `bg-green-50 border-green-200 text-green-700`
+- **Error Toast**: `bg-red-50 border-red-200 text-red-700`
+- **Type Badges**:
+  - SQLite Database: `bg-blue-100 text-blue-700`
+  - JSON Data: `bg-yellow-100 text-yellow-700`
+  - Text File: `bg-gray-100 text-gray-700`
+  - Image File: `bg-purple-100 text-purple-700`
+
+**File Structure** (F-012):
+
+```
+/src/devtools
+  /components
+    /OPFSBrowser
+      FileTree.tsx                  # MODIFIED - Add tree lines, delete buttons
+      FileNode.tsx                  # MODIFIED - Add metadata display, delete button
+      DeleteConfirmModal.tsx        # NEW - Delete confirmation modal
+      MetadataPanel.tsx             # NEW - Metadata display component
+      TreeLines.tsx                 # NEW - Guide line connectors
+      Toast.tsx                     # NEW - Toast notification component
+  /services
+    databaseService.ts              # MODIFIED - Add deleteOpfsFile, deleteOpfsDirectory
+```
+
+**Accessibility** (F-012):
+
+- **Delete Buttons**: `aria-label="Delete {filename}"`
+- **Modal**: `role="dialog"` and `aria-modal="true"`
+- **Focus Trap**: Tab cycles within modal
+- **Escape Key**: Closes modal
+- **Keyboard Navigation**: Tree items navigable with arrow keys
+- **Tree Lines**: Decorative only, no ARIA attributes needed
+
+**Performance Optimizations** (F-012):
+
+- **Tree Line Rendering**: CSS-only (no JS layout calculations)
+- **Lazy Loading**: Unchanged (loads on expand)
+- **Metadata Fetching**: On-demand (when directory expanded)
+- **Toast Auto-dismiss**: Timer-based cleanup (no memory leaks)
+
+**Error Handling** (F-012):
+
+```typescript
+// Delete operation error handling
+const handleDelete = async () => {
+  const response =
+    item.type === "file"
+      ? await databaseService.deleteOpfsFile(item.path)
+      : await databaseService.deleteOpfsDirectory(item.path);
+
+  if (response.success) {
+    // Remove from tree state
+    // Show success toast
+  } else {
+    // Show error toast with response.error
+    // Keep item in tree
+  }
+};
+```
+
+**Edge Cases** (F-012):
+
+1. **Directory with many files**: Enhanced warning with item count
+2. **Delete during load**: Disable delete button during operation
+3. **OPFS not supported**: Graceful degradation, show error
+4. **File locked by another process**: Show error toast, keep item in tree
+5. **Network error**: Show error toast with retry button
+6. **Sidebar collapsed**: Tree lines hidden, delete buttons visible on hover
+
+**Benefits** (F-012):
+
+- **Visual Clarity**: VSCode-style tree lines improve navigation
+- **Workflow Efficiency**: Delete operations without leaving DevTools
+- **Information Discovery**: Enhanced metadata at a glance
+- **User Confidence**: Confirmation dialogs prevent accidental deletion
+- **Feedback**: Toast notifications confirm actions
+
+**Implementation Notes** (F-012):
+
+- **Files Created**: 4 new components (DeleteConfirmModal, MetadataPanel, TreeLines, Toast)
+- **Files Modified**: 3 existing files (FileTree, FileNode, databaseService)
+- **Service Functions**: 2 new functions (deleteOpfsFile, deleteOpfsDirectory)
+- **Estimated Time**: 8-12 hours
+- **Risk**: Medium (delete operations are destructive)
+- **Dependencies**: F-001 (Service Layer), existing OPFS browser
+
+**Integration Points** (F-012):
+
+- **Service Layer**: Extends existing databaseService.ts
+- **Type System**: Enhanced OpfsFileEntry type
+- **Routing**: No changes to `/opfs` route
+- **State Management**: Local component state (no global state)
+- **Styling**: Tailwind CSS with existing theme tokens
+
+## 18) OPFS Browser Two-Panel Layout Architecture (F-013)
+
+### 18.1 Architecture Overview
+
+**Feature**: Transform OPFS browser into two-panel layout with file preview capability
+**Pattern**: Split-panel layout with resizable divider (similar to VSCode file explorer)
+**Dependencies**: F-012 (OPFS Browser Enhancement), F-006 (Resizable Vertical Dividers)
+
+```mermaid
+C4Component
+  title OPFS Browser Two-Panel Layout
+  Container(panel, "DevTools Panel", "React + TS", "OPFS Browser Route")
+  Component(gallery, "OPFSGallery", "Main Container", "Two-panel layout state")
+  Component(tree, "FileTree", "Left Panel", "File navigation")
+  Component(preview, "FilePreview", "Right Panel", "File content display")
+  Component(resize, "ResizeHandle", "Divider", "Panel width control")
+  Component(text, "TextPreview", "Preview Sub", "Text file display")
+  Component(image, "ImagePreview", "Preview Sub", "Image file display")
+  Component(empty, "EmptyPreview", "Preview Sub", "No selection state")
+  Component(unsupported, "UnsupportedPreview", "Preview Sub", "Binary file placeholder")
+
+  Rel(gallery, tree, "Renders")
+  Rel(gallery, preview, "Renders")
+  Rel(gallery, resize, "Renders")
+  Rel(tree, gallery, "onFileSelect")
+  Rel(preview, text, "Delegates")
+  Rel(preview, image, "Delegates")
+  Rel(preview, empty, "Delegates")
+  Rel(preview, unsupported, "Delegates")
+  Rel(resize, gallery, "onWidthChange")
+```
+
+### 18.2 Component Hierarchy
+
+```
+OPFSGallery (Main Container)
+├── Header (existing)
+├── Main Content Area (NEW: flex layout)
+│   ├── Left Panel (File Tree)
+│   │   └── FileTree (existing from F-012)
+│   │       └── FileNode (existing from F-012)
+│   │           └── MetadataPanel (existing from F-012)
+│   ├── ResizeHandle (existing from F-006)
+│   └── Right Panel (Preview Area)
+│       └── FilePreview (NEW)
+│           ├── TextPreview (NEW)
+│           ├── ImagePreview (NEW)
+│           ├── EmptyPreview (NEW)
+│           └── UnsupportedPreview (NEW)
+├── DeleteConfirmModal (existing from F-012)
+└── Toast (existing from F-012)
+```
+
+### 18.3 Data Flow for File Content Loading
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant FileTree
+    participant OPFSGallery
+    participant FilePreview
+    participant TextPreview
+    participant databaseService
+    participant OPFS
+
+    User->>FileTree: Click file
+    FileTree->>OPFSGallery: onFileSelect(entry)
+    OPFSGallery->>OPFSGallery: setSelectedFile(entry)
+    OPFSGallery->>FilePreview: file={selectedFile}
+    FilePreview->>databaseService: getFileContent(path)
+    databaseService->>OPFS: getFileHandle + getFile()
+    OPFS-->>databaseService: File object
+    databaseService->>databaseService: Detect type (text/image/binary)
+    databaseService-->>FilePreview: ServiceResponse<Content>
+    alt Text File
+        FilePreview->>TextPreview: Render
+        TextPreview->>TextPreview: Display text content
+    else Image File
+        FilePreview->>ImagePreview: Render
+        ImagePreview->>ImagePreview: Display image
+    else Binary File
+        FilePreview->>UnsupportedPreview: Render
+        UnsupportedPreview->>UnsupportedPreview: Show placeholder
+    end
+```
+
+### 18.4 Panel Resizing Architecture
+
+**Component**: ResizeHandle (reused from F-006)
+
+**State Management**:
+
+```typescript
+// In OPFSGallery component
+const [leftPanelWidth, setLeftPanelWidth] = useState<number>(350); // Default width
+const [selectedFile, setSelectedFile] = useState<OpfsFileEntry | null>(null);
+
+const handleResize = useCallback((width: number) => {
+  // Constrain between 200px and 600px
+  const constrainedWidth = Math.max(200, Math.min(600, width));
+  setLeftPanelWidth(constrainedWidth);
+}, []);
+```
+
+**Layout Structure**:
+
+```tsx
+<div className="flex flex-1 overflow-hidden">
+  {/* Left Panel: File Tree */}
+  <div
+    style={{ width: `${leftPanelWidth}px` }}
+    className="flex flex-col overflow-hidden"
+  >
+    <FileTree onFileSelect={setSelectedFile} selectedFile={selectedFile} />
+  </div>
+
+  {/* Resizable Divider */}
+  <ResizeHandle
+    direction="horizontal"
+    onResize={handleResize}
+    minSize={200}
+    maxSize={600}
+  />
+
+  {/* Right Panel: Preview */}
+  <div className="flex-1 flex flex-col overflow-hidden">
+    <FilePreview file={selectedFile} />
+  </div>
+</div>
+```
+
+### 18.5 State Management Approach
+
+**Component State** (OPFSGallery):
+
+```typescript
+interface OPFSGalleryState {
+  leftPanelWidth: number; // Panel width in pixels
+  selectedFile: OpfsFileEntry | null; // Currently selected file
+  isModalOpen: boolean; // Delete modal state (existing)
+  modalEntry: OpfsFileEntry | null; // Modal entry (existing)
+  toast: ToastState | null; // Toast state (existing)
+}
+```
+
+**Props Flow**:
+
+- `FileTree` receives `onFileSelect` callback and `selectedFile` prop
+- `FilePreview` receives `file` prop (OpfsFileEntry | null)
+- All preview components are props-driven (no internal state)
+- Loading/error state managed by `FilePreview` component
+
+### 18.6 File Content Loading Service
+
+**New Service Function**: `getFileContent(path)`
+
+```typescript
+/**
+ * Get file content from OPFS
+ * @param path - Full path to the file
+ * @returns ServiceResponse<{ type: FileType, content: string | Blob }>
+ */
+getFileContent: async (
+  path: string,
+): Promise<
+  ServiceResponse<{
+    type: "text" | "image" | "binary";
+    content: string | Blob;
+    metadata?: {
+      size: number;
+      lastModified: Date;
+      mimeType: string;
+    };
+  }>
+> => {
+  try {
+    const script = `
+      (async () => {
+        const root = await navigator.storage.getDirectory();
+        const pathParts = '${path}'.split('/').filter(Boolean);
+        let dir = root;
+
+        // Navigate to directory
+        for (let i = 0; i < pathParts.length - 1; i++) {
+          dir = await dir.getDirectoryHandle(pathParts[i]);
+        }
+
+        // Get file handle
+        const filename = pathParts[pathParts.length - 1];
+        const fileHandle = await dir.getFileHandle(filename);
+        const file = await fileHandle.getFile();
+
+        // Detect file type
+        const mimeType = file.type;
+        let type = 'binary';
+        
+        if (mimeType.startsWith('text/') || 
+            mimeType.endsWith('/json') ||
+            mimeType.endsWith('/xml') ||
+            filename.match(/\.(log|txt|md|csv|xml|json|yaml|yml)$/i)) {
+          type = 'text';
+        } else if (mimeType.startsWith('image/')) {
+          type = 'image';
+        }
+
+        // Read content based on type
+        let content;
+        if (type === 'text') {
+          content = await file.text();
+        } else {
+          content = file; // Blob for images
+        }
+
+        return { 
+          success: true, 
+          data: {
+            type,
+            content,
+            metadata: {
+              size: file.size,
+              lastModified: new Date(file.lastModified),
+              mimeType
+            }
+          }
+        };
+      })()
+    `;
+
+    return await inspectedWindowBridge.execute(script);
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+};
+```
+
+### 18.7 Preview Component Architecture
+
+**FilePreview Component** (Main Container):
+
+```typescript
+interface FilePreviewProps {
+  file: OpfsFileEntry | null;
+}
+
+// Renders appropriate preview component based on file state
+// States: null (empty), loading, error, loaded (text/image/binary)
+```
+
+**Preview Component Hierarchy**:
+
+```
+FilePreview (Container)
+├── EmptyPreview (no file selected)
+├── LoadingSpinner (file content loading)
+├── ErrorState (preview failed with retry)
+├── TextPreview (text files: .log, .txt, .json, .xml, .csv, .md)
+├── ImagePreview (image files: .jpg, .png, .gif, .svg, .webp)
+└── UnsupportedPreview (binary files: .sqlite, .db, etc.)
+```
+
+**TextPreview Component**:
+
+```typescript
+interface TextPreviewProps {
+  file: OpfsFileEntry;
+  content: string;
+  metadata: { size: number; lastModified: Date; mimeType: string };
+}
+
+// Displays text content in monospace font
+// Preserves line breaks and formatting
+// Optional: Syntax highlighting for JSON files
+```
+
+**ImagePreview Component**:
+
+```typescript
+interface ImagePreviewProps {
+  file: OpfsFileEntry;
+  content: Blob;
+  metadata: { size: number; lastModified: Date; mimeType: string };
+}
+
+// Displays image with object-fit: contain
+// Scales to fit within panel (max-width: 100%, max-height: 100%)
+// Maintains aspect ratio
+```
+
+**EmptyPreview Component**:
+
+```typescript
+interface EmptyPreviewProps {
+  // No props needed
+}
+
+// Displays "Select a file to preview its contents"
+// Shows helpful icon or illustration
+```
+
+**UnsupportedPreview Component**:
+
+```typescript
+interface UnsupportedPreviewProps {
+  file: OpfsFileEntry;
+}
+
+// Displays "Preview not available for this file type"
+// Shows file metadata (size, type, modified date)
+// Shows download button to download the file
+```
+
+### 18.8 Integration with Existing F-012 Components
+
+**Preserved Features** (from F-012):
+
+- **Tree Lines**: VSCode-style hierarchy (TreeLines component)
+- **Delete Confirmation Modal**: Metadata grid with warning (DeleteConfirmModal)
+- **Toast Notifications**: Success/error feedback (Toast component)
+- **Enhanced Metadata**: File type badges, timestamps (MetadataPanel component)
+- **Download/Delete Buttons**: Hover actions on file nodes (FileNode component)
+
+**Modified Components**:
+
+- **FileTree**: Add `onFileSelect` callback and `selectedFile` prop
+- **FileNode**: Add visual highlight for selected file
+- **OPFSGallery**: Add two-panel layout with ResizeHandle
+
+**New Components** (F-013):
+
+- **FilePreview**: Main preview container
+- **TextPreview**: Text file preview
+- **ImagePreview**: Image file preview
+- **EmptyPreview**: No selection state
+- **UnsupportedPreview**: Binary file placeholder
+
+### 18.9 Theme Colors (F-007 Integration)
+
+**Preview Panel Styling**:
+
+```typescript
+// Header: Emerald theme
+const previewHeader =
+  "bg-emerald-50 border-b border-emerald-200 text-emerald-700";
+
+// Selected file highlight in tree
+const selectedFileStyle =
+  "bg-emerald-50 text-emerald-600 border-l-4 border-emerald-600";
+
+// Loading spinner
+const loadingSpinner = "text-emerald-600 animate-spin";
+
+// Error state
+const errorState = "text-red-600 bg-red-50 border border-red-200";
+
+// Empty state
+const emptyState = "text-gray-500 bg-gray-50";
+```
+
+### 18.10 File Structure
+
+```
+/src/devtools
+  /components
+    /OPFSBrowser
+      OPFSGallery.tsx              # MODIFIED - Add two-panel layout
+      FileTree.tsx                 # MODIFIED - Add onFileSelect, selectedFile
+      FileNode.tsx                 # MODIFIED - Add selected state styling
+      FilePreview.tsx              # NEW - Preview container
+      TextPreview.tsx              # NEW - Text file preview
+      ImagePreview.tsx             # NEW - Image file preview
+      EmptyPreview.tsx             # NEW - Empty state
+      UnsupportedPreview.tsx       # NEW - Unsupported file placeholder
+      DeleteConfirmModal.tsx        # Existing (F-012)
+      MetadataPanel.tsx            # Existing (F-012)
+      TreeLines.tsx                # Existing (F-012)
+      Toast.tsx                    # Existing (F-012)
+  /services
+    databaseService.ts              # MODIFIED - Add getFileContent function
+  /shared
+    ResizeHandle.tsx                # Existing (F-006)
+```
+
+### 18.11 Accessibility
+
+**File Selection**:
+
+- Selected file has visual highlight (emerald-50 background)
+- Selected file has `aria-selected="true"` attribute
+- Keyboard navigation support (Enter to select)
+
+**Preview Panel**:
+
+- `role="region"` with `aria-label="File preview"`
+- `aria-live="polite"` for dynamic content changes
+- Image preview has `alt` text with filename
+
+**Divider**:
+
+- `role="separator"` and `aria-orientation="vertical"`
+- `aria-label="Resize panels"`
+- Keyboard navigation: Future enhancement
+
+### 18.12 Performance Considerations
+
+**File Size Limits**:
+
+- Text files: Warn if > 1MB, block if > 10MB
+- Images: Block if > 5MB
+- Binary files: No preview (show placeholder)
+
+**Optimization Strategies**:
+
+- Lazy loading: Load file content only when file is selected
+- Content caching: Cache loaded content in component state
+- Error boundaries: Wrap preview components in error boundaries
+- Cleanup: Revoke object URLs for images on unmount
+
+**Rendering Performance**:
+
+- Text preview: Use `<pre>` tag for monospace display (no virtual scrolling needed for < 1MB)
+- Image preview: Use `object-fit: contain` for responsive scaling
+- Panel resizing: 60fps smooth (proven in F-006)
+
+### 18.13 Error Handling
+
+**File Content Loading Errors**:
+
+```typescript
+// In FilePreview component
+const [loading, setLoading] = useState(false);
+const [error, setError] = useState<string | null>(null);
+
+useEffect(() => {
+  if (!file) return;
+
+  const loadContent = async () => {
+    setLoading(true);
+    setError(null);
+
+    const response = await databaseService.getFileContent(file.path);
+
+    if (response.success) {
+      setContent(response.data);
+    } else {
+      setError(response.error || "Failed to load file content");
+    }
+
+    setLoading(false);
+  };
+
+  loadContent();
+}, [file]);
+```
+
+**Error States**:
+
+- **Permission Denied**: Show error with "Access denied" message
+- **File Not Found**: Show error with "File not found" message
+- **Size Limit Exceeded**: Show error with file size warning
+- **Network Error**: Show error with retry button
+
+**Recovery Mechanisms**:
+
+- Retry button on error state
+- Clear selection on error
+- Show toast notification for errors
+
+### 18.14 Edge Cases
+
+1. **Very large text files (> 1MB)**: Show warning, truncate with "Show full file" button
+2. **Very large images (> 5MB)**: Block preview, show "Image too large" message
+3. **SQLite database files**: Show placeholder with download button
+4. **Binary files**: Show unsupported preview with download button
+5. **File deleted during preview**: Clear selection, show empty state
+6. **Panel width too narrow**: Hide preview panel, show "Resize to view preview" message
+7. **File encoding errors**: Show "Failed to decode file" error
+8. **Corrupted image data**: Show "Failed to load image" error
+
+### 18.15 Benefits
+
+- **Workflow Efficiency**: Preview files without downloading
+- **Improved UX**: Two-panel layout is industry standard (VSCode, file managers)
+- **Code Reusability**: 90% of components already exist (F-012, F-006)
+- **Performance**: Fast file loading (< 1s for text, < 2s for images)
+- **Extensibility**: Easy to add features later (syntax highlighting, search)
+- **Feature Preservation**: All F-012 features maintained
+
+### 18.16 Implementation Notes
+
+**Files Created**: 5 new components (FilePreview, TextPreview, ImagePreview, EmptyPreview, UnsupportedPreview)
+**Files Modified**: 4 existing files (OPFSGallery, FileTree, FileNode, databaseService)
+**Service Functions**: 1 new function (getFileContent)
+**Estimated Time**: 8-12 hours
+**Risk**: Low (proven patterns from F-006, F-012)
+
+**Dependencies**:
+
+- F-012 (OPFS Browser Enhancement) - Must be complete
+- F-006 (Resizable Vertical Dividers) - Reuse ResizeHandle component
+
+**Browser Compatibility**:
+
+- Chrome 111+ (OPFS File System Access stable)
+- Edge 111+ (same engine as Chrome)
+- Firefox: Not supported (OPFS not available)
+
+**Integration Points**:
+
+- Service Layer: Extends existing databaseService.ts
+- Type System: No changes to OpfsFileEntry (content loaded on-demand)
+- Routing: No changes to `/opfs` route
+- State Management: Local component state (OPFSGallery)
+
+## 19) OPFS UI Visual Redesign Architecture (Feature F-014)
+
+**Purpose**: Align OPFS File Browser visual design with product prototype, implementing green color theme, improved visual hierarchy, and removing unnecessary UI elements.
+
+**Dependencies**: F-012 (OPFS Browser Enhancement), F-013 (OPFS Two-Panel Preview)
+
+**Key Changes**:
+
+- Color scheme: Blue → Green (#4CAF50) for headers and primary elements
+- Preview panel: Emerald-50 background → White with green header
+- File tree: Add file/directory counts, make action icons always visible
+- Layout: Remove helper notice and footer tip sections
+
+**Rationale**:
+
+- **User Expectations**: Product prototype defines the visual language users expect
+- **Brand Consistency**: Green theme matches product branding guidelines
+- **Reduced Clutter**: Removing unnecessary UI elements improves focus on file operations
+
+### 19.1 C4 Component Diagram (F-014)
+
+```mermaid
+C4Component
+  title OPFS UI Visual Redesign (F-014)
+  Container_Boundary(opfsBrowser, "OPFS Browser Components") {
+    Component(gallery, "OPFSGallery", "Main Container", "Green header, white panels, no footer")
+    Component(fileTree, "FileTree", "File Browser", "File counts, visible action icons")
+    Component(preview, "FilePreview", "Preview Panel", "Green header, white bg, status badge")
+  }
+  Rel(gallery, fileTree, "Displays in left panel (40%)")
+  Rel(gallery, preview, "Displays in right panel (60%)")
+```
+
+### 19.2 Component Hierarchy (F-014)
+
+**Preserved Structure** (no changes to component hierarchy):
+
+```
+OPFSGallery (Main Container)
+├── Header (MODIFIED - F-014)
+│   ├── Icon: Green (#4CAF50)
+│   └── Title: "OPFS File Browser"
+├── FileTree (MODIFIED - F-014)
+│   └── FileNode
+│       ├── TreeLines (existing)
+│       ├── MetadataPanel (existing)
+│       └── Action Icons (MODIFIED - always visible)
+├── ResizeHandle (existing from F-013)
+├── FilePreview (MODIFIED - F-014)
+│   ├── PreviewHeader (NEW - F-014)
+│   │   ├── Title: "Preview: [filename]"
+│   │   └── StatusBadge: "started"
+│   └── PreviewContent
+│       ├── EmptyPreview (existing)
+│       ├── TextPreview (existing)
+│       ├── ImagePreview (existing)
+│       └── UnsupportedPreview (existing)
+├── DeleteConfirmModal (existing from F-012)
+└── Toast (existing from F-012)
+```
+
+**Removed Components** (F-014):
+
+- ~~HelperNotice~~ section (blue-50/Blue-200 banner)
+- ~~FooterTip~~ section (gray tip bar)
+
+### 19.3 Visual Design System (F-014)
+
+**Color Palette Updates**:
+
+| Usage               | Before         | After (F-014)   | Tailwind Class   |
+| ------------------- | -------------- | --------------- | ---------------- |
+| Main header icon    | Blue (#3B82F6) | Green (#4CAF50) | `text-green-600` |
+| Preview header bg   | None           | Green (#4CAF50) | `bg-green-600`   |
+| Preview header text | N/A            | White           | `text-white`     |
+| Preview panel bg    | Emerald-50     | White           | `bg-white`       |
+| Status badge bg     | None           | Green (#4CAF50) | `bg-green-600`   |
+| Status badge text   | N/A            | White           | `text-white`     |
+
+**Typography Changes**:
+
+| Element              | Font       | Size           | Weight   |
+| -------------------- | ---------- | -------------- | -------- |
+| Main header title    | Sans-serif | 18px (text-lg) | Semibold |
+| Preview header title | Sans-serif | 14px (text-sm) | Medium   |
+| Status badge         | Sans-serif | 12px (text-xs) | Medium   |
+| File counts          | Sans-serif | 11px (text-xs) | Regular  |
+
+**Spacing & Layout**:
+
+| Element        | Padding              | Notes                 |
+| -------------- | -------------------- | --------------------- |
+| Main header    | 12px vertical (py-3) | Reduced from 16px     |
+| Preview header | 12px vertical (py-3) | New in F-014          |
+| Panel divider  | 1px border           | Gray-200              |
+| Icon size      | 16-18px              | Consistent with F-012 |
+
+### 19.4 Component State Changes (F-014)
+
+**OPFSGallery State** (no changes - visual only):
+
+```typescript
+interface OPFSGalleryState {
+  leftPanelWidth: number; // Existing (F-013)
+  selectedFile: OpfsFileEntry | null; // Existing (F-013)
+  downloadStatus: DownloadStatus; // Existing
+  modalOpen: boolean; // Existing (F-012)
+  selectedEntry: OpfsFileEntry | null; // Existing (F-012)
+  toast: ToastState; // Existing (F-012)
+}
+```
+
+**FileTree Enhancements** (F-014):
+
+```typescript
+interface FileNodeProps {
+  entry: OpfsFileEntry;
+  level: number;
+  isLast: boolean;
+  showLines: boolean; // Existing (F-012)
+  onDownload: (path, name) => void; // Existing
+  onDelete: (entry) => void; // Existing (F-012)
+  onFileSelect: (entry) => void; // Existing (F-013)
+  selectedFile: OpfsFileEntry | null; // Existing (F-013)
+  showActionIcons?: boolean; // NEW - F-014 (default: true)
+  showFileCounts?: boolean; // NEW - F-014 (default: true)
+}
+```
+
+**FilePreview Enhancements** (F-014):
+
+```typescript
+interface FilePreviewProps {
+  file: OpfsFileEntry | null;
+  showStatus?: boolean; // NEW - F-014 (default: true)
+  statusText?: string; // NEW - F-014 (default: "started")
+}
+```
+
+### 19.5 Layout Changes (F-014)
+
+**Main Header Layout**:
+
+```
+┌────────────────────────────────────────────────────────┐
+│ OPFS File Browser                                     │
+│ [📁 Icon (green)]                                      │
+└────────────────────────────────────────────────────────┘
+```
+
+**Preview Header Layout** (NEW - F-014):
+
+```
+┌────────────────────────────────────────────────────────┐
+│ Preview: app.log            [started] (green badge)    │
+└────────────────────────────────────────────────────────┘
+```
+
+**Removed Sections**:
+
+```
+┌────────────────────────────────────────────────────────┐
+│ Origin Private File System          ← REMOVED (F-014)  │
+│ Browse and manage SQLite...                              │
+└────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────┐
+│ Tip: Click on directories...         ← REMOVED (F-014)  │
+└────────────────────────────────────────────────────────┘
+```
+
+### 19.6 File Tree Enhancements (F-014)
+
+**File/Directory Counts Display**:
+
+```typescript
+// Calculate counts for directories
+const getDirectoryCounts = (entry: OpfsFileEntry): string => {
+  if (entry.type !== "directory") return "";
+
+  const fileCount =
+    entry.children?.filter((c) => c.type === "file").length ?? 0;
+  const dirCount =
+    entry.children?.filter((c) => c.type === "directory").length ?? 0;
+
+  if (dirCount === 0) return `${fileCount} files`;
+  return `${fileCount} files ${dirCount} dirs`;
+};
+```
+
+**Action Icons Visibility** (F-014):
+
+```typescript
+// Before (F-012/F-013): Icons visible on group hover
+className = "opacity-0 group-hover:opacity-100";
+
+// After (F-014): Icons always visible
+className = "opacity-100";
+```
+
+**File Node Layout** (F-014):
+
+```
+┌─────────────────────────────────────────────────────────┐
+│ [▶] 📁 storage/                         120 files     │
+│   [▶] 📁 log/                          3 files 2 dirs │
+│     [📄] app.log          [⬇️ Download] [🗑️ Delete] │
+└─────────────────────────────────────────────────────────┘
+```
+
+### 19.7 Preview Panel Changes (F-014)
+
+**Preview Header Component** (NEW - F-014):
+
+```typescript
+interface PreviewHeaderProps {
+  fileName: string;
+  showStatus?: boolean;
+  statusText?: string;
+}
+
+export const PreviewHeader: React.FC<PreviewHeaderProps> = ({
+  fileName,
+  showStatus = true,
+  statusText = 'started'
+}) => {
+  return (
+    <div className="px-4 py-3 bg-green-600 text-white flex items-center justify-between">
+      <span className="text-sm font-medium">
+        Preview: {fileName}
+      </span>
+      {showStatus && (
+        <span className="px-2 py-1 bg-white text-green-600 text-xs font-medium rounded">
+          {statusText}
+        </span>
+      )}
+    </div>
+  );
+};
+```
+
+**Preview Panel Layout** (F-014):
+
+```
+┌────────────────────────────────────────────────────────┐
+│ Preview: app.log                [started] (white/green) │  ← NEW header
+├────────────────────────────────────────────────────────┤
+│                                                            │
+│  [Preview Content - white background]                     │
+│                                                            │
+│  2024-01-15 18:00:01 [INFO] Application started          │
+│  2024-01-15 18:00:02 [INFO] Connected to database       │
+│                                                            │
+└────────────────────────────────────────────────────────┘
+```
+
+### 19.8 CSS Styling Strategy (F-014)
+
+**Tailwind Class Updates**:
+
+| Component      | Before                              | After (F-014)                     |
+| -------------- | ----------------------------------- | --------------------------------- |
+| Header icon    | `text-blue-600`                     | `text-green-600`                  |
+| Helper notice  | `bg-blue-50 border-blue-200`        | ~~removed~~                       |
+| Preview panel  | `bg-emerald-50`                     | `bg-white`                        |
+| Preview header | N/A                                 | `bg-green-600 text-white`         |
+| Status badge   | N/A                                 | `bg-white text-green-600 rounded` |
+| Action icons   | `opacity-0 group-hover:opacity-100` | `opacity-100`                     |
+| Footer         | `bg-gray-50 border-gray-200`        | ~~removed~~                       |
+
+**Custom CSS for F-014**:
+
+```css
+/* File count badge styling */
+.file-count-badge {
+  @apply text-xs text-gray-500 ml-2;
+}
+
+/* Preview header - green background */
+.preview-header {
+  background-color: #4caf50; /* Green-600 */
+  color: white;
+}
+
+/* Status badge - white on green */
+.status-badge {
+  @apply px-2 py-1 bg-white text-green-600 text-xs font-medium rounded;
+}
+```
+
+### 19.9 Accessibility Considerations (F-014)
+
+**Color Contrast**:
+
+- Green header (#4CAF50) with white text: **WCAG AAA** (contrast ratio 7.1:1)
+- Status badge (white on green): **WCAG AA** (contrast ratio 4.8:1)
+- File count text (gray-500 on white): **WCAG AA** (contrast ratio 7.1:1)
+
+**ARIA Labels** (preserved from F-012/F-013):
+
+```typescript
+<button
+  aria-label="Download {filename}"
+  title="Download file"
+>
+  <FaDownload />
+</button>
+```
+
+**Keyboard Navigation** (no changes):
+
+- Tab order preserved
+- Enter/Space for actions
+- Escape to close modals
+
+### 19.10 Performance Optimizations (F-014)
+
+**Minimal Impact**:
+
+- **CSS-only changes**: No JavaScript logic changes
+- **No new re-renders**: File counts calculated from existing data
+- **No new API calls**: Uses existing `OpfsFileEntry.children`
+- **Bundle size**: Unchanged (no new dependencies)
+
+### 19.11 File Structure (F-014)
+
+```text
+src/devtools/components/OPFSBrowser/
+  OPFSGallery.tsx           # MODIFIED - Remove helper/footer, update colors
+  FileTree.tsx              # MODIFIED - Add file counts, always show icons
+  FileNode.tsx              # MODIFIED - Render file counts, update icon visibility
+  FilePreview.tsx           # MODIFIED - Add PreviewHeader, white background
+  PreviewHeader.tsx         # NEW - Green header with status badge
+  (HelperNotice removed)    # REMOVED - F-014
+  (Footer removed from OPFSGallery)  # REMOVED - F-014
+```
+
+### 19.12 Browser Compatibility (F-014)
+
+- Chrome 111+ (no changes - same as F-012/F-013)
+- Edge 111+ (same engine as Chrome)
+- Firefox: Not supported (OPFS not available)
+
+### 19.13 Benefits (F-014)
+
+1. **Visual Consistency**: Matches product prototype design language
+2. **Brand Alignment**: Green theme matches product branding
+3. **Reduced Clutter**: Removing helper/footer improves focus
+4. **Better Information Hierarchy**: Preview header with status improves UX
+5. **Improved Discoverability**: Always-visible action icons
+
+### 19.14 Implementation Notes (F-014)
+
+**Phase 1: Color Scheme Updates** (1.5h)
+
+1. Update main header icon: `text-blue-600` → `text-green-600`
+2. Remove helper notice section entirely
+3. Update preview panel background: `bg-emerald-50` → `bg-white`
+
+**Phase 2: Header Modifications** (1h)
+
+1. Create `PreviewHeader.tsx` component
+2. Add green header bar to preview panel
+3. Add "started" status badge
+
+**Phase 3: Preview Panel Styling** (1h)
+
+1. Update `FilePreview.tsx` to use `PreviewHeader`
+2. Change background to white
+3. Test all preview states (empty, text, image, unsupported)
+
+**Phase 4: File Tree Enhancements** (2h)
+
+1. Add `getDirectoryCounts()` helper function
+2. Update `FileNode.tsx` to display file counts
+3. Update action icons to be always visible
+4. Test expand/collapse behavior
+
+**Phase 5: Footer Removal** (0.5h)
+
+1. Remove footer tip section from `OPFSGallery.tsx`
+2. Verify layout remains stable
+
+**Phase 6: Testing & Validation** (1h)
+
+1. Visual regression testing vs prototype
+2. Functional testing (download, delete, preview)
+3. Accessibility testing (contrast, keyboard nav)
+4. Cross-browser testing (Chrome, Edge)
+
+### 19.15 Integration Points
+
+- **Service Layer**: No changes to `databaseService.ts`
+- **Type System**: No changes to `OpfsFileEntry`
+- **Routing**: No changes to `/opfs` route
+- **State Management**: No changes to component state
+
+### 19.16 Dependencies
+
+- F-012 (OPFS Browser Enhancement) - Complete
+- F-013 (OPFS Two-Panel Preview) - Complete
+- React 18+ (existing)
+- Tailwind CSS 4 (existing)
+
+### 19.17 Risk Assessment
+
+| Risk                 | Impact | Mitigation                                  |
+| -------------------- | ------ | ------------------------------------------- |
+| Color accessibility  | Low    | Use WCAG compliant green shades             |
+| Breaking existing UX | Low    | Only visual changes, no logic modifications |
+| Prototype ambiguity  | Low    | Reference screenshot for clarification      |
+
+### 19.18 Migration Strategy
+
+**No migration needed** - Visual-only changes with no data impact.
+
+### 19.19 Rollback Strategy
+
+**Instant rollback** - Revert CSS class changes if issues arise.
+
+## 20) OPFS Tree Visual Enhancements Architecture (Feature F-015)
+
+**Purpose**: Enhance OPFS File Tree with default root expansion, dotted tree lines, and file type-specific icons for improved visual hierarchy and file recognition.
+
+**Dependencies**: F-012 (OPFS Browser Enhancement), F-013 (OPFS Two-Panel Preview), F-014 (OPFS UI Visual Redesign)
+**Baseline**: Option A (Component-Based Enhancement)
+
+**Key Changes**:
+
+- **Default Expansion**: Root directories (level 0) expand automatically on load
+- **Tree Line Styling**: Solid lines → Dotted/dashed borders for subtle hierarchy
+- **File Type Icons**: 6 icon types based on file extension (sqlite3, images, txt, json, folders, unknown)
+
+**Rationale**:
+
+- **Improved Discoverability**: Auto-expanded roots show content structure immediately
+- **Visual Hierarchy**: Dotted lines provide subtle guidance without visual clutter
+- **File Recognition**: Type-specific icons allow quick identification without reading filenames
+- **Reduced Clicks**: Users see directory contents at a glance instead of expanding manually
+
+### 20.1 C4 Component Diagram (F-015)
+
+```mermaid
+C4Component
+  title OPFS Tree Visual Enhancements (F-015)
+  Container_Boundary(opfsBrowser, "OPFS Browser Components") {
+    Component(fileTree, "FileTree", "File Browser", "Auto-expand roots, dotted lines, type icons")
+    Component(treeLines, "TreeLines", "Hierarchy Lines", "Dotted border styling")
+  }
+  Rel(fileTree, treeLines, "Uses for visual hierarchy")
+```
+
+### 20.2 Component Hierarchy (F-015)
+
+**Modified Structure** (changes to FileTree.tsx and TreeLines.tsx):
+
+```
+FileTree (MODIFIED - F-015)
+├── FileTreeItem (MODIFIED - F-015)
+│   ├── Icon (MODIFIED - F-015)
+│   │   ├── getFileIcon() helper (NEW - F-015)
+│   │   │   ├── FaDatabase (.sqlite3 files)
+│   │   │   ├── FaRegFileImage (images)
+│   │   │   ├── TiDocumentText (.txt files)
+│   │   │   ├── LuFileJson (.json/.json5 files)
+│   │   │   ├── FaFolder (closed directories)
+│   │   │   ├── FaFolderOpen (open directories)
+│   │   │   └── FaFile (unknown files)
+│   ├── Name + Counts (existing from F-014)
+│   ├── Action Icons (existing from F-014)
+│   └── TreeLines (MODIFIED - F-015)
+│       └── Dotted border styling
+└── Auto-Expand Logic (NEW - F-015)
+    ├── useState(level === 0) for initial state
+    └── useEffect for auto-loading root children
+```
+
+**Preserved Components** (no changes):
+
+- OPFSGallery (container, no changes)
+- FilePreview (preview panel, no changes)
+- DeleteConfirmModal (no changes)
+- Toast notifications (no changes)
+
+### 20.3 Icon Mapping Architecture (F-015)
+
+**File Type Detection Flow**:
+
+```tsx
+// 1. Extract file extension
+const ext = getFileExtension(entry.name);
+
+// 2. Map extension to icon component
+switch (ext) {
+  case ".sqlite3":
+    return <FaDatabase className="text-purple-600" />;
+  case ".png":
+  case ".jpg":
+  case ".jpeg":
+  case ".webp":
+  case ".gif":
+  case ".svg":
+  case ".ico":
+    return <FaRegFileImage className="text-purple-500" />;
+  case ".txt":
+    return <TiDocumentText className="text-gray-600" />;
+  case ".json":
+  case ".json5":
+    return <LuFileJson className="text-yellow-600" />;
+  default:
+    if (entry.type === "directory") {
+      return isExpanded ? (
+        <FaFolderOpen className="text-yellow-500" />
+      ) : (
+        <FaFolder className="text-gray-600" />
+      );
+    }
+    return <FaFile className="text-gray-500" />;
+}
+```
+
+**Icon Imports Required**:
+
+```tsx
+import { FaDatabase } from "react-icons/fa6";
+import { FaRegFileImage, FaFolder, FaFolderOpen, FaFile } from "react-icons/fa";
+import { TiDocumentText } from "react-icons/ti";
+import { LuFileJson } from "react-icons/lu";
+```
+
+**Icon Color Scheme**:
+
+| File Type            | Icon           | Tailwind Color    | Hex     | Rationale                          |
+| -------------------- | -------------- | ----------------- | ------- | ---------------------------------- |
+| SQLite Database      | FaDatabase     | `text-purple-600` | #9333ea | Purple indicates structured data   |
+| Images               | FaRegFileImage | `text-purple-500` | #a855f7 | Purple variant for visual assets   |
+| Text Files           | TiDocumentText | `text-gray-600`   | #4b5563 | Neutral for plain text             |
+| JSON Files           | LuFileJson     | `text-yellow-600` | #ca8a04 | Yellow indicates structured config |
+| Directories (closed) | FaFolder       | `text-gray-600`   | #4b5563 | Gray for collapsed state           |
+| Directories (open)   | FaFolderOpen   | `text-yellow-500` | #eab308 | Yellow indicates active/open       |
+| Unknown Files        | FaFile         | `text-gray-500`   | #6b7280 | Lighter gray for unknown type      |
+
+### 20.4 Expansion State Architecture (F-015)
+
+**Current Behavior** (pre-F-015):
+
+```tsx
+const [isExpanded, setIsExpanded] = useState(false); // All directories collapsed
+```
+
+**New Behavior** (F-015):
+
+```tsx
+// Root directories (level 0) expand by default
+const [isExpanded, setIsExpanded] = useState(level === 0);
+
+// Auto-load root children on mount
+useEffect(() => {
+  if (level === 0 && !hasLoaded && !isLoading) {
+    loadChildren();
+  }
+}, [level, hasLoaded, isLoading, loadChildren]);
+```
+
+**State Diagram**:
+
+```
+Initial Load (level 0)
+    ↓
+isExpanded = true (initial state)
+    ↓
+loadChildren() triggered via useEffect
+    ↓
+Root directory shows first-level children
+
+Child Directories (level > 0)
+    ↓
+isExpanded = false (initial state)
+    ↓
+User clicks to expand (on-demand lazy load)
+    ↓
+Children displayed
+```
+
+**Performance Considerations**:
+
+- **Root-Only Expansion**: Only level 0 directories auto-expand, preserving lazy-load for deeper levels
+- **Preserved Lazy-Loading**: Child directories remain collapsed until user interaction
+- **No State Bloat**: No additional state variables, using existing `hasLoaded` flag
+
+### 20.5 Tree Line Styling Architecture (F-015)
+
+**Current Implementation** (pre-F-015):
+
+```tsx
+// TreeLines.tsx - solid gray line
+className = "absolute top-0 left-0 w-px bg-gray-200";
+```
+
+**New Implementation** (F-015):
+
+```tsx
+// TreeLines.tsx - dotted lighter line
+className = "absolute top-0 left-0 border-l border-dotted border-gray-300";
+```
+
+**Styling Comparison**:
+
+| Property       | Before (F-014)                       | After (F-015)        | Rationale                                   |
+| -------------- | ------------------------------------ | -------------------- | ------------------------------------------- |
+| Border Style   | `bg-gray-200` (solid via background) | `border-dotted`      | Dotted provides classic tree view aesthetic |
+| Color          | `gray-200` (#e5e7eb)                 | `gray-300` (#d1d5db) | Lighter color for subtler visual            |
+| Implementation | Background width                     | Border-left          | Semantically correct for lines              |
+
+**Responsive Behavior** (preserved from F-012):
+
+- Hidden when container width < 200px (sidebar collapsed)
+- Controlled by `showLines` prop from ResizeObserver
+- No changes to responsive hiding logic
+
+### 20.6 Component State Changes (F-015)
+
+**FileTreeItem State** (modified):
+
+| State        | Type           | Default       | Purpose (F-015)                      |
+| ------------ | -------------- | ------------- | ------------------------------------ |
+| `isExpanded` | boolean        | `level === 0` | Root directories start expanded      |
+| `isLoading`  | boolean        | `false`       | (unchanged) Loading state            |
+| `hasLoaded`  | boolean        | `false`       | (unchanged) Prevents duplicate loads |
+| `error`      | string \| null | `null`        | (unchanged) Error display            |
+
+**FileTree Props** (unchanged):
+
+| Prop           | Type                  | Purpose                             |
+| -------------- | --------------------- | ----------------------------------- |
+| `onDownload`   | function              | (unchanged) Download callback       |
+| `onDelete`     | function              | (unchanged) Delete callback         |
+| `onFileSelect` | function              | (unchanged) File selection callback |
+| `selectedFile` | OpfsFileEntry \| null | (unchanged) Currently selected file |
+
+### 20.7 Data Flow Architecture (F-015)
+
+**Expansion Flow** (new auto-expand logic):
+
+```
+FileTree Mount
+    ↓
+FileTreeItem rendered for each root entry (level=0)
+    ↓
+isExpanded = useState(level === 0) → true for roots
+    ↓
+useEffect detects level=0 + !hasLoaded
+    ↓
+loadChildren() called
+    ↓
+databaseService.getOpfsFiles(entry.path)
+    ↓
+Children loaded and displayed
+```
+
+**Icon Selection Flow** (new helper function):
+
+```
+FileTreeItem Render
+    ↓
+Get entry.type (directory vs file)
+    ↓
+If directory: return FaFolderOpen or FaFolder based on isExpanded
+    ↓
+If file: call getFileIcon(entry.name)
+    ↓
+Extract extension via getFileExtension()
+    ↓
+Switch on extension: return matching icon component
+    ↓
+Icon rendered with appropriate color className
+```
+
+### 20.8 Interface Updates (F-015)
+
+**No Interface Changes**:
+
+- `OpfsFileEntry` type: No modifications (uses existing `name`, `type`, `path` fields)
+- `databaseService.getOpfsFiles()`: No modifications (existing signature preserved)
+- Component props: No new props added to FileTree or FileTreeItem
+
+**Helper Function Signature** (internal to FileTree.tsx):
+
+```tsx
+interface getFileIconParams {
+  entry: OpfsFileEntry;
+  isExpanded: boolean;
+}
+
+const getFileIcon = ({ entry, isExpanded }: getFileIconParams): ReactNode => {
+  // ... implementation
+};
+```
+
+### 20.9 Error Handling Architecture (F-015)
+
+**Preserved Error Handling** (no changes to existing logic):
+
+- `error` state: Displayed below node if loadChildren() fails
+- `isLoading` state: Shows spinner during load
+- `hasLoaded` state: Prevents duplicate load attempts
+
+**New Error Scenarios** (low risk):
+
+| Scenario                   | Handling                                |
+| -------------------------- | --------------------------------------- |
+| Icon library missing       | Build error (caught at compile time)    |
+| Extension edge case        | Fallback to FaFile icon                 |
+| useEffect dependency cycle | Dependency array prevents infinite loop |
+
+### 20.10 Performance Considerations (F-015)
+
+**Bundle Size Impact**:
+
+| Addition                              | Size      | Notes                             |
+| ------------------------------------- | --------- | --------------------------------- |
+| react-icons/fa6 (FaDatabase)          | ~3KB      | Tree-shakeable                    |
+| react-icons/fa (FaRegFileImage, etc.) | ~8KB      | Already partially imported        |
+| react-icons/ti (TiDocumentText)       | ~2KB      | New sub-package                   |
+| react-icons/lu (LuFileJson)           | ~2KB      | New sub-package                   |
+| **Total**                             | **~15KB** | Acceptable for DevTools extension |
+
+**Runtime Performance**:
+
+- **Initial Load**: +50-100ms for root directory auto-expansion (acceptable trade-off)
+- **Render Performance**: No change (icon selection is pure function)
+- **Memory**: No change (same number of components, different icons only)
+
+**Optimization Strategies**:
+
+1. **Preserved Lazy-Loading**: Child directories still load on-demand
+2. **Memoization Potential**: Icon component could be memoized if performance issues arise
+3. **Code Splitting**: Not needed for small icon additions
+
+### 20.11 File Structure (F-015)
+
+```text
+src/devtools/components/OPFSBrowser/
+  FileTree.tsx              # MODIFIED - Add icon imports, getFileIcon helper, auto-expand
+  TreeLines.tsx             # MODIFIED - Dotted border styling
+  FilePreview.tsx           # unchanged
+  PreviewHeader.tsx         # unchanged
+  OPFSGallery.tsx           # unchanged
+```
+
+### 20.12 Browser Compatibility (F-015)
+
+- Chrome 90+ (no changes - `border-dotted` widely supported)
+- Edge 90+ (same engine as Chrome)
+- Firefox: Not supported (OPFS not available)
+
+### 20.13 Benefits (F-015)
+
+1. **Improved Discoverability**: Users see directory structure immediately without clicking
+2. **Visual Clarity**: Dotted lines provide subtle hierarchy guidance
+3. **File Recognition**: Type-specific icons allow quick identification
+4. **Reduced Interaction**: Fewer clicks to view file system contents
+5. **Professional Appearance**: Matches classic tree view patterns users expect
+
+### 20.14 Implementation Notes (F-015)
+
+**Phase 1: Icon Imports and Helper Function** (1h)
+
+1. Add 6 icon imports to FileTree.tsx
+2. Create `getFileExtension()` helper function
+3. Create `getFileIcon()` helper function with switch statement
+4. Add TSDoc comments with @example
+
+**Phase 2: Expansion State Update** (0.5h)
+
+1. Update `useState(false)` → `useState(level === 0)`
+2. Add `useEffect` hook for auto-loading root children
+3. Test expand/collapse behavior
+
+**Phase 3: Tree Line Styling** (0.5h)
+
+1. Update TreeLines.tsx className
+2. Change `bg-gray-200` to `border-dotted border-gray-300`
+3. Test responsive hiding (sidebar collapse)
+
+**Phase 4: Testing & Validation** (1h)
+
+1. Visual testing: Verify icons match file types
+2. Functional testing: Verify expand/collapse works
+3. Performance testing: Verify no significant load time increase
+4. ESLint and build verification
+
+### 20.15 Integration Points
+
+- **Service Layer**: No changes to `databaseService.ts`
+- **Bridge Layer**: No changes to `inspectedWindow.ts`
+- **Type System**: No changes to `OpfsFileEntry`
+- **Routing**: No changes to `/opfs` route
+- **Other Components**: No changes to FilePreview, PreviewHeader, etc.
+
+### 20.16 Dependencies
+
+- F-012 (OPFS Browser Enhancement) - Complete (provides TreeLines component)
+- F-013 (OPFS Two-Panel Preview) - Complete (provides file selection)
+- F-014 (OPFS UI Visual Redesign) - Complete (provides green theme)
+- React 18+ (existing)
+- Tailwind CSS 4 (existing)
+- react-icons (existing)
+
+### 20.17 Risk Assessment
+
+| Risk                   | Impact | Mitigation                              |
+| ---------------------- | ------ | --------------------------------------- |
+| Missing icon libraries | Medium | Verify imports before commit            |
+| Performance regression | Low    | Root-only expansion preserves lazy-load |
+| Icon bundle size       | Low    | ~15KB acceptable for DevTools           |
+| Visual inconsistency   | Low    | Reference prototype screenshot          |
+
+### 20.18 Migration Strategy
+
+**No migration needed** - Visual-only changes with no data impact.
+
+### 20.19 Rollback Strategy
+
+**Instant rollback** - Revert FileTree.tsx and TreeLines.tsx changes if issues arise.

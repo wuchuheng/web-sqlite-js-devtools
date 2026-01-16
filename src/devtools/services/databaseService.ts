@@ -14,6 +14,7 @@ import type {
   LogEntry as DBLogEntry,
   ReleaseConfig,
 } from "../../types/DB";
+import { LOG_ENTRY_MESSAGE, LOG_ENTRY_SOURCE } from "@/shared/messages";
 
 /**
  * Standard response envelope for service operations
@@ -142,7 +143,7 @@ export type DbVersionResult = {
 // ============================================================================
 
 /**
- * OPFS file entry with metadata
+ * OPFS file entry with metadata (F-012 enhanced)
  */
 export type OpfsFileEntry = {
   name: string; // File or directory name
@@ -151,6 +152,12 @@ export type OpfsFileEntry = {
   size: number; // File size in bytes (0 for directories)
   sizeFormatted: string; // Human-readable size (e.g., "1.5 KB")
   lastModified?: number; // Timestamp (optional, browser support varies)
+  fileType?: string; // NEW: "SQLite Database", "JSON Data", etc. (F-012)
+  itemCount?: {
+    // NEW: Child counts for directories (F-012)
+    files: number;
+    directories: number;
+  };
 };
 
 /**
@@ -283,7 +290,7 @@ export const getTableList = async (
         return { success: false as const, error: String(error) };
       }
     },
-    args: [dbname],
+    args: [_db_name],
   });
 };
 
@@ -349,7 +356,7 @@ export const getTableSchema = async (
             name: String(row.name ?? ""),
             type: String(row.type ?? ""),
             notnull: Number(row.notnull ?? 0),
-            dflt_value: row.dflt_value,
+            dflt_value: row.dflt_value as SqlValue | undefined,
             pk: Number(row.pk ?? 0),
           }),
         );
@@ -391,7 +398,7 @@ export const getTableSchema = async (
         return { success: false as const, error: String(error) };
       }
     },
-    args: [dbname, tableName],
+    args: [db_name, tableName],
   });
 };
 
@@ -469,12 +476,16 @@ export const queryTableData = async (
         }
 
         // Phase 3: Return response
-        return ok({ rows, total, columns });
+        return ok({
+          rows: rows as Record<string, SqlValue>[],
+          total,
+          columns,
+        });
       } catch (error) {
         return { success: false as const, error: String(error) };
       }
     },
-    args: [dbname, sql, limit, offset],
+    args: [db_name, sql, limit, offset],
   });
 };
 
@@ -542,7 +553,7 @@ export const execSQL = async (
         return { success: false as const, error: String(error) };
       }
     },
-    args: [dbname, sql, params],
+    args: [db_name, sql, params],
   });
 };
 
@@ -567,7 +578,12 @@ export const subscribeLogs = async (
 
   return inspectedWindowBridge
     .execute({
-      func: (databaseName: string, subId: string) => {
+      func: (
+        databaseName: string,
+        subId: string,
+        logEntryType: string,
+        logEntrySource: string,
+      ) => {
         try {
           const ok = <T>(data: T) => ({ success: true as const, data });
           const fail = (message: string) => ({
@@ -593,13 +609,16 @@ export const subscribeLogs = async (
           // Phase 2: Register log callback and get unsubscribe function
           // db.onLog returns an unsubscribe function
           const unsubscribe = db.onLog((entry: DBLogEntry) => {
-            // Send log entry via chrome.runtime.sendMessage to DevTools panel
-            // Include subscriptionId for routing
-            chrome.runtime.sendMessage({
-              type: "LOG_ENTRY",
-              subscriptionId: subId,
-              entry,
-            });
+            // Relay log entry to content script via window messaging
+            window.postMessage(
+              {
+                source: logEntrySource,
+                type: logEntryType,
+                subscriptionId: subId,
+                entry,
+              },
+              "*",
+            );
           });
 
           // Store unsubscribe function in window for later cleanup
@@ -613,7 +632,7 @@ export const subscribeLogs = async (
           return { success: false as const, error: String(error) };
         }
       },
-      args: [dbname, subscriptionId],
+      args: [db_name, subscriptionId, LOG_ENTRY_MESSAGE, LOG_ENTRY_SOURCE],
     })
     .then((response) => {
       // If subscription was successful, store it in the Map
@@ -622,7 +641,7 @@ export const subscribeLogs = async (
         // So we'll store a placeholder that will call back to the inspected page
         const subscription: LogSubscription = {
           subscriptionId: response.data.subscriptionId,
-          dbname,
+          dbname: db_name,
           callback,
           unsubscribe: () => {
             // This will be replaced in unsubscribeLogs with actual cleanup
@@ -755,7 +774,7 @@ export const devRelease = async (
         return { success: false as const, error: String(error) };
       }
     },
-    args: [dbname, version, migrationSQL, seedSQL],
+    args: [db_name, version, migrationSQL, seedSQL],
   });
 };
 
@@ -812,7 +831,7 @@ export const devRollback = async (
         return { success: false as const, error: String(error) };
       }
     },
-    args: [dbname, toVersion],
+    args: [db_name, toVersion],
   });
 };
 
@@ -896,7 +915,7 @@ export const getDbVersion = async (
         return { success: false as const, error: String(error) };
       }
     },
-    args: [dbname],
+    args: [_db_name],
   });
 };
 
@@ -969,6 +988,37 @@ export const getOpfsFiles = async (
           }
         }
 
+        // Helper function to detect file type (F-012)
+        const detectFileType = (filename: string): string | undefined => {
+          const ext = filename.toLowerCase();
+          if (
+            ext.endsWith(".sqlite")
+            || ext.endsWith(".db")
+            || ext.endsWith(".sqlite3")
+          ) {
+            return "SQLite Database";
+          }
+          if (ext.endsWith(".json")) {
+            return "JSON Data";
+          }
+          if (ext.endsWith(".txt") || ext.endsWith(".md")) {
+            return "Text File";
+          }
+          if (
+            ext.endsWith(".png")
+            || ext.endsWith(".jpg")
+            || ext.endsWith(".jpeg")
+            || ext.endsWith(".svg")
+          ) {
+            return "Image File";
+          }
+          // Use extension as type for unknown files
+          const dotIndex = ext.lastIndexOf(".");
+          return dotIndex >= 0
+            ? ext.slice(dotIndex + 1).toUpperCase()
+            : undefined;
+        };
+
         // Phase 2: List directory contents and filter
         const entries: OpfsFileEntry[] = [];
         const basePath = pathArg ? pathArg.replace(/^\/+|\/+$/g, "") : "";
@@ -987,15 +1037,44 @@ export const getOpfsFiles = async (
           const kind = entry.kind;
           let size = 0;
           let lastModified: number | undefined = undefined;
+          let fileType: string | undefined = undefined;
+          let itemCount:
+            | {
+                files: number;
+                directories: number;
+              }
+            | undefined = undefined;
 
           if (kind === "file") {
+            // Phase 2a: File metadata (F-012 enhanced)
             try {
               const file = await entry.getFile();
               size = file.size;
               lastModified = file.lastModified;
+              fileType = detectFileType(entryName);
             } catch {
               // File might be inaccessible, skip
               continue;
+            }
+          } else {
+            // Phase 2b: Directory item counting (F-012 enhanced)
+            try {
+              const dirHandle = await currentDir.getDirectoryHandle(entryName, {
+                create: false,
+              });
+              let files = 0;
+              let directories = 0;
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              for await (const child of (dirHandle as any).values()) {
+                if (child.kind === "file") {
+                  files++;
+                } else if (child.kind === "directory") {
+                  directories++;
+                }
+              }
+              itemCount = { files, directories };
+            } catch {
+              // Cannot access directory contents, continue without item count
             }
           }
 
@@ -1006,6 +1085,8 @@ export const getOpfsFiles = async (
             size,
             sizeFormatted: formatFileSize(size),
             lastModified,
+            fileType, // NEW: F-012
+            itemCount, // NEW: F-012
           });
         }
 
@@ -1104,6 +1185,347 @@ export const downloadOpfsFile = async (
 };
 
 /**
+ * Delete OPFS file (F-012)
+ *
+ * @remarks
+ * 1. Navigate to file path in OPFS
+ * 2. Delete file using removeEntry()
+ * 3. Return success response
+ *
+ * @param path - Full path to the file to delete
+ * @returns Service response (void on success, error on failure)
+ *
+ * @example
+ * ```typescript
+ * const result = await databaseService.deleteOpfsFile("/data/test.db");
+ * if (result.success) {
+ *   console.log("File deleted successfully");
+ * } else {
+ *   console.error("Delete failed:", result.error);
+ * }
+ * ```
+ */
+export const deleteOpfsFile = async (
+  path: string,
+): Promise<ServiceResponse<void>> => {
+  return inspectedWindowBridge.execute({
+    func: async (filePath: string) => {
+      try {
+        const ok = <T>(data: T) => ({ success: true as const, data });
+        const fail = (message: string) => ({
+          success: false as const,
+          error: message,
+        });
+
+        // Phase 1: Validate and navigate to parent directory
+        if (typeof navigator === "undefined" || !navigator.storage) {
+          return fail("OPFS not supported in this browser");
+        }
+
+        const root = await navigator.storage.getDirectory();
+        const pathParts = filePath.split("/").filter(Boolean);
+
+        if (pathParts.length === 0) {
+          return fail("Invalid path: empty path");
+        }
+
+        // Navigate to parent directory (all but last segment)
+        let currentDir = root;
+        for (let i = 0; i < pathParts.length - 1; i++) {
+          try {
+            currentDir = await currentDir.getDirectoryHandle(pathParts[i], {
+              create: false,
+            });
+          } catch {
+            return fail(`Path not found: ${filePath}`);
+          }
+        }
+
+        // Phase 2: Delete file
+        const filename = pathParts[pathParts.length - 1];
+        try {
+          await currentDir.removeEntry(filename, { recursive: false });
+        } catch {
+          return fail(`File not found: ${filePath}`);
+        }
+
+        // Phase 3: Return success
+        return ok(undefined);
+      } catch (error) {
+        return { success: false as const, error: String(error) };
+      }
+    },
+    args: [path],
+  });
+};
+
+/**
+ * Delete OPFS directory recursively (F-012)
+ *
+ * @remarks
+ * 1. Navigate to directory path in OPFS
+ * 2. Count items before delete
+ * 3. Delete recursively using removeEntry()
+ *
+ * @param path - Full path to the directory to delete
+ * @returns Service response with item count on success, error on failure
+ *
+ * @example
+ * ```typescript
+ * const result = await databaseService.deleteOpfsDirectory("/data/old");
+ * if (result.success) {
+ *   console.log(`Deleted ${result.data.itemCount} items`);
+ * } else {
+ *   console.error("Delete failed:", result.error);
+ * }
+ * ```
+ */
+export const deleteOpfsDirectory = async (
+  path: string,
+): Promise<ServiceResponse<{ itemCount: number }>> => {
+  return inspectedWindowBridge.execute({
+    func: async (dirPath: string) => {
+      try {
+        const ok = <T>(data: T) => ({ success: true as const, data });
+        const fail = (message: string) => ({
+          success: false as const,
+          error: message,
+        });
+
+        // Phase 1: Validate and navigate to parent directory
+        if (typeof navigator === "undefined" || !navigator.storage) {
+          return fail("OPFS not supported in this browser");
+        }
+
+        const root = await navigator.storage.getDirectory();
+        const pathParts = dirPath.split("/").filter(Boolean);
+
+        if (pathParts.length === 0) {
+          return fail("Invalid path: empty path");
+        }
+
+        // Navigate to parent directory (all but last segment)
+        let currentDir = root;
+        for (let i = 0; i < pathParts.length - 1; i++) {
+          try {
+            currentDir = await currentDir.getDirectoryHandle(pathParts[i], {
+              create: false,
+            });
+          } catch {
+            return fail(`Path not found: ${dirPath}`);
+          }
+        }
+
+        // Phase 2: Count items and delete
+        const dirname = pathParts[pathParts.length - 1];
+        let targetDir: FileSystemDirectoryHandle;
+        try {
+          targetDir = await currentDir.getDirectoryHandle(dirname, {
+            create: false,
+          });
+        } catch {
+          return fail(`Directory not found: ${dirPath}`);
+        }
+
+        // Count items before delete
+        let itemCount = 0;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        for await (const _ of (targetDir as any).values()) {
+          itemCount++;
+        }
+
+        // Delete recursively
+        try {
+          await currentDir.removeEntry(dirname, { recursive: true });
+        } catch {
+          return fail(`Failed to delete directory: ${dirPath}`);
+        }
+
+        // Phase 3: Return success with item count
+        return ok({ itemCount });
+      } catch (error) {
+        return { success: false as const, error: String(error) };
+      }
+    },
+    args: [path],
+  });
+};
+
+/**
+ * Get file content from OPFS for preview (F-013)
+ *
+ * @remarks
+ * 1. Navigate to file path and retrieve file handle
+ * 2. Detect file type and read content appropriately
+ * 3. Return content with metadata and enforce size limits
+ *
+ * @param path - Full path to the file in OPFS
+ * @returns File content response with type, content, and metadata
+ *
+ * @example
+ * ```typescript
+ * const result = await databaseService.getFileContent("/logs/app.log");
+ * if (result.success) {
+ *   console.log(result.data.type); // "text"
+ *   console.log(result.data.content); // "file contents..."
+ *   console.log(result.data.metadata.size); // 1234
+ * }
+ * ```
+ */
+export const getFileContent = async (
+  path: string,
+): Promise<
+  ServiceResponse<{
+    type: "text" | "image" | "binary";
+    content: string | Blob;
+    metadata: {
+      size: number;
+      lastModified: Date;
+      mimeType: string;
+    };
+  }>
+> => {
+  return inspectedWindowBridge.execute({
+    func: async (filePath: string) => {
+      try {
+        const ok = <T>(data: T) => ({ success: true as const, data });
+        const fail = (message: string) => ({
+          success: false as const,
+          error: message,
+        });
+
+        // 1. Validate and navigate to file
+        if (typeof navigator === "undefined" || !navigator.storage) {
+          return fail("OPFS not supported in this browser");
+        }
+
+        const root = await navigator.storage.getDirectory();
+        const pathParts = filePath.split("/").filter(Boolean);
+
+        if (pathParts.length === 0) {
+          return fail("Invalid path: empty path");
+        }
+
+        // Navigate to parent directory
+        let currentDir = root;
+        for (let i = 0; i < pathParts.length - 1; i++) {
+          try {
+            currentDir = await currentDir.getDirectoryHandle(pathParts[i], {
+              create: false,
+            });
+          } catch {
+            return fail(`Path not found: ${filePath}`);
+          }
+        }
+
+        // Get file handle
+        const filename = pathParts[pathParts.length - 1];
+        let fileHandle: FileSystemFileHandle;
+        try {
+          fileHandle = await currentDir.getFileHandle(filename, {
+            create: false,
+          });
+        } catch {
+          return fail(`File not found: ${filePath}`);
+        }
+
+        // 2. Get file and detect type
+        const file = await fileHandle.getFile();
+        const { size, lastModified, type: mimeType } = file;
+
+        // Helper function to detect file type based on MIME and extension
+        const detectFileType = (fileObj: File): "text" | "image" | "binary" => {
+          const { type: mime, name } = fileObj;
+
+          // Check MIME type first
+          if (mime.startsWith("image/")) {
+            return "image";
+          }
+          if (mime.startsWith("text/")) {
+            return "text";
+          }
+
+          // Fallback to extension detection
+          const ext = name.toLowerCase();
+          const textExtensions = [
+            ".log",
+            ".txt",
+            ".md",
+            ".csv",
+            ".xml",
+            ".json",
+            ".yaml",
+            ".yml",
+          ];
+
+          if (textExtensions.some((extension) => ext.endsWith(extension))) {
+            return "text";
+          }
+
+          return "binary";
+        };
+
+        const fileType = detectFileType(file);
+
+        // Enforce file size limits
+        const ONE_MB = 1024 * 1024;
+        const TEN_MB = 10 * ONE_MB;
+        const FIVE_MB = 5 * ONE_MB;
+
+        if (fileType === "text" && size > TEN_MB) {
+          return fail(
+            `File too large for preview: ${Math.round(size / ONE_MB)} MB (limit: 10 MB)`,
+          );
+        }
+
+        if (fileType === "image" && size > FIVE_MB) {
+          return fail(
+            `Image too large for preview: ${Math.round(size / ONE_MB)} MB (limit: 5 MB)`,
+          );
+        }
+
+        // 3. Read content based on type
+        let content: string | Blob;
+        let warning: string | undefined;
+
+        if (fileType === "text") {
+          // Read text content
+          try {
+            content = await file.text();
+            // Add warning for large text files
+            if (size > ONE_MB) {
+              warning = `Large file (${Math.round(size / ONE_MB)} MB)`;
+            }
+          } catch (encodingError) {
+            return fail(
+              `Failed to read file content: ${String(encodingError)}`,
+            );
+          }
+        } else {
+          // Return file as Blob for images and binary
+          content = new Blob([await file.arrayBuffer()], { type: mimeType });
+        }
+
+        // Return response with content and metadata
+        return ok({
+          type: fileType,
+          content,
+          metadata: {
+            size,
+            lastModified: new Date(lastModified),
+            mimeType,
+            ...(warning ? { warning } : {}),
+          },
+        });
+      } catch (error) {
+        return { success: false as const, error: String(error) };
+      }
+    },
+    args: [path],
+  });
+};
+
+/**
  * Database service API
  */
 export const databaseService = Object.freeze({
@@ -1119,4 +1541,7 @@ export const databaseService = Object.freeze({
   getDbVersion,
   getOpfsFiles,
   downloadOpfsFile,
+  deleteOpfsFile, // NEW: F-012
+  deleteOpfsDirectory, // NEW: F-012
+  getFileContent, // NEW: F-013
 });

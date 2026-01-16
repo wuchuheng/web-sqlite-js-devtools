@@ -5,6 +5,7 @@ import { IoTimeOutline } from "react-icons/io5";
 import { MdOutlineQueryBuilder } from "react-icons/md";
 import { FaSeedling } from "react-icons/fa6";
 import { FaInfoCircle } from "react-icons/fa";
+import { PageHeader } from "../Shared";
 
 /**
  * Database tab definition
@@ -47,7 +48,7 @@ interface DatabaseTabHeaderProps {
  */
 export const DatabaseTabHeader = ({ dbname }: DatabaseTabHeaderProps) => {
   return (
-    <nav className="flex border-b border-gray-200 bg-white">
+    <PageHeader className="flex bg-white">
       {DATABASE_TABS.map((tab) => (
         <NavLink
           key={tab.path}
@@ -65,7 +66,7 @@ export const DatabaseTabHeader = ({ dbname }: DatabaseTabHeaderProps) => {
           {tab.label}
         </NavLink>
       ))}
-    </nav>
+    </PageHeader>
   );
 };
 

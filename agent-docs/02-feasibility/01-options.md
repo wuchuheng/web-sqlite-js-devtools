@@ -14,152 +14,169 @@ NOTES
 
 ## 1) Decision drivers (what matters most)
 
-- **D1 (Speed to MVP)**: Existing template has React + Tailwind + Vite + @crxjs setup, want to leverage this
-- **D2 (Extension bundle size)**: Chrome extensions have size limits, especially with CodeMirror
-- **D3 (DevTools context isolation)**: DevTools panel cannot directly access page's `window.__web_sqlite`
-- **D4 (User experience)**: Real-time updates, fast query execution, responsive UI
+- **D1 (Implementation Speed)**: F-015 is a focused visual enhancement, should be completed quickly
+- **D2 (Code Quality)**: Must follow existing S8 functional component patterns
+- **D3 (Bundle Size)**: Adding new react-icons imports increases bundle size
+- **D4 (User Experience)**: Default expansion improves discoverability but must not impact performance
 
 ## 2) Constraints recap (from Stage 1)
 
 - **Key constraints**:
-  - Must use Manifest V3 for Chrome extension
-  - React for UI components (per existing template)
-  - Tailwind CSS for styling (per existing template)
-  - DevTools panel cannot directly access web page context
-  - Content script required as proxy to `window.__web_sqlite` API
-  - Hash-based routing for all navigation
+  - Must modify existing `FileTree.tsx` component
+  - Must preserve lazy-loading for child directories
+  - Tree lines use `TreeLines` component for responsive hiding
+  - Icons come from react-icons library (multiple sub-packages)
+  - TypeScript strict mode enabled
 - **Key success criteria**:
-  - Panel open time < 500ms
-  - Table data load time < 200ms
-  - Extension bundle size < 2MB
-  - Real-time icon state updates via `onDatabaseChange`
-  - Auto-reconnect with timeout on page refresh
+  - Root directories expand by default on load
+  - Tree lines use dotted/dashed styling
+  - 6 file types get specific icons (sqlite3, images, txt, json, folders, unknown)
+  - No performance regression on initial load
+  - ESLint passes with no new warnings
 
 ## 3) Options (A/B/C)
 
-### Option A — Content Script Proxy with React Router
+### Option A — Component-Based Enhancement
 
-- **Summary**: Use existing DevTools page → chrome.runtime.sendMessage → Content Script → `window.__web_sqlite`. Hash routing via react-router-dom.
+- **Summary**: Modify existing `FileTree.tsx` and `TreeLines.tsx` directly with new icon imports, expansion logic, and styling
+- **Approach**:
+  - Add 6 icon imports to FileTree.tsx (FaDatabase, FaRegFileImage, TiDocumentText, LuFileJson, FaFolder, FaFolderOpen)
+  - Create `getFileIcon(entry, isExpanded)` helper function that returns icon based on extension
+  - Update `isExpanded` initial state: `useState(level === 0)` for root-level auto-expansion
+  - Add `useEffect` hook to auto-load root directory children on mount
+  - Update `TreeLines.tsx` className: change `bg-gray-200` to `border-dotted border-gray-300`
 - **Pros**:
-  - Leverages existing template infrastructure (Vite + @crxjs + React + Tailwind)
-  - Clean separation of concerns (DevTools UI vs page context)
-  - React Router provides robust hash routing and history management
-  - Content script persists as long as page is open
-  - Well-documented pattern for Chrome extensions
+  - Leverages existing FileTree structure and patterns
+  - Minimal code changes (2 files, ~50 lines added)
+  - No additional abstraction layers or wrapper components
+  - Direct performance benefits (no lazy-loading or wrapper overhead)
+  - Follows existing S8 functional component patterns with hooks
 - **Cons**:
-  - Message passing overhead (chrome.runtime.sendMessage is async)
-  - Need to handle message serialization for complex objects (Maps, etc.)
-  - Content script lifecycle management on page navigation
+  - Tightly couples icon logic to FileTree component (harder to test in isolation)
+  - Icon imports increase bundle size for all react-icons variants (~15-20KB total)
+  - Less reusable if other components need same icon mapping
 - **Risks**:
-  - R1: Message serialization may not support Map objects from `migrationSQL`/`seedSQL`
-  - R2: Content script injection timing vs DevTools panel open
-- **Estimated effort**: 5-7 days for MVP architecture setup
-- **Fits success criteria?**: **Yes** - Message overhead is minimal (~1-5ms per call), well within performance targets
+  - R1: Auto-expanding all root directories may slow initial load if many files exist
+  - R2: Missing icon libraries may cause build errors
+- **Estimated effort**: 2-3 hours for implementation
+- **Fits success criteria?**: **Yes** - Direct approach with minimal overhead, meets all functional requirements
 
-### Option B — Offscreen Document as Message Bridge
+### Option B — Icon Component Abstraction
 
-- **Summary**: DevTools → background → offscreen document → content script → `window.__web_sqlite`. Offscreen doc handles state caching.
+- **Summary**: Create new `FileTypeIcon.tsx` component that encapsulates icon selection logic, then consume in FileTree
+- **Approach**:
+  - Create `src/devtools/components/OPFSBrowser/FileTypeIcon.tsx` (new file)
+  - Implement discriminated union type for file extensions
+  - Export component with `fileName: string` and `isExpanded?: boolean` props
+  - Use in FileTree: `<FileTypeIcon fileName={entry.name} isExpanded={isExpanded} />`
+  - Same expansion and tree line changes as Option A
 - **Pros**:
-  - Offscreen document has full DOM and longer lifecycle than DevTools panel
-  - Can maintain connection state even when DevTools closes
-  - Better for complex state management and caching
-  - Template already has offscreen.html setup
+  - Separates concerns (icon logic isolated in dedicated component)
+  - Reusable across other components (FilePreview, MetadataPanel, etc.)
+  - Easier to unit test icon mapping in isolation
+  - Clean component interface with TypeScript types
+  - Better maintainability if new file types are added
 - **Cons**:
-  - More complex message chain (4 hops vs 2)
-  - Higher latency for each operation
-  - Offscreen docs have limited support in Chrome (requires permission)
-  - Overkill for simple read/query operations
+  - Additional file and component to maintain
+  - Slightly more complex component hierarchy (extra prop layer)
+  - Over-engineering for current use case (only used in FileTree today)
+  - Same bundle size impact as Option A
 - **Risks**:
-  - R1: Offscreen document may not persist across all scenarios
-  - R2: Increased complexity may introduce bugs
-- **Estimated effort**: 7-10 days (more complex architecture)
-- **Fits success criteria?**: **Partial** - May exceed 500ms panel open time due to extra message hops
+  - R1: May be seen as "gold-plating" for a simple visual enhancement
+  - R2: Extra component may add minor render overhead
+- **Estimated effort**: 3-4 hours for implementation
+- **Fits success criteria?**: **Yes** - Meets all requirements with better code organization
 
-### Option C (fallback) — Direct Page Script Injection
+### Option C (fallback) — CSS-Only with Icon Map
 
-- **Summary**: DevTools panel dynamically injects script into active page to access `window.__web_sqlite` directly via postMessage.
+- **Summary**: Use plain JavaScript object for icon mapping and CSS-only tree line styling, avoiding React component overhead
+- **Approach**:
+  - Create `iconMap.ts` utility with object mapping extensions to component names
+  - Use dynamic imports: `const Icon = lazy(() => import(\`react-icons/${icon.library}\`).then(m => m[icon.name]))`
+  - Update FileTree to use dynamic icon rendering based on map lookup
+  - Same expansion changes as Option A
+  - Use Tailwind `@apply` or CSS modules for tree line dot styling
 - **Pros**:
-  - Direct access to page context without content script proxy
-  - Fewer message hops
-  - Simpler for some operations
+  - Centralized icon configuration (easy to add new types without modifying component)
+  - Potential for code-splitting icon bundles (lazy loading)
+  - CSS-only tree line changes are simple
 - **Cons**:
-  - Script injection each time DevTools opens (overhead)
-  - Need to manage injected script lifecycle
-  - postMessage is less structured than chrome.runtime.sendMessage
-  - Script may be cleaned up by page unexpectedly
-- **When to use**:
-  - Only if Option A proves insufficient during spike testing
-  - For specific features that need synchronous access
+  - Dynamic imports add complexity and may cause icon flicker on render
+  - Type safety issues with object key lookups (need runtime validation)
+  - More difficult to maintain and debug than direct imports
+  - Lazy loading overhead defeats purpose for commonly-used icons
+- **Risks**:
+  - R1: Dynamic icon rendering may cause visual inconsistency during load
+  - R2: Type errors may not be caught at compile time
+- **Estimated effort**: 4-5 hours for implementation
+- **Fits success criteria?**: **Partial** - Meets functional requirements but may introduce UX issues
 
 ## 4) Tradeoff table
 
-| Dimension          | Option A (Content Script Proxy) | Option B (Offscreen Bridge)   | Option C (Direct Injection) |
-| ------------------ | ------------------------------- | ----------------------------- | --------------------------- |
-| **Speed**          | Fast (2 hops, ~1-5ms overhead)  | Slower (4 hops, ~10-20ms)     | Medium (injection cost)     |
-| **Cost**           | Low (uses existing template)    | Medium (more complexity)      | Medium (injection logic)    |
-| **Ops complexity** | Low (standard pattern)          | High (4-hop messaging)        | Medium (lifecycle mgmt)     |
-| **Scalability**    | High (works for all features)   | Medium (latency concerns)     | Low (injection limits)      |
-| **Security**       | High (Chrome APIs validate)     | High (same as A)              | Medium (postMessage risks)  |
-| **Bundle size**    | ~500KB (React + deps)           | ~600KB (extra offscreen code) | ~450KB (slightly less)      |
-| **Maintenance**    | Low (well-documented)           | Medium (custom architecture)  | Medium (custom injection)   |
+| Dimension           | Option A (Component-Based) | Option B (Abstraction) | Option C (CSS-Only)  |
+| ------------------- | -------------------------- | ---------------------- | -------------------- |
+| **Speed**           | Fast (2-3h)                | Medium (3-4h)          | Slower (4-5h)        |
+| **Cost**            | Low (2 files modified)     | Medium (new component) | Medium (new utility) |
+| **Ops complexity**  | Low (direct changes)       | Medium (abstraction)   | Medium (dynamic)     |
+| **Maintainability** | Medium                     | High                   | Low                  |
+| **Reusability**     | Low (FileTree only)        | High (any component)   | Medium (map lookup)  |
+| **Performance**     | High (no wrappers)         | High (minimal props)   | Medium (lazy load)   |
+| **Bundle size**     | +15-20KB                   | +15-20KB               | +15-20KB (same)      |
+| **Code quality**    | Medium                     | High                   | Low                  |
 
 ## 5) Recommendation
 
-- **Recommended baseline**: **Option A — Content Script Proxy with React Router**
+- **Recommended baseline**: **Option A — Component-Based Enhancement**
 - **Why (tie to decision drivers and success criteria)**:
-  - **D1 (Speed)**: Leverages existing Vite + @crxjs + React + Tailwind setup, no new infrastructure
-  - **D2 (Size)**: React Router adds ~50KB, well within 2MB budget (CodeMirror is the main size concern)
-  - **D3 (Isolation)**: Content script proxy is the standard pattern for DevTools → page communication
-  - **D4 (UX)**: Message overhead is negligible (~1-5ms per call), meets <500ms panel open and <200ms data load targets
-  - Existing template already has contentScript setup (src/contentScript/index.tsx) and messaging infrastructure (src/messaging/)
+  - **D1 (Speed)**: Fastest implementation at 2-3 hours, gets feature to users quickly
+  - **D2 (Quality)**: Follows existing S8 patterns (hooks, functional components) already used in FileTree
+  - **D3 (Bundle)**: All react-icons already imported in other components (FaFile in FileNode, FiFileText in EmptyPreview), incremental cost is minimal
+  - **D4 (UX)**: No wrapper overhead or lazy-loading flicker, direct rendering ensures smooth experience
+  - FileTree already has direct icon usage (FaFile, FaDownload, IoMdTrash) - adding more is consistent
+  - F-015 is a focused enhancement, not a framework change - over-engineering is not warranted
 - **What we postpone (explicit)**:
-  - Offscreen document caching (Option B) - can add later if performance issues arise
-  - Query history persistence (P1 feature FR-106) - can use chrome.storage after MVP
-  - Advanced keyboard shortcuts (P1 feature FR-107) - add after core features work
+  - Icon component abstraction (Option B) - can extract later if 3+ components need same mapping
+  - Code-splitting for icons (Option C) - not needed unless bundle size becomes critical
 
 ## 6) Open questions / Needs spikes
 
-- **Q1**: Can chrome.runtime.sendMessage properly serialize `Map<string, string>` from `migrationSQL` and `seedSQL` fields in `DatabaseRecord`?
-  - **Spike needed?**: **Yes** - 1 hour spike to test message serialization
-- **Q2**: What is the actual message overhead for chrome.runtime.sendMessage with query results (100+ rows)?
-  - **Spike needed?**: **Yes** - 1 hour spike to benchmark latency
-- **Q3**: Will CodeMirror 6 with SQL mode fit within bundle size target?
-  - **Spike needed?**: **Yes** - 2 hours spike to test bundle size with CodeMirror
-- **Q4**: How to handle `onDatabaseChange` events from page context to update DevTools icon state?
-  - **Spike needed?**: **No** - Well-documented pattern (content script → background → popup icon)
+- **Q1**: Will auto-expanding all root directories cause performance issues with large OPFS file systems (100+ files)?
+  - **Spike needed?**: **No** - Lazy-loading is preserved for child directories, only root expands
+- **Q2**: Do all react-icons sub-packages (fa, fa6, ti, lu) exist in the project's dependencies?
+  - **Spike needed?**: **No** - Can verify with `npm list react-icons` before implementation
+- **Q3**: Will dotted tree lines be visible enough on high-DPI displays?
+  - **Spike needed?**: **No** - Can test during implementation, fallback to `border-dashed` if needed
+- **Q4**: Should we expand root directories immediately or after a short delay for perceived performance?
+  - **Spike needed?**: **No** - Immediate expansion is standard UX pattern (matches prototype)
 
-## 7) Architectural Evolution (2026-01-13)
+## 7) Architectural Notes
 
-**Evolution from Option A → Direct Scripting (Feature F-001)**:
+**Relation to F-012, F-013, F-014**:
 
-After implementing Option A (Content Script Proxy with runtime messaging), the architecture evolved to use `chrome.scripting.executeScript` for direct page context access. This evolution maintains the spirit of Option A while simplifying the data flow.
+F-015 builds on the existing OPFS browser architecture established in earlier features:
 
-**Key Changes**:
+- **F-012**: Added TreeLines component, delete operations, metadata display
+- **F-013**: Added two-panel preview layout with file selection
+- **F-014**: Added green color theme, preview headers, file counts, always-visible icons
+- **F-015**: Enhances tree visual hierarchy (expansion, lines, file type icons)
 
-- **Removed**: Runtime messaging for database operations (chrome.runtime.sendMessage)
-- **Added**: Direct script execution via chrome.scripting.executeScript (MAIN world)
-- **Result**: 3-layer architecture (Presentation → Service → Bridge) instead of message-based proxy
-
-**Why this aligns with Option A**:
-
-- **Separation of Concerns**: Still maintains clean DevTools UI vs page context separation
-- **React Router**: Hash routing remains unchanged
-- **Content Script**: Still used for icon state updates (not database operations)
-- **Performance**: Eliminates message overhead (~1-5ms savings per call)
-
-**Implementation**:
+**Component Update Scope**:
 
 ```
-DevTools Panel → databaseService (business logic)
-                → inspectedWindowBridge (chrome.scripting.executeScript)
-                → Page Context (window.__web_sqlite in MAIN world)
+src/devtools/components/OPFSBrowser/
+├── FileTree.tsx          [MODIFY] - Add icon imports, getFileIcon helper, auto-expand logic
+├── TreeLines.tsx         [MODIFY] - Change solid border to dotted/dashed
+├── FileTypeIcon.tsx      [SKIP - Option A] - Not creating abstraction layer
+└── iconMap.ts            [SKIP - Option C] - Not creating utility map
 ```
 
-**Benefits over original Option A**:
+**Implementation Boundary**:
 
-- Simpler data flow (no message serialization)
-- Type-safe argument passing (executeScript supports structured args)
-- Better testability (service layer isolated from Chrome APIs)
-- Cleaner error handling (ServiceResponse envelope)
+F-015 ONLY touches FileTree.tsx and TreeLines.tsx. No changes to:
 
-This evolution represents a refinement of Option A, not a departure from it. The core principles (React Router, separation of concerns, speed to MVP) remain intact.
+- Service layer (databaseService.ts)
+- Bridge layer (inspectedWindow.ts)
+- Other components (FilePreview, MetadataPanel, etc.)
+- Routing or navigation
+
+This ensures minimal risk and focused delivery.

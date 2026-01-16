@@ -22,3 +22,4 @@
 # secrets
 secrets.*.js
 .chromuimCache/
+.chromiumCache/

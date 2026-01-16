@@ -1,13 +1,160 @@
-import { useState, useCallback } from "react";
+import {
+  useState,
+  useCallback,
+  useEffect,
+  useRef,
+  type ReactNode,
+} from "react";
+import { FaDatabase } from "react-icons/fa6";
+import {
+  FaFile,
+  FaDownload,
+  FaRegFileImage,
+  FaFolder,
+  FaFolderOpen,
+} from "react-icons/fa";
+import { IoMdTrash } from "react-icons/io";
+import { TiDocumentText } from "react-icons/ti";
+import { LuFileJson } from "react-icons/lu";
 import { databaseService } from "@/devtools/services/databaseService";
 import { useInspectedWindowRequest } from "@/devtools/hooks/useInspectedWindowRequest";
 import type { OpfsFileEntry } from "@/devtools/services/databaseService";
+import { TreeLines } from "./TreeLines";
+
+/**
+ * Get directory counts for display (TASK-322)
+ *
+ * @remarks
+ * - Pure function with no side effects
+ * - Uses entry.itemCount for file/directory counts
+ * - Returns formatted string for display
+ * - Returns empty string for files (not directories)
+ *
+ * @param entry - OpfsFileEntry to calculate counts for
+ * @returns Formatted count string (e.g., "3 files 2 dirs") or empty string for files
+ *
+ * @example
+ * ```ts
+ * const counts = getDirectoryCounts(entry); // "3 files 2 dirs"
+ * ```
+ */
+const getDirectoryCounts = (entry: OpfsFileEntry): string => {
+  // 1. Only directories have itemCount to display
+  if (entry.type !== "directory") {
+    return "";
+  }
+
+  // 2. Get itemCount or default to zeros
+  const counts = entry.itemCount ?? { files: 0, directories: 0 };
+
+  // 3. Return formatted string based on counts
+  if (counts.directories === 0) {
+    return `${counts.files} files`;
+  }
+  if (counts.files === 0) {
+    return `${counts.directories} dirs`;
+  }
+  return `${counts.files} files ${counts.directories} dirs`;
+};
+
+/**
+ * Get file extension from filename (TASK-326)
+ *
+ * @remarks
+ * - Pure function with no side effects
+ * - Extracts extension using lastIndexOf('.')
+ * - Returns lowercase extension with dot
+ * - Returns empty string if no extension found
+ *
+ * @param filename - File name to extract extension from
+ * @returns File extension with dot (e.g., ".txt") or empty string
+ *
+ * @example
+ * ```ts
+ * const ext = getFileExtension("database.sqlite3"); // ".sqlite3"
+ * const ext2 = getFileExtension("README"); // ""
+ * ```
+ */
+const getFileExtension = (filename: string): string => {
+  // 1. Find last dot position
+  const idx = filename.lastIndexOf(".");
+
+  // 2. Return empty string if no dot found
+  if (idx === -1) {
+    return "";
+  }
+
+  // 3. Return lowercase extension with dot
+  return filename.substring(idx).toLowerCase();
+};
+
+/**
+ * Get icon component based on file type and expansion state (TASK-326)
+ *
+ * @remarks
+ * - Pure function with no side effects
+ * - Returns icon component based on file extension
+ * - Directories use FaFolder/FaFolderOpen based on expansion state
+ * - Files use type-specific icons (sqlite3, images, txt, json, unknown)
+ * - Icon colors provide visual differentiation (purple, yellow, gray)
+ *
+ * @param entry - OpfsFileEntry to get icon for
+ * @param isExpanded - Whether directory is expanded (for folder icons)
+ * @returns ReactNode representing the icon
+ *
+ * @example
+ * ```ts
+ * const icon = getFileIcon(entry, true); // <FaFolderOpen />
+ * const icon2 = getFileIcon(fileEntry, false); // <FaDatabase />
+ * ```
+ */
+const getFileIcon = (entry: OpfsFileEntry, isExpanded: boolean): ReactNode => {
+  // 1. Handle directories - use folder icons based on expansion state
+  if (entry.type === "directory") {
+    return isExpanded ? (
+      <FaFolderOpen className="text-yellow-500" size={14} />
+    ) : (
+      <FaFolder className="text-gray-600" size={14} />
+    );
+  }
+
+  // 2. Get file extension
+  const ext = getFileExtension(entry.name);
+
+  // 3. Return icon based on file extension
+  switch (ext) {
+    case ".sqlite3":
+      return <FaDatabase className="text-purple-600" size={14} />;
+
+    case ".png":
+    case ".jpg":
+    case ".jpeg":
+    case ".webp":
+    case ".gif":
+    case ".svg":
+    case ".ico":
+      return <FaRegFileImage className="text-purple-500" size={12} />;
+
+    case ".txt":
+      return <TiDocumentText className="text-gray-600" size={14} />;
+
+    case ".json":
+    case ".json5":
+      return <LuFileJson className="text-yellow-600" size={14} />;
+
+    default:
+      return <FaFile className="text-gray-500" size={12} />;
+  }
+};
 
 /**
  * FileTree component props
  */
 interface FileTreeProps {
   onDownload: (_path: string, name: string) => Promise<void>;
+  onDelete?: (entry: OpfsFileEntry) => void;
+  onFileSelect?: (entry: OpfsFileEntry) => void; // NEW (TASK-318)
+  selectedFile?: OpfsFileEntry | null; // NEW (TASK-318)
 }
 
 /**
@@ -17,25 +164,44 @@ interface FileTreeItemProps {
   entry: OpfsFileEntry;
   level: number;
   onDownload: (_path: string, name: string) => Promise<void>;
+  onDelete?: (entry: OpfsFileEntry) => void;
+  onFileSelect?: (entry: OpfsFileEntry) => void; // NEW (TASK-318)
+  selectedFile?: OpfsFileEntry | null; // NEW (TASK-318)
   keyPrefix: string;
+  showLines: boolean;
+  isLast?: boolean;
+  fileCounts?: string; // NEW - TASK-322
 }
 
 /**
- * FileTreeItem - Internal component for tree items with lazy-loading
+ * FileTreeItem - Internal component for tree items with lazy-loading (F-012 enhanced, TASK-313 delete button, TASK-318 selection)
  */
 const FileTreeItem = ({
   entry,
   level,
   onDownload,
+  onDelete,
+  onFileSelect,
+  selectedFile,
   keyPrefix,
+  showLines,
+  isLast = false,
 }: FileTreeItemProps) => {
-  const [isExpanded, setIsExpanded] = useState(false);
+  // TASK-327: Root directories (level 0) start expanded
+  const [isExpanded, setIsExpanded] = useState(level === 0);
+  const [isDownloading, setIsDownloading] = useState(false);
   const [children, setChildren] = useState<OpfsFileEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasLoaded, setHasLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const isDirectory = entry.type === "directory";
+
+  // 11. Calculate directory counts for display (TASK-322)
+  const directoryCounts = getDirectoryCounts(entry);
+
+  // 12. Selection state (TASK-318: Two-panel layout)
+  const isSelected = selectedFile?.path === entry.path;
 
   const loadChildren = useCallback(async () => {
     if (!isDirectory || hasLoaded || isLoading) {
@@ -61,6 +227,16 @@ const FileTreeItem = ({
     }
   }, [entry.path, hasLoaded, isLoading, isDirectory]);
 
+  // TASK-327: Auto-load root directories on mount
+  // 1. Load children when directory is expanded and not yet loaded
+  // 2. Dependency array prevents infinite loops
+  // 3. Only runs for directories (checked inside)
+  useEffect(() => {
+    if (isExpanded && !hasLoaded && isDirectory) {
+      loadChildren();
+    }
+  }, [isExpanded, hasLoaded, isDirectory, loadChildren]);
+
   const handleClick = useCallback(() => {
     if (!isDirectory) {
       return;
@@ -73,67 +249,126 @@ const FileTreeItem = ({
     }
   }, [isDirectory, hasLoaded, loadChildren]);
 
+  // 13. Handle file selection (TASK-318: Two-panel layout)
+  const handleFileSelect = useCallback(() => {
+    if (entry.type === "file" && onFileSelect) {
+      onFileSelect(entry);
+    }
+  }, [entry, onFileSelect]);
+
+  const handleDownload = useCallback(async () => {
+    if (isDirectory || isDownloading) {
+      return;
+    }
+
+    setIsDownloading(true);
+    setError(null);
+
+    try {
+      await onDownload(entry.path, entry.name);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setIsDownloading(false);
+    }
+  }, [entry, isDirectory, isDownloading, onDownload]);
+
+  const handleDelete = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (onDelete) {
+        onDelete(entry);
+      }
+    },
+    [entry, onDelete],
+  );
+
   const paddingLeft = level * 16;
 
   return (
     <div>
-      {/* Parent Node */}
+      {/* Parent Node with horizontal connector (F-012) */}
       <div
-        className={`flex items-center gap-2 py-1 px-2 hover:bg-gray-100 cursor-pointer select-none`}
-        style={{ paddingLeft: `${paddingLeft + 16}px` }}
-        onClick={handleClick}
+        className={`group flex items-center gap-2 py-2 px-3 cursor-pointer select-none relative border-l-4 transition-colors ${
+          isSelected
+            ? "bg-slate-200/70 text-slate-900 border-emerald-500"
+            : "border-transparent text-slate-700 hover:bg-slate-100"
+        }`}
+        style={{ paddingLeft: `${paddingLeft + 12}px` }}
+        onClick={isDirectory ? handleClick : handleFileSelect}
       >
-        {/* Icon */}
-        {isDirectory ? (
-          isLoading ? (
-            <div className="animate-spin h-3 w-3 border-2 border-yellow-600 border-t-transparent rounded-full" />
-          ) : isExpanded ? (
-            <svg
-              className="w-3 h-3 text-yellow-500"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fillRule="evenodd"
-                d="M2 6a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1H8a2 2 0 100 4h8a2 2 0 002-2V6a2 2 0 00-2-2H4a2 2 0 00-2 2zm2 10a2 2 0 100-4H8a2 2 0 000 4h8z"
-              />
-            </svg>
-          ) : (
-            <svg
-              className="w-3 h-3 text-yellow-500"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path d="M2 6a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1H8a2 2 0 100 4h8a2 2 0 002-2V6a2 2 0 00-2-2H4a2 2 0 00-2 2z" />
-            </svg>
-          )
+        {/* Horizontal connector line (F-012) */}
+        {level > 0 && showLines && (
+          <div
+            className="absolute top-1/2 -translate-y-1/2 h-px bg-slate-200 pointer-events-none"
+            style={{
+              left: `${paddingLeft}px`,
+              width: "12px",
+            }}
+            aria-hidden="true"
+          />
+        )}
+        {/* Icon - TASK-326: Use getFileIcon helper for type-specific icons */}
+        {isDirectory && isLoading ? (
+          <div className="animate-spin h-3 w-3 border-2 border-yellow-600 border-t-transparent rounded-full" />
         ) : (
-          <svg
-            className="w-3 h-3 text-gray-500"
-            fill="currentColor"
-            viewBox="0 0 20 20"
-          >
-            <path
-              fillRule="evenodd"
-              d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"
-              clipRule="evenodd"
-            />
-          </svg>
+          getFileIcon(entry, isExpanded)
         )}
 
         {/* Name */}
         <span
-          className="flex-1 text-sm text-gray-700 truncate"
+          className="flex-1 text-sm truncate"
           title={entry.name}
         >
           {entry.name}
         </span>
 
+        {/* Directory counts (TASK-322) */}
+        {isDirectory && directoryCounts && (
+          <span className="text-xs text-slate-500 ml-2">
+            {directoryCounts}
+          </span>
+        )}
+
         {/* Size (only for files) */}
         {!isDirectory && (
-          <span className="text-xs text-gray-500 mr-2">
-            {entry.sizeFormatted}
-          </span>
+          <span className="text-xs text-slate-500">{entry.sizeFormatted}</span>
+        )}
+
+        {/* Action Buttons (files only, TASK-313, TASK-323: always visible) */}
+        {!isDirectory && (
+          <div className="flex items-center gap-1 opacity-100">
+            {/* Download Button */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDownload();
+              }}
+              disabled={isDownloading}
+              className="p-1 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+              title={`Download ${entry.name}`}
+              type="button"
+            >
+              {isDownloading ? (
+                <div className="animate-spin h-3 w-3 border-2 border-blue-600 border-t-transparent rounded-full" />
+              ) : (
+                <FaDownload size={12} />
+              )}
+            </button>
+
+            {/* Delete Button (TASK-313) */}
+            {onDelete && (
+              <button
+                onClick={handleDelete}
+                className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded"
+                aria-label={`Delete ${entry.name}`}
+                title={`Delete ${entry.name}`}
+                type="button"
+              >
+                <IoMdTrash size={14} />
+              </button>
+            )}
+          </div>
         )}
 
         {/* Chevron for directories */}
@@ -162,19 +397,24 @@ const FileTreeItem = ({
         </div>
       )}
 
-      {/* Children (when expanded) */}
+      {/* Children (when expanded) - F-012 enhanced with TreeLines, TASK-313 pass onDelete, TASK-318 pass selection props */}
       {isExpanded && hasLoaded && children.length > 0 && (
-        <div>
-          {children.map((child) => (
+        <TreeLines depth={level + 1} isLast={isLast} isCollapsed={!showLines}>
+          {children.map((child, index) => (
             <FileTreeItem
               key={`${keyPrefix}/${child.name}`}
               entry={child}
               level={level + 1}
               onDownload={onDownload}
+              onDelete={onDelete}
+              onFileSelect={onFileSelect}
+              selectedFile={selectedFile}
               keyPrefix={`${keyPrefix}/${child.name}`}
+              showLines={showLines}
+              isLast={index === children.length - 1}
             />
           ))}
-        </div>
+        </TreeLines>
       )}
 
       {/* Empty State */}
@@ -191,19 +431,54 @@ const FileTreeItem = ({
 };
 
 /**
- * FileTree component
+ * FileTree component (F-012 enhanced with responsive tree lines, TASK-313 delete functionality, TASK-318 selection)
  *
  * @remarks
  * - Displays OPFS file tree with lazy-loaded directories
  * - Root level files are shown initially
  * - Directories are loaded on-demand when expanded
  * - Supports file download via callback
+ * - VSCode-style tree lines with responsive hiding (F-012)
+ * - Delete button for files (TASK-313)
+ * - File selection with visual highlight (TASK-318)
  *
  * @param props.onDownload - Callback for downloading files
+ * @param props.onDelete - Callback for delete button click (TASK-313)
+ * @param props.onFileSelect - Callback for file selection (TASK-318)
+ * @param props.selectedFile - Currently selected file (TASK-318)
  *
  * @returns JSX.Element - File tree display
  */
-export const FileTree = ({ onDownload }: FileTreeProps) => {
+export const FileTree = ({
+  onDownload,
+  onDelete,
+  onFileSelect,
+  selectedFile,
+}: FileTreeProps) => {
+  // F-012: Track container width for responsive tree lines
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [showLines, setShowLines] = useState(true);
+
+  // F-012: ResizeObserver to detect sidebar collapse
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) {
+      return undefined;
+    }
+
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        // Hide lines when width < 200px (collapsed sidebar)
+        setShowLines(entry.contentRect.width >= 200);
+      }
+    });
+
+    observer.observe(container);
+    return function cleanup() {
+      observer.disconnect();
+    };
+  }, []);
+
   // Fetch root level files
   const {
     data: entries,
@@ -211,15 +486,18 @@ export const FileTree = ({ onDownload }: FileTreeProps) => {
     error,
     reload,
   } = useInspectedWindowRequest<OpfsFileEntry[]>(
-    () => databaseService.getOpfsFiles(),
+    () => {
+      console.log("[FileTree] Fetching OPFS files...");
+      return databaseService.getOpfsFiles();
+    },
     [],
     [],
   );
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-8 text-gray-500 text-sm">
-        <div className="animate-spin h-4 w-4 border-2 border-gray-600 border-t-transparent rounded-full mr-2" />
+      <div className="flex items-center justify-center py-8 text-slate-500 text-sm">
+        <div className="animate-spin h-4 w-4 border-2 border-slate-500 border-t-transparent rounded-full mr-2" />
         Loading OPFS files...
       </div>
     );
@@ -227,7 +505,7 @@ export const FileTree = ({ onDownload }: FileTreeProps) => {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center py-8 text-red-600 text-sm">
+      <div className="flex items-center justify-center py-8 text-rose-600 text-sm">
         <span>{error}</span>
         <button
           onClick={reload}
@@ -242,21 +520,27 @@ export const FileTree = ({ onDownload }: FileTreeProps) => {
 
   if (!entries || entries.length === 0) {
     return (
-      <div className="flex items-center justify-center py-8 text-gray-500 text-sm">
+      <div className="flex items-center justify-center py-8 text-slate-500 text-sm">
         No OPFS files found
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col">
-      {entries.map((entry) => (
+    // F-012: Add containerRef for responsive tree lines
+    <div ref={containerRef} className="flex flex-col">
+      {entries.map((entry, index) => (
         <FileTreeItem
           key={entry.name}
           entry={entry}
           level={0}
           onDownload={onDownload}
+          onDelete={onDelete}
+          onFileSelect={onFileSelect}
+          selectedFile={selectedFile}
           keyPrefix={entry.name}
+          showLines={showLines}
+          isLast={index === entries.length - 1}
         />
       ))}
     </div>

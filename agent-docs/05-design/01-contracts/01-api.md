@@ -40,7 +40,7 @@ agent-docs/05-design/
 | Database Service     | `agent-docs/05-design/03-modules/database-service.md`     | `## 1) Service Layer API`          | Service Functions   |
 | Content Script Proxy | `agent-docs/05-design/03-modules/content-script-proxy.md` | `### Module: Content Script Proxy` | Proxy handlers      |
 | Background Service   | `agent-docs/05-design/03-modules/background-service.md`   | `### Module: Background Service`   | Icon state, routing |
-| OPFS Browser         | `agent-docs/05-design/03-modules/opfs-browser.md`         | `### Module: OPFS Browser`         | File operations     |
+| OPFS Browser         | `agent-docs/05-design/03-modules/opfs-browser.md`         | `### Module: OPFS File Browser`    | File operations     |
 | Opened DB List       | `agent-docs/05-design/03-modules/opened-db-list.md`       | `### Module: Database Discovery`   | Database navigation |
 | Log Tab Integration  | `agent-docs/05-design/03-modules/log-tab-integration.md`  | `### Module: Log Streaming`        | UI Integration      |
 | Database Refresh     | `agent-docs/05-design/03-modules/database-refresh.md`     | `### Module: Database Refresh`     | React Context       |
@@ -350,7 +350,7 @@ agent-docs/05-design/
 
 #### Function: `getOpfsFiles(path?, dbname?)`
 
-- **Summary**: List OPFS files with lazy loading
+- **Summary**: List OPFS files with lazy loading and metadata
 - **Signature**:
   ```typescript
   getOpfsFiles(
@@ -366,13 +366,21 @@ agent-docs/05-design/
       entries: [
         {
           name: "databases",
-          kind: "directory",
-          size: undefined
+          type: "directory",
+          path: "/databases",
+          size: 0,
+          sizeFormatted: "-",
+          lastModified: "2025-01-15T10:30:00Z",
+          itemCount: { files: 5, directories: 2 }
         },
         {
           name: "cache.sqlite",
-          kind: "file",
-          size: "1.2 MB"
+          type: "file",
+          path: "/cache.sqlite",
+          size: 1258291,
+          sizeFormatted: "1.2 MB",
+          lastModified: "2025-01-15T10:30:00Z",
+          fileType: "SQLite Database"
         }
       ]
     }
@@ -383,6 +391,7 @@ agent-docs/05-design/
   - Lists directory contents at `path` (defaults to root)
   - Filters by `dbname` if provided (for database-specific files)
   - Converts file sizes to human-readable format
+  - Fetches metadata (lastModified, fileType) for each entry
   - Returns flat list for lazy loading in UI
 
 #### Function: `downloadOpfsFile(path)`
@@ -408,6 +417,142 @@ agent-docs/05-design/
   - Creates object URL for download
   - Returns URL and filename for browser download trigger
   - Caller responsible for URL cleanup (`URL.revokeObjectURL`)
+
+#### Function: `deleteOpfsFile(path)`
+
+- **Summary**: Delete a file from OPFS (Feature F-012)
+- **Signature**:
+  ```typescript
+  deleteOpfsFile(path: string): Promise<ServiceResponse<void>>
+  ```
+- **Response (200)**:
+  ```typescript
+  {
+    success: true;
+  }
+  ```
+- **Business Logic**:
+  - Navigates to parent directory using `getDirectoryHandle()`
+  - Calls `removeEntry(filename)` on parent directory
+  - Removes file from OPFS permanently
+  - Returns success response
+- **Error Cases**:
+  - File not found
+  - Permission denied
+  - OPFS not supported
+- **Used By**: OPFSBrowser FileTree component (Feature F-012)
+
+#### Function: `deleteOpfsDirectory(path)`
+
+- **Summary**: Delete a directory and all contents from OPFS (Feature F-012)
+- **Signature**:
+  ```typescript
+  deleteOpfsDirectory(path: string): Promise<ServiceResponse<{ itemCount: number }>>
+  ```
+- **Response (200)**:
+  ```typescript
+  {
+    success: true,
+    data: {
+      itemCount: 15
+    }
+  }
+  ```
+- **Business Logic**:
+  - Navigates to parent directory using `getDirectoryHandle()`
+  - Counts items in target directory before deletion
+  - Calls `removeEntry(dirname, { recursive: true })` on parent directory
+  - Removes directory and all contents permanently
+  - Returns item count for confirmation display
+- **Error Cases**:
+  - Directory not found
+  - Directory not empty (without recursive flag)
+  - Permission denied
+  - OPFS not supported
+- **Used By**: OPFSBrowser FileTree component (Feature F-012)
+
+#### Function: `getFileContent(path)`
+
+- **Summary**: Get file content from OPFS for preview (Feature F-013)
+- **Signature**:
+  ```typescript
+  getFileContent(path: string): Promise<ServiceResponse<{
+    type: 'text' | 'image' | 'binary';
+    content: string | Blob;
+    metadata: {
+      size: number;
+      lastModified: Date;
+      mimeType: string;
+    };
+  }>>
+  ```
+- **Response (200)**:
+  ```typescript
+  {
+    success: true,
+    data: {
+      type: "text",
+      content: "2024-01-15 18:01:22 [INFO] Application started\n...",
+      metadata: {
+        size: 1024,
+        lastModified: "2025-01-15T10:30:00Z",
+        mimeType: "text/plain"
+      }
+    }
+  }
+  ```
+- **Response (200) - Image**:
+  ```typescript
+  {
+    success: true,
+    data: {
+      type: "image",
+      content: Blob { size: 524288, type: "image/png" },
+      metadata: {
+        size: 524288,
+        lastModified: "2025-01-15T10:30:00Z",
+        mimeType: "image/png"
+      }
+    }
+  }
+  ```
+- **Response (200) - Binary**:
+  ```typescript
+  {
+    success: true,
+    data: {
+      type: "binary",
+      content: Blob { size: 1048576, type: "application/x-sqlite3" },
+      metadata: {
+        size: 1048576,
+        lastModified: "2025-01-15T10:30:00Z",
+        mimeType: "application/x-sqlite3"
+      }
+    }
+  }
+  ```
+- **Business Logic**:
+  - Navigates to parent directory using `getDirectoryHandle()`
+  - Retrieves file handle using `getFileHandle(filename)`
+  - Gets file object using `getFile()`
+  - Detects file type based on MIME type and file extension:
+    - Text files: MIME starts with `text/`, extensions: `.log`, `.txt`, `.md`, `.csv`, `.xml`, `.json`, `.yaml`, `.yml`
+    - Image files: MIME starts with `image/`
+    - Binary files: Everything else (SQLite, executables, etc.)
+  - Reads content based on type:
+    - Text files: Uses `file.text()` to get string content
+    - Image/Binary files: Returns file object as Blob
+  - Returns metadata (size, lastModified, mimeType)
+  - Enforces file size limits:
+    - Text files: Warn if > 1MB, block if > 10MB
+    - Images: Block if > 5MB
+- **Error Cases**:
+  - File not found
+  - Permission denied
+  - File too large (> 10MB for text, > 5MB for images)
+  - Encoding errors (text files)
+  - OPFS not supported
+- **Used By**: FilePreview component (Feature F-013 - OPFS Browser Two-Panel Layout)
 
 ## 3) Runtime Messaging (Icon State Only)
 
@@ -484,11 +629,19 @@ type ExecResult = {
   changes: number | bigint;
 };
 
-// OPFS File Entry
+// OPFS File Entry (Enhanced - Feature F-012)
 type OpfsFileEntry = {
   name: string;
-  kind: "file" | "directory";
-  size?: string;
+  path: string; // Full path from OPFS root
+  type: "file" | "directory"; // Changed from 'kind' for consistency
+  size: number; // Raw size in bytes
+  sizeFormatted: string; // Human-readable size (e.g., "1.2 MB")
+  lastModified?: string; // ISO 8601 timestamp
+  fileType?: string; // "SQLite Database", "JSON Data", etc. (files only)
+  itemCount?: {
+    files: number; // Child file count (directories only)
+    directories: number; // Child directory count (directories only)
+  };
 };
 
 // SQL Value Types
@@ -580,11 +733,19 @@ type ExecResult = {
   changes: number | bigint;
 };
 
-// OPFS File Entry
+// OPFS File Entry (Enhanced - Feature F-012)
 type OpfsFileEntry = {
   name: string;
-  kind: "file" | "directory";
-  size?: string;
+  path: string; // Full path from OPFS root
+  type: "file" | "directory"; // Changed from 'kind' for consistency
+  size: number; // Raw size in bytes
+  sizeFormatted: string; // Human-readable size (e.g., "1.2 MB")
+  lastModified?: string; // ISO 8601 timestamp
+  fileType?: string; // "SQLite Database", "JSON Data", etc. (files only)
+  itemCount?: {
+    files: number; // Child file count (directories only)
+    directories: number; // Child directory count (directories only)
+  };
 };
 
 // SQL Value Types

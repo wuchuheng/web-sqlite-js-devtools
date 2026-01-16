@@ -141,7 +141,7 @@ const DevToolsContent = () => {
           onToggle={() => setIsSidebarCollapsed((prev) => !prev)}
         />
 
-        <main className="flex-1 h-full overflow-auto flex flex-col text-left">
+        <main className="flex-1 h-full overflow-auto flex flex-col text-left m-0 p-0">
           {/* Connection status indicator */}
           {renderConnectionStatus()}
 
@@ -230,7 +230,12 @@ const DevToolsContent = () => {
  */
 export const DevTools = () => {
   return (
-    <HashRouter>
+    <HashRouter
+      future={{
+        v7_startTransition: true,
+        v7_relativeSplatPath: true,
+      }}
+    >
       <DevToolsContent />
     </HashRouter>
   );

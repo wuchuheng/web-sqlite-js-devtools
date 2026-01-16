@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { databaseService } from "@/devtools/services/databaseService";
 import type { BufferedLogEntry } from "@/contentScript/subscriptions/LogRingBuffer";
+import { LOG_ENTRY_MESSAGE } from "@/shared/messages";
 
 /**
  * Log subscription hook result
@@ -17,7 +18,7 @@ interface UseLogSubscriptionResult {
  * Message from content script containing log entry
  */
 interface LogEntryMessage {
-  type: "LOG_ENTRY";
+  type: typeof LOG_ENTRY_MESSAGE;
   subscriptionId: string;
   entry: BufferedLogEntry;
 }
@@ -92,7 +93,7 @@ export const useLogSubscription = (): UseLogSubscriptionResult => {
 
       // Type guard: ensure msg has all required properties
       if (
-        msg.type === "LOG_ENTRY"
+        msg.type === LOG_ENTRY_MESSAGE
         && msg.subscriptionId === subscriptionId
         && msg.entry !== undefined
       ) {

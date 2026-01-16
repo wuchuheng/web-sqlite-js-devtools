@@ -10,6 +10,10 @@ interface UseInspectedWindowRequestResult<T> {
   reload: () => void;
 }
 
+interface UseInspectedWindowRequestOptions {
+  enabled?: boolean;
+}
+
 /**
  * 1. Run inspected window request with loading/error state
  * 2. Cache latest successful data
@@ -18,16 +22,19 @@ interface UseInspectedWindowRequestResult<T> {
  * @param request - Async request returning InspectedWindowResponse
  * @param deps - Dependencies that should re-run the request
  * @param initialData - Initial data value before first load
+ * @param options - Optional settings (ex: enabled)
  * @returns Request state and reload handler
  */
 export const useInspectedWindowRequest = <T>(
   request: () => Promise<ServiceResponse<T>>,
   deps: DependencyList,
   initialData: T,
+  options?: UseInspectedWindowRequestOptions,
 ): UseInspectedWindowRequestResult<T> => {
   const [data, setData] = useState(initialData);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isEnabled = options?.enabled ?? true;
 
   /**
    * 1. Trigger async request
@@ -35,25 +42,44 @@ export const useInspectedWindowRequest = <T>(
    * 3. Update loading state on completion
    */
   const load = useCallback(async () => {
+    if (!isEnabled) {
+      setIsLoading(false);
+      setError(null);
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
     try {
+      console.log("[useInspectedWindowRequest] Starting request...");
       const response = await request();
 
       if (!response.success) {
+        console.error(
+          "[useInspectedWindowRequest] Request failed:",
+          response.error,
+        );
         throw new Error(response.error || "Request failed");
       }
 
+      console.log(
+        "[useInspectedWindowRequest] Request succeeded:",
+        response.data,
+      );
       setData((current) => response.data ?? current);
     } catch (fetchError) {
+      console.error(
+        "[useInspectedWindowRequest] Exception caught:",
+        fetchError,
+      );
       setError(
         fetchError instanceof Error ? fetchError.message : String(fetchError),
       );
     } finally {
       setIsLoading(false);
     }
-  }, deps);
+  }, [...deps, isEnabled]);
 
   useEffect(() => {
     void load();

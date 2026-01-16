@@ -1,4 +1,5 @@
 import { IoMdRefresh } from "react-icons/io";
+import { PageHeader } from "../Shared";
 
 /**
  * Page header props
@@ -24,13 +25,14 @@ interface HeaderProps {
  */
 export const Header = ({ refresh, count }: HeaderProps) => {
   return (
-    <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white">
+    <PageHeader className="flex items-center justify-between px-4">
       <h1 className="text-2xl font-semibold text-gray-700">
         Opened Databases
         {count !== undefined && (
           <span className="ml-2 text-sm text-secondary-500">({count})</span>
         )}
       </h1>
+
       <button
         onClick={refresh}
         aria-label="Refresh database list"
@@ -38,6 +40,6 @@ export const Header = ({ refresh, count }: HeaderProps) => {
       >
         <IoMdRefresh size={20} />
       </button>
-    </div>
+    </PageHeader>
   );
 };

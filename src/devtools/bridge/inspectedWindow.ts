@@ -64,19 +64,43 @@ async function executeInMainWorld<
   const tabId = options?.tabId ?? chrome.devtools.inspectedWindow.tabId;
   const target = { tabId };
 
-  const results = await chrome.scripting.executeScript({
+  console.log("[inspectedWindowBridge] executeInMainWorld called", {
+    tabId,
     target,
-    world: "MAIN",
-    func,
-    args: args as Args,
+    args,
   });
 
-  const [firstResult] = results;
-  if (!firstResult) {
-    throw new Error("No result returned from executeScript.");
-  }
+  try {
+    // Filter out trailing undefined values to avoid serialization errors
+    // When optional parameters are not provided, they become undefined
+    // which chrome.scripting.executeScript cannot serialize properly
+    const filteredArgs = [...args];
+    while (
+      filteredArgs.length > 0
+      && filteredArgs[filteredArgs.length - 1] === undefined
+    ) {
+      filteredArgs.pop();
+    }
 
-  return firstResult.result as Result;
+    const results = await chrome.scripting.executeScript({
+      target,
+      world: "MAIN",
+      func,
+      args: filteredArgs as unknown as Args,
+    });
+
+    console.log("[inspectedWindowBridge] executeScript results:", results);
+
+    const [firstResult] = results;
+    if (!firstResult) {
+      throw new Error("No result returned from executeScript.");
+    }
+
+    return firstResult.result as Result;
+  } catch (error) {
+    console.error("[inspectedWindowBridge] executeScript error:", error);
+    throw error;
+  }
 }
 
 /**

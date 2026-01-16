@@ -175,7 +175,7 @@ NOTES
 
 **Milestone**: F-011 Complete - Automated code linting with ESLint 9
 
-- [ ] **TASK-307**: ESLint Integration Feature (F-011)
+- [x] **TASK-307**: ESLint Integration Feature (F-011) (Completed 2026-01-15)
   - Install ESLint packages (7 packages: eslint, @eslint/js, @typescript-eslint/\*, eslint-plugin-react, eslint-plugin-react-hooks, eslint-plugin-prettier)
   - Create eslint.config.js (flat config format with 5 layers)
   - Create .vscode/settings.json (ESLint integration)
@@ -183,6 +183,191 @@ NOTES
   - Test configuration and IDE integration
   - Run lint:fix on existing codebase
   - Documentation updates
+
+#### Phase 9: OPFS Browser Enhancement (Days 14-17)
+
+**Milestone**: F-012 Complete - Tree lines, delete operations, enhanced metadata
+
+- [ ] **TASK-308**: Service Layer - Delete Operations (F-012)
+  - Implement `deleteOpfsFile(path)` in databaseService.ts
+  - Implement `deleteOpfsDirectory(path)` in databaseService.ts
+  - Update `OpfsFileEntry` type with metadata fields
+  - Add metadata fetching to `getOpfsFiles()`
+  - Error handling and testing
+
+- [ ] **TASK-309**: Guided Tree Lines Component (F-012)
+  - Create `TreeLines.tsx` component
+  - CSS styling for vertical/horizontal connectors
+  - Responsive hiding for collapsed sidebar
+  - Integration with FileTree.tsx
+
+- [ ] **TASK-310**: Delete Confirmation Modal (F-012)
+  - Create `DeleteConfirmModal.tsx` component
+  - Metadata display grid layout
+  - Confirm/cancel button logic
+  - Loading state handling
+  - Accessibility (focus trap, ARIA)
+
+- [ ] **TASK-311**: Enhanced Metadata Display (F-012)
+  - Create `MetadataPanel.tsx` component
+  - File type detection and badges
+  - Timestamp formatting utilities
+  - Hover/click interaction
+  - Directory item counting
+
+- [ ] **TASK-312**: Toast Notifications (F-012)
+  - Create `Toast.tsx` component
+  - Success and error variants
+  - Auto-dismiss logic
+  - Position styling (top-right)
+  - Integration with delete operations
+
+- [ ] **TASK-313**: Integration & Testing (F-012)
+  - Integrate all components with FileTree.tsx
+  - Update OPFSGallery.tsx for toast handling
+  - Test delete operations (files and directories)
+  - Test metadata display for all file types
+  - Test tree line rendering at various depths
+  - ESLint and build verification
+
+#### Phase 10: OPFS Browser Two-Panel Layout (Days 18-20)
+
+**Milestone**: F-013 Complete - Two-panel layout with file preview
+
+**Target Date**: 2026-01-17 (3 days from 2026-01-15)
+**Dependencies**: F-012 (OPFS Browser Enhancement) - Must be complete
+
+**Feature Overview**: Transform OPFS browser into two-panel layout with file preview capability. Left panel shows file tree navigation (existing FileTree component), right panel shows selected file contents (new FilePreview components). Users can resize panels using draggable divider (reusing ResizeHandle from F-006).
+
+**Tasks Breakdown**:
+
+- [ ] **TASK-314**: Service Layer - File Content Loading (F-013)
+  - Add `getFileContent(path)` function to databaseService.ts
+  - Implement file type detection (text/image/binary)
+  - Read file content based on type (text() for text, Blob for images)
+  - Enforce file size limits (text: 10MB max, images: 5MB max)
+  - Return metadata (size, lastModified, mimeType)
+  - Error handling (file not found, permission denied, encoding errors)
+  - Three-phase comments for functions > 5 lines
+  - TSDoc comments on exported function
+  - Estimated time: 2 hours
+
+- [ ] **TASK-315**: File Preview Component Structure (F-013)
+  - Create `FilePreview.tsx` main container component
+  - Implement state management (loading, error, content)
+  - Add useEffect hook for file content loading
+  - Implement conditional rendering based on file state
+  - Add loading spinner with emerald theme
+  - Add error state with retry button
+  - Delegate to appropriate preview component (TextPreview, ImagePreview, UnsupportedPreview)
+  - Handle empty state (no file selected)
+  - TSDoc comments on component and interfaces
+  - Estimated time: 2 hours
+
+- [ ] **TASK-316**: Text Preview Implementation (F-013)
+  - Create `TextPreview.tsx` component
+  - Display text content in monospace font (<pre> tag)
+  - Show "Preview: {filename}" header with emerald theme
+  - Display metadata (size, modified date) in header
+  - Preserve line breaks and formatting (whitespace-pre-wrap)
+  - Optional: JSON syntax highlighting if feasible
+  - Handle large text files (> 1MB warning, > 10MB block)
+  - TSDoc comments on component and interfaces
+  - Estimated time: 1.5 hours
+
+- [ ] **TASK-317**: Image Preview Implementation (F-013)
+  - Create `ImagePreview.tsx` component
+  - Display image with responsive scaling (object-fit: contain)
+  - Show "Preview: {filename}" header with emerald theme
+  - Display metadata (size, modified date) in header
+  - Create object URL for image display
+  - Cleanup object URL on unmount (useEffect return)
+  - Handle large images (> 5MB block)
+  - Maintain aspect ratio (max-width: 100%, max-height: 100%)
+  - TSDoc comments on component and interfaces
+  - Estimated time: 1.5 hours
+
+- [ ] **TASK-318**: Panel Resizing Integration (F-013)
+  - Modify `OPFSGallery.tsx` to use two-panel flex layout
+  - Add `leftPanelWidth` state (default: 350px, range: 200-600px)
+  - Add `selectedFile` state for preview
+  - Add `handleResize` callback with width constraints
+  - Integrate `ResizeHandle` component from F-006
+  - Modify `FileTree.tsx` to accept `onFileSelect` and `selectedFile` props
+  - Modify `FileNode.tsx` to show selected state highlight (emerald-50 background)
+  - Add click handler to FileNode for file selection
+  - Test panel resizing smoothness (60fps target)
+  - Test minimum/maximum width constraints
+  - Estimated time: 2 hours
+
+- [ ] **TASK-319**: Integration & Testing (F-013)
+  - Create `EmptyPreview.tsx` component (no selection state)
+  - Create `UnsupportedPreview.tsx` component (binary files)
+  - Integrate all preview components with FilePreview
+  - Test file selection and preview updates
+  - Test text preview with various file types (.log, .txt, .json, .xml, .csv, .md)
+  - Test image preview with various formats (.jpg, .png, .gif, .svg, .webp)
+  - Test SQLite database placeholder (with download button)
+  - Test unsupported file placeholder (with download button)
+  - Test empty state (no file selected)
+  - Test loading state (large files)
+  - Test error state (file not found, permission denied)
+  - Test panel resizing at different widths
+  - Test that all F-012 features still work (tree lines, delete, metadata, toast)
+  - ESLint verification (no new warnings)
+  - Type check verification (no type errors)
+  - Build verification (bundle size check)
+  - Manual testing with 10+ test scenarios
+  - Update documentation (feature spec, status board)
+  - Estimated time: 2 hours
+
+**Success Criteria**:
+
+- **Two-Panel Layout**: [ ] File tree (left) and preview (right) displayed side by side
+- **Resizable Divider**: [ ] Panels resize smoothly with 200-600px constraints
+- **File Selection**: [ ] Clicking file updates preview panel with visual highlight
+- **Text Preview**: [ ] Text files displayed in monospace font with line breaks
+- **Image Preview**: [ ] Images displayed with responsive scaling
+- **SQLite Placeholder**: [ ] Database files show placeholder with download button
+- **Unsupported Placeholder**: [ ] Binary files show placeholder with download button
+- **Empty State**: [ ] Preview panel shows empty state when no file selected
+- **Loading State**: [ ] Preview panel shows loading spinner during file load
+- **Error State**: [ ] Preview panel shows error with retry button on failure
+- **Feature Preservation**: [ ] All F-012 features work (tree lines, delete, metadata, toast)
+
+**Risk Mitigation**:
+
+- **Complexity**: Medium (similar to F-012, reuses proven patterns)
+- **Files Modified**: 4 files (OPFSGallery, FileTree, FileNode, databaseService)
+- **New Components**: 5 components (FilePreview, TextPreview, ImagePreview, EmptyPreview, UnsupportedPreview)
+- **Breaking Changes**: None (additive changes only)
+- **Migration Path**: N/A (new feature, no existing data)
+- **Rollback Strategy**: Remove new components, revert modified files (git checkout)
+- **Performance**: File loading < 1s for text < 1MB, < 2s for images < 5MB, panel resize 60fps
+
+**Timeline**:
+
+- **Day 1 (2h)**: TASK-314 (Service Layer) + TASK-315 (FilePreview Container)
+- **Day 2 (3h)**: TASK-316 (TextPreview) + TASK-317 (ImagePreview)
+- **Day 3 (4h)**: TASK-318 (Panel Resizing) + TASK-319 (Integration & Testing)
+- **Total**: 9 hours (within 8-12 hour estimate from feasibility analysis)
+
+**Definition of Done**:
+
+- [ ] All 6 tasks complete (TASK-314 through TASK-319)
+- [ ] Two-panel layout implemented with resizable divider
+- [ ] File selection updates preview panel
+- [ ] Text preview working for all text file types
+- [ ] Image preview working for all image formats
+- [ ] SQLite and unsupported file placeholders working
+- [ ] Empty, loading, and error states working
+- [ ] All F-012 features preserved (tree lines, delete, metadata, toast)
+- [ ] ESLint passed with no new warnings
+- [ ] Type check passed with no errors
+- [ ] Build passed with no errors
+- [ ] Manual testing completed with 10+ scenarios
+- [ ] Documentation updated (feature spec, status board)
+- [ ] Bundle size impact assessed (< 100KB increase)
 
 ### Release v1.3.0 (Future Enhancements)
 
@@ -208,7 +393,9 @@ NOTES
 - [x] **v1.2.0 Phase 1-5 Complete**: 2026-01-14 (F-004, F-005, F-006, F-008)
 - [x] **v1.2.0 Phase 6 Complete**: 2026-01-14 (F-009)
 - [x] **v1.2.0 Phase 7 Complete**: 2026-01-14 (F-010)
-- [ ] **v1.2.0 Phase 8 Complete**: TBD (F-011)
+- [x] **v1.2.0 Phase 8 Complete**: 2026-01-15 (F-011)
+- [x] **v1.2.0 Phase 9 Complete**: 2026-01-15 (F-012)
+- [ ] **v1.2.0 Phase 10 Complete**: TBD (F-013)
 
 ## 4. Feature F-001: Service Layer Expansion
 
@@ -666,23 +853,23 @@ Add shared React Context to coordinate database refresh between sidebar and main
 
 ### Definition of Done
 
-- [ ] DatabaseRefreshContext created with proper TypeScript types
-- [ ] DatabaseRefreshProvider wraps DevTools content
-- [ ] useDatabaseRefresh hook exported and documented
-- [ ] Sidebar refresh button added (left side, IoMdRefresh icon)
-- [ ] Sidebar refresh button styling matches F-007 tokens
-- [ ] OpenedDBList consumes DatabaseRefreshContext
-- [ ] Main page refresh button uses shared trigger
-- [ ] Bidirectional refresh working (both directions)
-- [ ] Data consistency verified (both locations show same data)
-- [ ] Debounce working (rapid clicks = single refresh)
-- [ ] Edge cases handled (collapsed, error, empty states)
-- [ ] Build passed with no errors
-- [ ] Type check passed with no errors
-- [ ] Bundle size impact acceptable (< 5KB)
-- [ ] Feature spec updated
-- [ ] LLD updated with implementation status
-- [ ] Status board updated with completion evidence
+- [x] DatabaseRefreshContext created with proper TypeScript types
+- [x] DatabaseRefreshProvider wraps DevTools content
+- [x] useDatabaseRefresh hook exported and documented
+- [x] Sidebar refresh button added (left side, IoMdRefresh icon)
+- [x] Sidebar refresh button styling matches F-007 tokens
+- [x] OpenedDBList consumes DatabaseRefreshContext
+- [x] Main page refresh button uses shared trigger
+- [x] Bidirectional refresh working (both directions)
+- [x] Data consistency verified (both locations show same data)
+- [x] Debounce working (rapid clicks = single refresh)
+- [x] Edge cases handled (collapsed, error, empty states)
+- [x] Build passed with no errors
+- [x] Type check passed with no errors
+- [x] Bundle size impact acceptable (< 5KB)
+- [x] Feature spec updated
+- [x] LLD updated with implementation status
+- [x] Status board updated with completion evidence
 
 ## 8. Feature F-011: ESLint Integration
 
@@ -796,40 +983,40 @@ Add ESLint 9 with flat config format, TypeScript support, React rules, and Prett
 ### Success Criteria
 
 1. **Installation**
-   - [ ] All 7 ESLint packages installed
-   - [ ] Package.json updated with devDependencies
-   - [ ] No install errors or warnings
+   - [x] All 7 ESLint packages installed
+   - [x] Package.json updated with devDependencies
+   - [x] No install errors or warnings
 
 2. **Configuration**
-   - [ ] eslint.config.js created with flat config format
-   - [ ] All 5 configuration layers working
-   - [ ] TypeScript parser configured
-   - [ ] React plugins configured
-   - [ ] Prettier integration configured
+   - [x] eslint.config.js created with flat config format
+   - [x] All 5 configuration layers working
+   - [x] TypeScript parser configured
+   - [x] React plugins configured
+   - [x] Prettier integration configured
 
 3. **NPM Scripts**
-   - [ ] `npm run lint` works
-   - [ ] `npm run lint:fix` works
-   - [ ] Scripts don't conflict with existing scripts
-   - [ ] Exit codes correct (0 for pass, 1 for errors)
+   - [x] `npm run lint` works
+   - [x] `npm run lint:fix` works
+   - [x] Scripts don't conflict with existing scripts
+   - [x] Exit codes correct (0 for pass, 1 for errors)
 
 4. **IDE Integration**
-   - [ ] VSCode shows ESLint errors in real-time
-   - [ ] Fix-on-save works via command palette
-   - [ ] Format-on-save integrates with ESLint
-   - [ ] No console errors from ESLint server
+   - [x] VSCode shows ESLint errors in real-time
+   - [x] Fix-on-save works via command palette
+   - [x] Format-on-save integrates with ESLint
+   - [x] No console errors from ESLint server
 
 5. **Build Compatibility**
-   - [ ] `npm run build` still works
-   - [ ] `npm run dev` still works
-   - [ ] `npm run typecheck` still works
-   - [ ] No new build errors introduced
+   - [x] `npm run build` still works
+   - [x] `npm run dev` still works
+   - [x] `npm run typecheck` still works
+   - [x] No new build errors introduced
 
 6. **Code Quality**
-   - [ ] Lint passes on existing code (or only minor issues)
-   - [ ] No breaking changes to existing code style
-   - [ ] Prettier and ESLint don't conflict
-   - [ ] At least 80% of issues auto-fixable
+   - [x] Lint passes on existing code (or only minor issues)
+   - [x] No breaking changes to existing code style
+   - [x] Prettier and ESLint don't conflict
+   - [x] At least 80% of issues auto-fixable
 
 ### Risk Mitigation
 
@@ -854,21 +1041,587 @@ Add ESLint 9 with flat config format, TypeScript support, React rules, and Prett
 
 ### Definition of Done
 
-- [ ] All 7 ESLint packages installed
-- [ ] eslint.config.js created with flat config
-- [ ] .vscode/settings.json created/updated
-- [ ] NPM scripts (lint, lint:fix) added and working
-- [ ] TypeScript linting configured and working
-- [ ] React linting configured and working
-- [ ] Prettier integration configured and working
-- [ ] Airbnb-style rules applied
-- [ ] Ignore patterns configured
-- [ ] `npm run lint` runs without crashing
-- [ ] `npm run lint:fix` auto-fixes issues
-- [ ] VSCode shows real-time lint errors
-- [ ] Fix-on-save works in VSCode
-- [ ] Build scripts still work (build, dev, typecheck)
-- [ ] Known issues documented (if any)
+- [x] All 7 ESLint packages installed
+- [x] eslint.config.js created with flat config
+- [x] .vscode/settings.json created/updated
+- [x] NPM scripts (lint, lint:fix) added and working
+- [x] TypeScript linting configured and working
+- [x] React linting configured and working
+- [x] Prettier integration configured and working
+- [x] Airbnb-style rules applied
+- [x] Ignore patterns configured
+- [x] `npm run lint` runs without crashing
+- [x] `npm run lint:fix` auto-fixes issues
+- [x] VSCode shows real-time lint errors
+- [x] Fix-on-save works in VSCode
+- [x] Build scripts still work (build, dev, typecheck)
+- [x] Known issues documented (if any)
+- [x] Feature spec marked complete
+- [x] LLD marked implementation complete
+- [x] Status board updated with completion evidence
+
+## 9. Feature F-012: OPFS Browser Enhancement
+
+### Overview
+
+**Feature ID**: F-012 (Discovery)
+**Status**: Design Complete - Ready for Implementation
+**Priority**: High (P1) - Core Feature Completion
+**Target**: Complete during v1.2.0 Phase 9 (Days 14-17 from 2026-01-14)
+
+### Objective
+
+Enhance the OPFS File Browser with guided tree lines for visual hierarchy, delete operations for files and directories with confirmation modals, and enhanced metadata display including file types, last modified dates, and full paths. This completes the OPFS browser feature set for better file management and user experience.
+
+### Task Breakdown
+
+**Implementation Phases** (6 tasks, 8-12 hours total):
+
+#### TASK-308: Service Layer - Delete Operations (1.5 hours)
+
+**Milestone**: Delete functions implemented in databaseService.ts
+
+- [ ] Implement `deleteOpfsFile(path)` service function
+  - Navigate to file path in OPFS
+  - Delete file using `removeEntry(filename)`
+  - Return `ServiceResponse<void>`
+  - Handle file not found errors
+- [ ] Implement `deleteOpfsDirectory(path)` service function
+  - Navigate to directory path in OPFS
+  - Count items before delete
+  - Delete recursively using `removeEntry(dirname, { recursive: true })`
+  - Return `ServiceResponse<{ itemCount: number }>`
+  - Handle directory not found errors
+- [ ] Update `OpfsFileEntry` type with metadata fields
+  - Add `lastModified?: Date`
+  - Add `fileType?: string`
+  - Add `itemCount?: { files: number; directories: number }`
+- [ ] Update `getOpfsFiles()` to fetch metadata
+  - Fetch last modified timestamp from file handles
+  - Detect file types based on extension
+  - Count items in directories
+- [ ] Add JSDoc comments to all functions
+- [ ] TypeScript strict mode compliance
+
+#### TASK-309: Guided Tree Lines Component (2 hours)
+
+**Milestone**: TreeLines component created and integrated
+
+- [ ] Create `src/devtools/components/OPFSBrowser/TreeLines.tsx`
+- [ ] Implement vertical line connector
+  - CSS `::before` pseudo-element
+  - Position: absolute, left: 12px, top: 0, bottom: 0
+  - Width: 1px, background: gray-200 (#e5e7eb)
+- [ ] Implement horizontal line connector
+  - CSS `::before` pseudo-element on tree-node-item
+  - Position: absolute, left: -12px, top: 50%
+  - Width: 12px, height: 1px, background: gray-200
+- [ ] Implement last child adjustment
+  - Extend horizontal line from vertical
+  - No vertical line after last child
+- [ ] Add responsive hiding
+  - Hide lines when sidebar collapsed (< 200px)
+  - Use CSS media query or state-based class
+- [ ] Integrate with FileTree.tsx
+  - Wrap children containers with TreeLines
+  - Pass depth prop for line positioning
+  - Conditional rendering for root items (depth = 0)
+- [ ] Test with various nesting depths
+- [ ] Verify VSCode-style appearance
+
+#### TASK-310: Delete Confirmation Modal (2 hours)
+
+**Milestone**: DeleteConfirmModal component created and integrated
+
+- [ ] Create `src/devtools/components/OPFSBrowser/DeleteConfirmModal.tsx`
+- [ ] Implement modal structure
+  - Backdrop: `bg-gray-900 bg-opacity-50`
+  - Modal container: centered, max-w-md
+  - Close on: Cancel button, backdrop click, Escape key
+- [ ] Implement metadata display grid
+  - Title: "Delete {item_name}?"
+  - Type badge: File / Directory (color-coded)
+  - Size: {size_formatted}
+  - Type: {file_type}
+  - Modified: {last_modified}
+  - Path: {full_path} (monospace)
+- [ ] Implement warning text
+  - Red text: "This action cannot be undone."
+  - Enhanced warning for directories: "Delete directory and all contents?"
+  - Show item count for directories
+- [ ] Implement buttons
+  - Cancel: Gray secondary button
+  - Delete: Red danger button with IoMdTrash icon
+  - Loading state on Delete button during deletion
+- [ ] Add accessibility features
+  - `role="dialog"`
+  - `aria-modal="true"`
+  - `aria-label="Delete confirmation"`
+  - Focus trap (Tab cycles within modal)
+  - Escape key closes modal
+- [ ] Export component and types
+
+#### TASK-311: Enhanced Metadata Display (2 hours)
+
+**Milestone**: MetadataPanel component created and integrated
+
+- [ ] Create `src/devtools/components/OPFSBrowser/MetadataPanel.tsx`
+- [ ] Implement file type detection
+  - SQLite databases: `.sqlite`, `.db`, `.sqlite3` → "SQLite Database" (blue badge)
+  - JSON files: `.json` → "JSON Data" (yellow badge)
+  - Text files: `.txt`, `.md` → "Text File" (gray badge)
+  - Images: `.png`, `.jpg`, `.svg` → "Image File" (purple badge)
+  - Unknown: Use extension or "File" (default gray badge)
+- [ ] Implement timestamp formatting
+  - Format: `YYYY-MM-DD HH:mm` (local time)
+  - Color: gray-500 (secondary text)
+  - Utility function: `formatTimestamp(date)`
+- [ ] Implement inline metadata display
+  - Default: Name + size (existing)
+  - Hover: Show type badge and modified timestamp
+  - Transition: smooth fade-in/out (150ms)
+- [ ] Implement directory metadata
+  - Item count: `{file_count} files, {dir_count} dirs`
+  - Visible when expanded
+  - Updated on lazy load
+  - Full path on hover/click (monospace)
+- [ ] Export component and utility functions
+
+#### TASK-312: Toast Notifications (1 hour)
+
+**Milestone**: Toast component created and integrated
+
+- [ ] Create `src/devtools/components/OPFSBrowser/Toast.tsx`
+- [ ] Implement toast container
+  - Position: fixed, top-right
+  - Z-index: high (above modal)
+  - Animation: slide-in from right
+- [ ] Implement success toast
+  - Icon: FaCheck (green)
+  - Title: "Deleted successfully"
+  - Message: "{item_name} has been deleted."
+  - Duration: 3 seconds (auto-dismiss)
+  - Background: bg-green-50 border-green-200 text-green-700
+- [ ] Implement error toast
+  - Icon: FaExclamationCircle (red)
+  - Title: "Delete failed"
+  - Message: {error_message}
+  - Duration: 5 seconds (auto-dismiss)
+  - Action: "Retry" button (reopens modal)
+  - Background: bg-red-50 border-red-200 text-red-700
+- [ ] Implement auto-dismiss logic
+  - setTimeout with duration
+  - Cleanup on unmount
+  - Pause on hover (optional)
+- [ ] Export component and types
+
+#### TASK-313: Integration & Testing (1.5 hours)
+
+**Milestone**: All components integrated and tested
+
+- [ ] Update FileTree.tsx with tree lines
+  - Import TreeLines component
+  - Wrap children containers
+  - Pass depth prop
+  - Test various nesting depths
+- [ ] Update FileNode.tsx with delete button
+  - Import IoMdTrash icon
+  - Add delete button (right side, group-hover)
+  - Add onClick handler to open modal
+  - Add ARIA label
+- [ ] Update FileNode.tsx with metadata display
+  - Import MetadataPanel component
+  - Add hover state for metadata
+  - Display type badge and timestamp
+  - Show item count for directories
+- [ ] Update OPFSGallery.tsx for toast handling
+  - Import Toast component
+  - Add toast container
+  - Handle delete confirmations
+  - Show success/error toasts
+  - Refresh tree after successful delete
+- [ ] Test delete operations (files)
+  - Click delete icon → modal opens
+  - Verify metadata displayed correctly
+  - Confirm delete → file removed from tree
+  - Success toast shown
+  - Error handling tested
+- [ ] Test delete operations (directories)
+  - Click delete icon → modal opens
+  - Verify item count shown
+  - Confirm delete → directory removed from tree
+  - Success toast shown
+  - Error handling tested
+- [ ] Test metadata display
+  - File type badges correct for all types
+  - Timestamps formatted correctly
+  - Directory item counts accurate
+  - Full path displays on hover
+- [ ] Test tree lines
+  - Lines render correctly for nested items
+  - Lines hide when sidebar collapsed
+  - Lines match VSCode style
+- [ ] ESLint verification
+  - Run `npm run lint`
+  - Fix any issues
+- [ ] Build verification
+  - Run `npm run build`
+  - Run `npm run typecheck`
+  - Verify no errors
+
+### Dependencies
+
+- **Upstream**: TASK-10 (OPFS File Browser - provides base FileTree, FileNode, OPFSGallery components)
+- **Downstream**: None (can proceed independently)
+
+### Success Criteria
+
+1. **Tree Lines Display**
+   - [ ] Vertical lines connect parent to all children
+   - [ ] Horizontal lines connect each child to vertical line
+   - [ ] Lines render correctly for nested directories (depth > 0)
+   - [ ] Lines hide when sidebar collapsed (< 200px)
+   - [ ] Lines match VSCode file tree style
+
+2. **Delete Operation - Files**
+   - [ ] Delete icon visible on file row hover
+   - [ ] Clicking delete opens confirmation modal
+   - [ ] Modal shows file metadata (name, size, type, path)
+   - [ ] Confirming delete removes file from tree
+   - [ ] Success toast shown after deletion
+   - [ ] Error toast shown on failure
+
+3. **Delete Operation - Directories**
+   - [ ] Delete icon visible on directory row hover
+   - [ ] Confirmation shows item count (files, subdirectories)
+   - [ ] Recursive delete removes directory and contents
+   - [ ] Success toast shown after deletion
+   - [ ] Error toast shown on failure
+
+4. **Enhanced Metadata - Files**
+   - [ ] File type badge shown on hover (SQLite, JSON, etc.)
+   - [ ] Last modified timestamp shown on hover
+   - [ ] File extension shown in type badge
+   - [ ] Metadata displays correctly for all file types
+
+5. **Enhanced Metadata - Directories**
+   - [ ] Item count shown when directory expanded
+   - [ ] Last modified timestamp shown on hover
+   - [ ] Full path shown on hover/click
+
+6. **Delete Confirmation Modal**
+   - [ ] Modal opens on delete button click
+   - [ ] Modal shows all item metadata
+   - [ ] Warning text displayed clearly
+   - [ ] Cancel button closes modal
+   - [ ] Delete button shows loading state
+   - [ ] Modal closes on backdrop click or Escape key
+
+7. **Service Layer Functions**
+   - [ ] `deleteOpfsFile(path)` implemented in databaseService.ts
+   - [ ] `deleteOpfsDirectory(path)` implemented in databaseService.ts
+   - [ ] Both functions return `ServiceResponse<void>` or with data
+   - [ ] Error handling for OPFS API failures
+   - [ ] Recursive delete for directories
+
+8. **Integration**
+   - [ ] OPFS browser route (`/opfs`) works with all enhancements
+   - [ ] No regression in existing download functionality
+   - [ ] No regression in existing lazy loading
+   - [ ] Build passes without errors
+   - [ ] ESLint passes without new warnings
+
+### Risk Mitigation
+
+- **Data Loss**: Confirmation modal with warning text prevents accidental deletion
+- **OPFS API Compatibility**: Graceful degradation if not supported, error messages
+- **Tree Line Performance**: CSS-only implementation, no JS layout calculations
+- **Metadata Fetching Delay**: Lazy load on-demand, show loading indicator
+- **Modal Accessibility**: Focus trap, ARIA attributes, keyboard support
+
+### Timeline
+
+- **Day 1** (1.5 hours): Service layer functions (deleteOpfsFile, deleteOpfsDirectory, metadata fetching)
+- **Day 2** (2 hours): Guided tree lines component
+- **Day 3** (2 hours): Delete confirmation modal
+- **Day 4** (2 hours): Enhanced metadata display
+- **Day 5** (1 hour): Toast notifications
+- **Day 5** (1.5 hours): Integration & testing
+
+**Total**: 10 hours (3-4 days)
+
+### Definition of Done
+
+- [ ] Service layer functions implemented and tested
+- [ ] TreeLines component created and integrated
+- [ ] DeleteConfirmModal component created and integrated
+- [ ] MetadataPanel component created and integrated
+- [ ] Toast component created and integrated
+- [ ] FileTree.tsx updated with tree lines
+- [ ] FileNode.tsx updated with delete button and metadata
+- [ ] OPFSGallery.tsx updated with toast handling
+- [ ] All acceptance criteria met (8 categories above)
+- [ ] Manual testing complete (all scenarios)
+- [ ] ESLint passed with no new warnings
+- [ ] Build passed with no errors
+- [ ] Type check passed with no errors
 - [ ] Feature spec marked complete
-- [ ] LLD marked implementation complete
-- [ ] Status board updated with completion evidence
+- [ ] Documentation updated (HLD, LLD, status board)
+
+---
+
+#### Phase 11: OPFS UI Visual Redesign (Days 21-22)
+
+**Milestone**: F-014 Complete - Visual redesign to match product prototype
+
+**Target Date**: 2026-01-21 (2 days from 2026-01-19)
+
+**Dependencies**: F-012 (OPFS Browser Enhancement) - Complete, F-013 (OPFS Two-Panel Preview) - Complete
+
+**Feature Overview**: Complete visual redesign of OPFS File Browser to match product prototype. Implement green color theme (#4CAF50), add preview header with status badge, display file/directory counts, make action icons always visible, and remove helper notice/footer sections. All changes are visual-only with no functional changes to existing behavior.
+
+**Tasks Breakdown**:
+
+- [ ] **TASK-320**: Color Scheme Updates (F-014)
+  - Update main header icon: `text-blue-600` → `text-green-600`
+  - Remove helper notice section entirely ("Origin Private File System" banner)
+  - Update preview panel background: `bg-emerald-50` → `bg-white`
+  - Update OPFSGallery.tsx styles
+  - Test color contrast for accessibility (WCAG AA)
+  - Estimated time: 1.5 hours
+
+- [ ] **TASK-321**: Preview Header Component (F-014)
+  - Create `PreviewHeader.tsx` component with green background (#4CAF50)
+  - Display "Preview: [filename]" title in white text
+  - Add status badge component (white background, green text, "started" text)
+  - Implement props interface (fileName, showStatus, statusText)
+  - Add TSDoc comments
+  - Integrate into FilePreview.tsx
+  - Estimated time: 1 hour
+
+- [ ] **TASK-322**: File Tree Enhancements - File Counts (F-014)
+  - Add `getDirectoryCounts(entry)` helper function to FileTree.tsx
+  - Calculate file and directory counts from `entry.children`
+  - Display counts in FileNode.tsx for directories only
+  - Format: "3 files", "2 dirs", or "3 files 2 dirs"
+  - Style: `text-xs text-gray-500 ml-2`
+  - Test with empty directories, large directories
+  - Estimated time: 1.5 hours
+
+- [ ] **TASK-323**: File Tree Enhancements - Icon Visibility (F-014)
+  - Update FileNode.tsx action icons: `opacity-0 group-hover:opacity-100` → `opacity-100`
+  - Make download and delete icons always visible (not hover-only)
+  - Test icon positioning and spacing
+  - Ensure icons remain clickable and accessible
+  - Estimated time: 0.5 hours
+
+- [ ] **TASK-324**: Footer Removal (F-014)
+  - Remove footer tip section from OPFSGallery.tsx
+  - Verify layout stability without footer
+  - Test panel resize behavior
+  - Estimated time: 0.5 hours
+
+- [ ] **TASK-325**: Integration & Testing (F-014)
+  - Visual regression testing vs prototype screenshot
+  - Functional testing: download, delete, preview all work
+  - Test all preview states: empty, text, image, unsupported
+  - Test file count display accuracy
+  - Test action icon visibility and accessibility
+  - Test color contrast with accessibility tools
+  - Keyboard navigation testing (Tab, Enter, Escape)
+  - ESLint verification (no new warnings)
+  - Build verification (no errors)
+  - Estimated time: 1 hour
+
+**Total**: 6 hours (2 days)
+
+### Acceptance Criteria
+
+**Visual Design**:
+
+- [ ] Main header icon is green (#4CAF50)
+- [ ] Helper notice section removed
+- [ ] Preview panel has green header bar
+- [ ] Preview panel has white background
+- [ ] Preview header shows "Preview: [filename]"
+- [ ] Preview header has "started" status badge (white/green)
+- [ ] Footer tip section removed
+- [ ] Visual design matches prototype screenshot
+
+**File Tree Enhancements**:
+
+- [ ] Directory nodes show file/directory counts
+- [ ] File count format is correct ("3 files 2 dirs")
+- [ ] Action icons (download/delete) are always visible
+- [ ] Action icons remain functional and accessible
+
+**Functionality**:
+
+- [ ] All existing features work: expand/collapse, download, delete, preview
+- [ ] File preview loads and displays correctly
+- [ ] Panel resize works correctly
+- [ ] Delete confirmation modal works
+- [ ] Toast notifications work
+
+**Accessibility**:
+
+- [ ] Color contrast meets WCAG AA standards
+- [ ] Keyboard navigation works (Tab, Enter, Escape)
+- [ ] ARIA labels preserved on all interactive elements
+- [ ] Screen reader testing passes
+
+**Code Quality**:
+
+- [ ] ESLint passed with no new warnings
+- [ ] Build passed with no errors
+- [ ] Type check passed with no errors
+- [ ] TSDoc comments added to new components
+- [ ] Code follows S8 quality rules (functional components, hooks)
+
+### Risk Mitigation
+
+| Risk                       | Impact | Mitigation                                         |
+| -------------------------- | ------ | -------------------------------------------------- |
+| Color accessibility issues | Medium | Use WCAG compliant green shades (#4CAF50, #16A34A) |
+| Breaking existing UX       | Low    | Visual-only changes, no logic modifications        |
+| Prototype ambiguity        | Low    | Reference screenshot for clarification             |
+| File count performance     | Low    | Calculate from existing data, no new API calls     |
+
+### Definition of Done
+
+- [ ] Color scheme updated (green theme)
+- [ ] PreviewHeader component created and integrated
+- [ ] File counts display implemented
+- [ ] Action icons always visible
+- [ ] Helper notice and footer removed
+- [ ] Visual regression testing passed
+- [ ] Functional testing passed (all features work)
+- [ ] Accessibility testing passed (WCAG AA)
+- [ ] ESLint passed with no new warnings
+- [ ] Build passed with no errors
+- [ ] Type check passed with no errors
+- [ ] Feature spec marked complete
+- [ ] Documentation updated (HLD, LLD, status board)
+
+---
+
+#### Phase 12: OPFS Tree Visual Enhancements (Day 22)
+
+**Milestone**: Default root expansion, dotted tree lines, file type icons
+
+**Feature**: F-015 - OPFS Tree Visual Enhancements
+
+**Overview**: Enhance the OPFS File Tree with three visual improvements: (1) Root directories expand by default on load, (2) Tree hierarchy lines use dotted/dashed styling for subtle visual guidance, (3) File type-specific icons for quick identification (sqlite3, images, txt, json, folders, unknown).
+
+**Target Date**: 2026-01-22
+**Duration**: 3 hours (0.5 days)
+**Baseline**: Option A (Component-Based Enhancement)
+
+### Task Breakdown
+
+- [ ] **TASK-326**: Icon Imports and Helper Functions (F-015)
+  - Add 6 icon imports to FileTree.tsx: FaDatabase (fa6), FaRegFileImage, FaFolder, FaFolderOpen, FaFile (fa), TiDocumentText (ti), LuFileJson (lu)
+  - Create getFileExtension(filename) helper to extract file extension
+  - Create getFileIcon(entry, isExpanded) helper with switch statement for 6 file types
+  - Add TSDoc comments with @example for both helpers
+  - Test icon rendering for all 6 types
+  - Estimated time: 1 hour
+
+- [ ] **TASK-327**: Expansion State Update (F-015)
+  - Update useState(false) to useState(level === 0) for root-level auto-expansion
+  - Add useEffect hook to auto-load root directory children on mount
+  - Verify only root (level 0) directories auto-expand
+  - Verify child directories remain lazy-loaded
+  - Test expand/collapse behavior still works
+  - Estimated time: 0.5 hours
+
+- [ ] **TASK-328**: Tree Line Styling (F-015)
+  - Update TreeLines.tsx className: bg-gray-200 to border-dotted border-gray-300
+  - Verify dotted lines display correctly
+  - Test responsive hiding (sidebar collapse) still works
+  - Estimated time: 0.5 hours
+
+- [ ] **TASK-329**: Integration and Testing (F-015)
+  - Visual testing: verify all 6 icon types display correctly
+  - Functional testing: verify expand, lazy-load, download, delete work
+  - Integration testing: verify compatibility with F-012, F-013, F-014
+  - Performance testing: verify no significant load time increase
+  - ESLint verification (no new warnings)
+  - Build verification (no errors)
+  - Estimated time: 1 hour
+
+**Total**: 3 hours (0.5 days)
+
+### Acceptance Criteria
+
+**Default Expansion**:
+
+- [ ] Root directories (level 0) are expanded on load
+- [ ] Root directory children are loaded automatically
+- [ ] Child directories (level > 0) remain collapsed (lazy-loaded)
+- [ ] Expand/collapse behavior still works for all directories
+
+**Tree Line Styling**:
+
+- [ ] Tree lines use dotted/dashed styling (not solid)
+- [ ] Line color is lighter (gray-300 vs gray-200)
+- [ ] Responsive hiding works (sidebar collapse)
+
+**File Type Icons**:
+
+- [ ] .sqlite3 files display FaDatabase icon (purple)
+- [ ] Image files (.png, .jpg, etc.) display FaRegFileImage icon (purple)
+- [ ] .txt files display TiDocumentText icon (gray)
+- [ ] .json/.json5 files display LuFileJson icon (yellow)
+- [ ] Closed directories display FaFolder icon (gray)
+- [ ] Open directories display FaFolderOpen icon (yellow)
+- [ ] Unknown file types display FaFile icon (gray fallback)
+
+**Functionality**:
+
+- [ ] All existing features work: expand/collapse, download, delete, preview
+- [ ] File selection works correctly
+- [ ] Panel resize works correctly
+- [ ] Delete confirmation modal works
+- [ ] Toast notifications work
+
+**Performance**:
+
+- [ ] Initial load time increased by < 100ms (acceptable)
+- [ ] No render performance regression
+- [ ] Bundle size increased by ~15KB (acceptable)
+
+**Code Quality**:
+
+- [ ] ESLint passed with no new warnings
+- [ ] Build passed with no errors
+- [ ] Type check passed with no errors
+- [ ] TSDoc comments added to helper functions
+- [ ] Code follows S8 quality rules (functional components, hooks)
+
+### Risk Mitigation
+
+| Risk                   | Impact | Mitigation                                    |
+| ---------------------- | ------ | --------------------------------------------- |
+| Missing icon libraries | Medium | Verify imports before committing              |
+| Performance regression | Low    | Root-only expansion preserves lazy-loading    |
+| Icon bundle size       | Low    | ~15KB acceptable for DevTools extension       |
+| Visual inconsistency   | Low    | Reference prototype screenshot for validation |
+
+### Definition of Done
+
+- [ ] Icon imports added to FileTree.tsx (6 icons from 4 libraries)
+- [ ] getFileExtension() helper created with TSDoc
+- [ ] getFileIcon() helper created with switch statement for 6 types
+- [ ] Expansion state updated: useState(level === 0)
+- [ ] Auto-loading useEffect added for root directories
+- [ ] TreeLines styling updated to dotted border
+- [ ] Visual testing passed (all 6 icon types display correctly)
+- [ ] Functional testing passed (expand, lazy-load, download, delete)
+- [ ] Integration testing passed (F-012, F-013, F-014 compatibility)
+- [ ] Performance testing passed (< 100ms load time increase)
+- [ ] ESLint passed with no new warnings
+- [ ] Build passed with no errors
+- [ ] Type check passed with no errors
+- [ ] Feature spec marked complete
+- [ ] Documentation updated (HLD Section 20, LLD Section 13, status board)

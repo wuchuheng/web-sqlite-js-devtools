@@ -38,10 +38,10 @@ NOTES
 
 ## 3) Current stage
 
-- **Current stage (1-8)**: Stage 8 - Worker (S8:worker - F-011)
-- **Active release**: v1.2.0 (Enhancements) - Target: 2026-01-21
-- **Status summary**: TASK-307 complete (F-011), TASK-306 complete (F-010), TASK-305 complete (F-009), TASK-304 complete (F-008), TASK-303 complete (Integration), TASK-302 complete (F-006), TASK-301 complete (F-005)
-- **Last updated (YYYY-MM-DD)**: 2026-01-14 (F-011: ESLint Integration - Implementation Complete)
+- **Current stage (1-8)**: Stage 8 - Worker (TASK-330: Separator Line Color Consistency)
+- **Active release**: v1.3.1 (Tree Enhancements) - Target: 2026-01-22
+- **Status summary**: F-015 Complete (TASK-326/327/328/329 all complete). TASK-330 In Progress (visual fix for separator line color). F-014 Complete (TASK-320 through TASK-325). F-013 Complete, F-012 Complete, F-011 Complete, F-010 Complete, F-009 Complete, F-008 Complete.
+- **Last updated (YYYY-MM-DD)**: 2026-01-16 (TASK-330: Separator line color fix in progress)
 
 ## 4) Technology stack (chosen in Stage 2)
 
@@ -76,6 +76,9 @@ NOTES
 - `agent-docs/01-discovery/features/F-009-log-tab.md` (COMPLETED - Feature F-009)
 - `agent-docs/01-discovery/features/F-010-database-refresh-coordination.md` (NEW - Feature F-010)
 - `agent-docs/01-discovery/features/F-011-eslint-integration.md` (NEW - Feature F-011)
+- `agent-docs/01-discovery/features/F-012-opfs-browser-enhancement.md` (COMPLETED - Feature F-012)
+- `agent-docs/01-discovery/features/F-013-opfs-two-panel-preview.md` (COMPLETED - Feature F-013)
+- `agent-docs/01-discovery/features/F-014-opfs-ui-redesign.md` (NEW - Feature F-014)
 - `agent-docs/02-feasibility/01-options.md`
 - `agent-docs/02-feasibility/02-risk-assessment.md`
 - `agent-docs/02-feasibility/03-spike-plan.md`
@@ -199,3 +202,145 @@ NOTES
   - Initial lint run: 150 problems (108 errors, 42 warnings) - mostly unused vars, console statements, consistent-return issues
   - All build scripts verified working: typecheck, build, dev
   - Feature spec marked complete, status board updated
+- **2026-01-15**: TASK-308 completed - Service Layer Delete Operations (F-012)
+  - Added `deleteOpfsFile(path)` function for deleting files from OPFS
+  - Added `deleteOpfsDirectory(path)` function for recursive directory deletion with item count
+  - Updated `OpfsFileEntry` type with `fileType` and `itemCount` fields
+  - Enhanced `getOpfsFiles()` to fetch file type (SQLite Database, JSON Data, etc.) and directory item counts
+  - Added `detectFileType()` helper function for file type detection based on extension
+  - Exported new functions via `databaseService` object
+  - TypeScript compliance: Fixed `FileSystemDirectoryHandle.values()` type errors with `eslint-disable-next-line` comments
+- **2026-01-15**: TASK-309 completed - Guided Tree Lines Component (F-012)
+  - Added `TreeLines.tsx` component for VSCode-style tree hierarchy
+  - Implemented vertical line connector (1px gray-200, absolute positioned div)
+  - Implemented horizontal line connector (12px gray-200, absolute positioned div)
+  - Implemented last child adjustment (L-shaped connector with 50% height vertical)
+  - Added responsive hiding with ResizeObserver (hide lines when sidebar < 200px)
+  - Integrated with FileTree.tsx (wrap children with TreeLines, pass depth/showLines/isLast props)
+  - Added horizontal connector to each non-root item in FileTreeItem
+  - Accessibility: `aria-hidden="true"` on decorative line elements
+  - Type check passed with no new errors
+- **2026-01-15**: TASK-310 completed - Delete Confirmation Modal (F-012)
+  - Created `DeleteConfirmModal.tsx` component for file and directory deletion confirmation
+  - Implemented modal structure with backdrop overlay and centered container
+  - Added metadata display grid (type badge, size, file type, modified date, item count, full path)
+  - Implemented conditional rendering for files vs directories (size/fileType vs itemCount)
+  - Added warning text with enhanced directory warning showing total items count
+  - Implemented Escape key handler and backdrop click handler for closing modal
+  - Added confirm (red with trash icon) and cancel (gray) buttons
+  - Implemented loading state with spinner during deletion operation
+  - Disabled close actions during deletion (isDeleting state)
+  - Accessibility: `role="dialog"`, `aria-modal="true"`, `aria-labelledby="delete-modal-title"`
+  - Type check passed with no new errors
+- **2026-01-15**: TASK-311 completed - Enhanced Metadata Display (F-012)
+  - Created `fileTypeDetection.ts` utility module (detectFileType, getBadgeColor, getBadgeColorClasses)
+  - Implemented 30+ file type mappings (SQLite, JSON, XML, CSV, Text, Markdown, Log, Image, SVG, Audio, Video)
+  - Added color-coded badges (blue for databases, yellow for data, gray for text, purple for images, green for audio, red for video)
+  - Created `timestampFormatting.ts` utility module (formatTimestamp, getRelativeTime)
+  - Implemented YYYY-MM-DD HH:mm timestamp formatting with local time
+  - Implemented relative time strings ("just now", "2 minutes ago", "3 hours ago", "4 days ago")
+  - Created `MetadataPanel.tsx` component with inline/expanded view modes
+  - Inline view: compact metadata row with type badge and timestamp (150ms fade-in on hover)
+  - Expanded view: detailed list with type, modified date, item count, full path
+  - Updated `FileNode.tsx` to integrate MetadataPanel with hover state
+  - Type check passed with no new errors
+- **2026-01-15**: TASK-312 completed - Toast Notifications (F-012)
+  - Created `Toast.tsx` component with success and error variants
+  - Success variant: green styling with FaCheck icon, 3 second auto-dismiss
+  - Error variant: red styling with FaExclamationCircle icon, 5 second auto-dismiss, retry button
+  - Implemented auto-dismiss logic with useEffect and setTimeout
+  - Added proper cleanup for timeout on unmount/visibility change
+  - Implemented close button with X icon
+  - Added slide-in animation using Tailwind arbitrary values (animate-[slide-in_0.3s_ease-out])
+  - Fixed positioning at top-right with z-index 60 (above modal)
+  - Accessibility: role="alert", aria-live="polite", aria-atomic="true", aria-label on close button
+  - Type check passed with no new errors
+- **2026-01-15**: TASK-313 completed - Integration & Testing (F-012)
+  - Updated \`FileTree.tsx\` with onDelete callback support
+  - Added action buttons (download and delete) with hover state (opacity-0 group-hover:opacity-100)
+  - Added isDownloading state and handleDownload/handleDelete callbacks
+  - Updated \`FileNode.tsx\` with delete button (IoMdTrash icon, ARIA label)
+  - Updated \`OPFSGallery.tsx\` with DeleteConfirmModal and Toast integration
+  - Added modal state management (isModalOpen, selectedEntry, isDeleting)
+  - Added toast state management (isVisible, variant, title, message, itemName)
+  - Added handleDeleteClick to open modal, handleDeleteConfirm to execute deletion
+  - Added handleModalClose, handleToastDismiss, and handleToastRetry callbacks
+  - Integrated DeleteConfirmModal and Toast components into JSX
+  - Error handling with success/error toast notifications
+  - Type check passed with no new errors
+  - **F-012 Feature Complete**: All 6 tasks finished (TASK-308 through TASK-313)
+- **2026-01-15**: F-013 Discovery completed - OPFS Browser Two-Panel Layout with File Preview
+  - Analyzed target UI design from screenshot (green header, two-panel layout, file preview)
+  - Identified gap between current single-panel OPFS browser and target two-panel design
+  - Interviewed user for requirements clarification (preview panel, emerald theme, text/image files, preserve F-012 features)
+  - Created feature specification document with 12 sections
+  - Documented 14 functional requirements (FR-OPFS-001 through FR-OPFS-014)
+  - Documented 5 non-functional requirements (NFR-OPFS-001 through NFR-OPFS-005)
+  - Defined component structure (FilePreview, TextPreview, ImagePreview, EmptyPreview, UnsupportedPreview)
+- **2026-01-15**: F-013 Full Documentation Chain Completed (S2 → S3 → S5 → S7)
+  - **Stage 2 (Feasibility Analysis)**: Evaluated 3 technical options, recommended Option A (Split-Panel Layout)
+    - Risk assessment: LOW risk (proven patterns from F-006, F-012)
+    - Technical approach: Two-panel layout with resizable divider, file content loading via OPFS API
+    - Performance targets: Text < 1s (< 1MB), Images < 2s (< 5MB), Panel resize 60fps
+    - Browser compatibility: Chrome 111+, Edge 111+, Firefox not supported
+  - **Stage 3 (Architecture)**: Added Section 18 to HLD - OPFS Browser Two-Panel Layout Architecture
+    - C4 Component diagram for two-panel layout
+    - Component hierarchy (OPFSGallery, FileTree, FilePreview, TextPreview, ImagePreview, etc.)
+    - Data flow for file content loading (FileTree → FilePreview → databaseService → OPFS)
+    - Panel resizing architecture (ResizeHandle integration, state management)
+    - File content loading service (getFileContent function signature and implementation)
+    - Preview component architecture (FilePreview, TextPreview, ImagePreview, EmptyPreview, UnsupportedPreview)
+    - Integration with existing F-012 components (preserved all features)
+    - File structure, accessibility, performance considerations, error handling, edge cases
+  - **Stage 5 (Design)**: Updated API Contract and Module LLD
+    - **API Contract (01-api.md)**: Added `getFileContent(path)` function to OPFS File Browser section
+      - Function signature with ServiceResponse wrapper
+      - Response examples for text, image, and binary files
+      - Business logic: file type detection, content reading, metadata, size limits
+      - Error cases: file not found, permission denied, file too large, encoding errors
+    - **Module LLD (opfs-browser.md)**: Added Section 11 - Two-Panel Layout with File Preview
+      - File Tree Update (OPFSGallery, FileTree, FileNode modifications)
+      - FilePreview Component (main container with state management)
+      - TextPreview Component (monospace font, emerald header, metadata display)
+      - ImagePreview Component (responsive scaling, object URL cleanup)
+      - EmptyPreview Component (no selection state with helpful icon)
+      - UnsupportedPreview Component (binary files with download button)
+      - File Content Loading Flow (sequence diagram)
+      - State Management (OPFSGallery and FilePreview states)
+      - UI/UX Patterns (two-panel layout, selected file highlight, loading/error states)
+      - Accessibility (file selection, preview panel, divider)
+      - Performance considerations (file size limits, optimization strategies)
+      - Browser compatibility (OPFS API, File.text(), Blob API, CSS object-fit)
+      - Error handling (error types, recovery mechanisms)
+      - Edge cases (large files, SQLite databases, binary files, encoding errors)
+      - Integration with F-012 components (all features preserved)
+  - **Stage 7 (Task Management)**: Updated Roadmap and Task Catalog
+    - **Roadmap (01-roadmap.md)**: Added Phase 10 - OPFS Browser Two-Panel Layout (Days 18-20)
+      - Feature overview, target date (2026-01-17), dependencies (F-012 must be complete)
+      - 6 tasks breakdown: TASK-314 through TASK-319
+      - Success criteria (11 items: two-panel layout, resizable divider, file selection, previews, states, F-012 preservation)
+      - Risk mitigation (medium complexity, 4 files modified, 5 new components, no breaking changes)
+      - Timeline (Day 1: 2h, Day 2: 3h, Day 3: 4h, Total: 9h)
+      - Definition of Done (15 items: all tasks complete, all features working, testing, documentation)
+    - **Task Catalog (02-task-catalog.md)**: Added 6 tasks to v1.2.0 release
+      - TASK-314: Service Layer - File Content Loading (2h) - Add getFileContent function, file type detection, size limits
+      - TASK-315: File Preview Component Structure (2h) - Main container, state management, conditional rendering
+      - TASK-316: Text Preview Implementation (1.5h) - Monospace font, emerald header, line breaks preserved
+      - TASK-317: Image Preview Implementation (1.5h) - Responsive scaling, object URL cleanup, aspect ratio
+      - TASK-318: Panel Resizing Integration (2h) - Two-panel layout, ResizeHandle integration, selected state
+      - TASK-319: Integration & Testing (2h) - EmptyPreview/UnsupportedPreview, integration testing, documentation
+      - Total estimated: 9 hours (within 8-12 hour estimate from feasibility analysis)
+    - **Micro-Specs**: Created 6 task micro-specs in `agent-docs/08-task/active/`
+      - TASK-314.md: Service Layer - File Content Loading (detailed DoD, testing checklist)
+      - TASK-315.md: File Preview Component Structure (state management, conditional rendering)
+      - TASK-316.md: Text Preview Implementation (monospace font, metadata display, large file handling)
+      - TASK-317.md: Image Preview Implementation (responsive scaling, object URL cleanup)
+      - TASK-318.md: Panel Resizing Integration (two-panel layout, ResizeHandle, selected state)
+      - TASK-319.md: Integration & Testing (EmptyPreview/UnsupportedPreview, 10+ test scenarios)
+  - **Ready for Stage 8**: All documentation complete, ready for implementation by S8:worker
+  - **Estimated Implementation Time**: 9 hours (6 tasks: service layer, preview components, panel resizing, integration)
+  - **Technical Approach**: Split-panel layout with resizable divider, file content loading via OPFS API, text/image preview components
+  - **Risk Level**: LOW (proven patterns from F-006, F-012, 90% code reusability)
+  - Identified dependencies on F-012 (must be complete) and F-006 (ResizeHandle reuse)
+  - Estimated timeline: 8-12 hours total (Discovery: 1h, Feasibility: 1h, Architecture: 2h, Design: 2h, Implementation: 4-6h, Testing: 1h)
+  - Next stages: Feasibility Analysis (S2:feasibilityAnalyst) → Architecture (S3:systemArchitect) → Design (S5:contractDesigner) → Task Management (S7:taskManager)
