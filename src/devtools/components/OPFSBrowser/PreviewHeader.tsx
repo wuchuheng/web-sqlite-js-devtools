@@ -5,25 +5,22 @@ import type { ReactNode } from "react";
  *
  * @remarks
  * - fileName: Name of the file being previewed
- * - showStatus: Whether to show the status badge (default: true)
- * - statusText: Text to display in status badge (default: "started")
+ * - fileSize: Optional formatted file size string
  */
 interface PreviewHeaderProps {
   /** Name of the file being previewed */
   fileName: string;
-  /** Whether to show the status badge (default: true) */
-  showStatus?: boolean;
-  /** Text to display in status badge (default: "started") */
-  statusText?: string;
+  /** Optional formatted file size string */
+  fileSize?: string;
 }
 
 /**
  * Preview header component (F-014)
  *
  * @remarks
- * - Green header bar for preview panel
+ * - Neutral header bar for preview panel
  * - Displays "Preview: [filename]" title
- * - Shows status badge (white background, green text)
+ * - Optionally displays file size under the title
  * - Used in FilePreview component
  *
  * @param props.fileName - Name of the file being previewed
@@ -33,25 +30,19 @@ interface PreviewHeaderProps {
  *
  * @example
  * ```tsx
- * <PreviewHeader fileName="app.log" showStatus={true} statusText="started" />
+ * <PreviewHeader fileName="app.log" fileSize="12.4 KB" />
  * ```
  */
 export const PreviewHeader = ({
   fileName,
-  showStatus = true,
-  statusText = "started",
+  fileSize,
 }: PreviewHeaderProps): ReactNode => {
   return (
-    <div className="px-4 py-3 bg-green-600 text-white flex items-center justify-between">
-      {/* File name */}
-      <span className="text-sm font-medium">Preview: {fileName}</span>
-
-      {/* Status badge */}
-      {showStatus && (
-        <span className="px-2 py-1 bg-white text-green-600 text-xs font-medium rounded">
-          {statusText}
-        </span>
-      )}
+    <div className="px-6 py-4 bg-white border-b border-slate-200">
+      <div className="text-base font-semibold text-slate-800">
+        Preview: {fileName}
+      </div>
+      {fileSize && <div className="text-xs text-slate-500">{fileSize}</div>}
     </div>
   );
 };

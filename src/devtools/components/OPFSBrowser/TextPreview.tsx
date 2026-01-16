@@ -1,5 +1,4 @@
 import type { OpfsFileEntry } from "@/devtools/services/databaseService";
-import { formatTimestamp } from "@/devtools/utils/timestampFormatting";
 
 /**
  * Content metadata from service layer
@@ -51,9 +50,8 @@ function formatFileSize(bytes: number): string {
  *
  * @remarks
  * 1. Display text file content in monospace font with line breaks preserved
- * 2. Show emerald-themed header with filename and metadata
- * 3. Handle large files (> 1MB) with warning message
- * 4. Use whitespace-pre-wrap for preserving formatting
+ * 2. Handle large files (> 1MB) with warning message
+ * 3. Use whitespace-pre-wrap for preserving formatting
  *
  * @param props.file - File entry being previewed
  * @param props.content - Text file content
@@ -70,7 +68,6 @@ function formatFileSize(bytes: number): string {
  * ```
  */
 export const TextPreview = ({
-  file,
   content,
   metadata,
 }: TextPreviewProps): JSX.Element => {
@@ -78,30 +75,22 @@ export const TextPreview = ({
   const isLargeFile = metadata.size > ONE_MB;
 
   return (
-    <div className="flex flex-col h-full bg-emerald-50">
-      {/* Header */}
-      <div className="bg-emerald-50 border-b border-emerald-200 px-4 py-2">
-        <h3 className="text-emerald-700 font-semibold">Preview: {file.name}</h3>
-        <div className="text-xs text-gray-600 mt-1">
-          {formatFileSize(metadata.size)} •{" "}
-          {formatTimestamp(metadata.lastModified)}
+    <div className="flex flex-col flex-1 min-h-0 bg-white">
+      {(isLargeFile || metadata.warning) && (
+        <div className="border-b border-amber-200 bg-amber-50 px-4 py-2 text-xs text-amber-700">
+          {isLargeFile && (
+            <div>
+              Warning: Large file ({formatFileSize(metadata.size)}) - preview
+              may be slow.
+            </div>
+          )}
+          {metadata.warning && <div>Warning: {metadata.warning}</div>}
         </div>
-        {isLargeFile && (
-          <div className="text-xs text-orange-600 mt-1">
-            ⚠️ Large file ({formatFileSize(metadata.size)}) - preview may be
-            slow
-          </div>
-        )}
-        {metadata.warning && (
-          <div className="text-xs text-orange-600 mt-1">
-            ⚠️ {metadata.warning}
-          </div>
-        )}
-      </div>
+      )}
 
       {/* Content */}
-      <div className="flex-1 overflow-auto p-4 bg-white">
-        <pre className="font-mono text-sm text-gray-700 whitespace-pre-wrap">
+      <div className="flex-1 min-h-0 overflow-auto p-4 bg-white">
+        <pre className="font-mono text-sm text-slate-700 whitespace-pre-wrap">
           {content}
         </pre>
       </div>

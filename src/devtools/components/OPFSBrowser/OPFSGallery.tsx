@@ -5,6 +5,7 @@ import { DeleteConfirmModal } from "./DeleteConfirmModal";
 import { Toast, type ToastProps } from "./Toast";
 import { FilePreview } from "./FilePreview";
 import { ResizeHandle } from "@/devtools/components/Shared/ResizeHandle";
+import { PageHeader } from "@/devtools/components/Shared/PageHeader";
 import { databaseService } from "@/devtools/services/databaseService";
 import type { OpfsFileEntry } from "@/devtools/services/databaseService";
 
@@ -197,74 +198,78 @@ export const OPFSGallery = () => {
   }, []);
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="border-b border-gray-200 bg-white">
-        <div className="flex items-center gap-2">
-          <FaFile className="text-green-600" size={18} />
-          <h2 className="text-lg font-semibold text-gray-800">
+    <div className="flex flex-col h-full bg-slate-100">
+      <div className="flex flex-col flex-1 min-h-0  bg-white shadow-sm ring-1 ring-slate-200 overflow-hidden">
+        {/* Header */}
+        <PageHeader className="flex items-center gap-3 px-4">
+          <FaFile className="text-emerald-600" size={18} />
+          <h2 className="text-base font-semibold text-slate-800">
             OPFS File Browser
           </h2>
-        </div>
-      </div>
+        </PageHeader>
 
-      {/* Download Status */}
-      {downloadStatus.isDownloading && (
-        <div className="px-4 py-2 bg-green-50 border-b border-green-200 flex items-center gap-2">
-          <div className="animate-spin h-4 w-4 border-2 border-green-600 border-t-transparent rounded-full" />
-          <span className="text-sm text-green-700">
-            Downloading {downloadStatus.filename}...
-          </span>
-        </div>
-      )}
+        {/* Download Status */}
+        {downloadStatus.isDownloading && (
+          <div className="px-5 py-2 bg-emerald-50 border-b border-emerald-200 flex items-center gap-2">
+            <div className="animate-spin h-4 w-4 border-2 border-emerald-600 border-t-transparent rounded-full" />
+            <span className="text-sm text-emerald-700">
+              Downloading {downloadStatus.filename}...
+            </span>
+          </div>
+        )}
 
-      {downloadStatus.error && (
-        <div className="px-4 py-2 bg-red-50 border-b border-red-200 flex items-center gap-2">
-          <FaExclamationTriangle className="text-red-600" size={16} />
-          <span className="text-sm text-red-700">{downloadStatus.error}</span>
-          <button
-            onClick={() =>
-              setDownloadStatus({
-                isDownloading: false,
-                filename: null,
-                error: null,
-              })
-            }
-            className="ml-auto text-xs text-red-600 hover:text-red-800"
-            type="button"
+        {downloadStatus.error && (
+          <div className="px-5 py-2 bg-rose-50 border-b border-rose-200 flex items-center gap-2">
+            <FaExclamationTriangle className="text-rose-600" size={16} />
+            <span className="text-sm text-rose-700">
+              {downloadStatus.error}
+            </span>
+            <button
+              onClick={() =>
+                setDownloadStatus({
+                  isDownloading: false,
+                  filename: null,
+                  error: null,
+                })
+              }
+              className="ml-auto text-xs text-rose-600 hover:text-rose-800"
+              type="button"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
+
+        {/* File Tree (TASK-318: Two-panel layout) */}
+        <div className="flex flex-1 min-h-0 overflow-hidden bg-slate-50 relative">
+          {/* Left Panel: File Tree */}
+          <div
+            style={{ width: `${leftPanelWidth}px` }}
+            className="relative flex flex-col overflow-hidden bg-slate-50 border-r border-slate-200"
           >
-            Dismiss
-          </button>
-        </div>
-      )}
+            <div className="flex-1 overflow-auto py-2">
+              <FileTree
+                onDownload={handleDownload}
+                onDelete={handleDeleteClick}
+                onFileSelect={setSelectedFile}
+                selectedFile={selectedFile}
+              />
+            </div>
+          </div>
 
-      {/* File Tree (TASK-318: Two-panel layout) */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Left Panel: File Tree */}
-        <div
-          style={{ width: `${leftPanelWidth}px` }}
-          className="relative flex flex-col overflow-hidden bg-white"
-        >
-          <FileTree
-            onDownload={handleDownload}
-            onDelete={handleDeleteClick}
-            onFileSelect={setSelectedFile}
-            selectedFile={selectedFile}
+          {/* Divider (TASK-318: ResizeHandle) */}
+          <ResizeHandle
+            position="right"
+            onDrag={handleDrag}
+            minWidth={200}
+            maxWidth={600}
+            currentWidth={leftPanelWidth}
           />
-        </div>
 
-        {/* Divider (TASK-318: ResizeHandle) */}
-        <ResizeHandle
-          position="right"
-          onDrag={handleDrag}
-          minWidth={200}
-          maxWidth={600}
-          currentWidth={leftPanelWidth}
-        />
-
-        {/* Right Panel: Preview (TASK-318: FilePreview) */}
-        <div className="flex-1 flex flex-col overflow-hidden bg-white">
-          <FilePreview file={selectedFile} />
+          {/* Right Panel: Preview (TASK-318: FilePreview) */}
+          <div className="flex-1 flex flex-col overflow-hidden bg-white">
+            <FilePreview file={selectedFile} />
+          </div>
         </div>
       </div>
 

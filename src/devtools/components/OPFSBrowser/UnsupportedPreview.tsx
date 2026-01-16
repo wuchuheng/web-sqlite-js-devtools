@@ -1,6 +1,5 @@
 import { FiFile } from "react-icons/fi";
 import type { OpfsFileEntry } from "@/devtools/services/databaseService";
-import { formatTimestamp } from "@/devtools/utils/timestampFormatting";
 
 /**
  * ContentMetadata interface
@@ -26,19 +25,6 @@ interface UnsupportedPreviewProps {
 }
 
 /**
- * Format file size for display
- */
-const formatFileSize = (bytes: number): string => {
-  if (bytes === 0) {
-    return "0 B";
-  }
-  const k = 1024;
-  const sizes = ["B", "KB", "MB", "GB"];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
-};
-
-/**
  * UnsupportedPreview component (F-013)
  *
  * @remarks
@@ -57,33 +43,22 @@ const formatFileSize = (bytes: number): string => {
  * ```
  */
 export const UnsupportedPreview = ({
-  file,
-  metadata,
+  metadata: _metadata,
 }: UnsupportedPreviewProps): JSX.Element => {
   return (
-    <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="bg-gray-50 border-b border-gray-200 px-4 py-2">
-        <h3 className="text-gray-700 font-semibold">Preview: {file.name}</h3>
-        <div className="text-xs text-gray-600 mt-1">
-          {formatFileSize(metadata.size)} •{" "}
-          {formatTimestamp(metadata.lastModified)} • {metadata.mimeType}
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-        <div className="text-gray-400 mb-4">
+    <div className="flex flex-col flex-1 min-h-0">
+      <div className="flex-1 min-h-0 flex flex-col items-center justify-center p-8 text-center gap-4">
+        <div className="text-slate-300 mb-4">
           <FiFile size={64} />
         </div>
-        <h3 className="text-gray-600 text-lg font-semibold mb-2">
-          Preview not available
+        <h3
+          className="text-lg  mb-2 text-black font-bold"
+          style={{ color: "black", fontSize: "1.125rem", fontWeight: "bold" }}
+        >
+          Preview not available for binary files.
         </h3>
-        <p className="text-gray-500 text-sm">
-          This file type ({metadata.mimeType || "binary"}) cannot be previewed
-        </p>
-        <p className="text-gray-500 text-xs mt-2">
-          Use the download button in the file tree to save this file
+        <p className="text-slate-500 text-sm">
+          Please use the download button to save the file.
         </p>
       </div>
     </div>

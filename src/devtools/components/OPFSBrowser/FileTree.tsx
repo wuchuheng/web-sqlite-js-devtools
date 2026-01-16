@@ -289,18 +289,18 @@ const FileTreeItem = ({
     <div>
       {/* Parent Node with horizontal connector (F-012) */}
       <div
-        className={`group flex items-center gap-2 py-1 px-2 cursor-pointer select-none relative ${
+        className={`group flex items-center gap-2 py-2 px-3 cursor-pointer select-none relative border-l-4 transition-colors ${
           isSelected
-            ? "bg-emerald-50 text-emerald-600 border-l-4 border-emerald-600"
-            : "hover:bg-gray-100"
+            ? "bg-slate-200/70 text-slate-900 border-emerald-500"
+            : "border-transparent text-slate-700 hover:bg-slate-100"
         }`}
-        style={{ paddingLeft: `${paddingLeft + 16}px` }}
+        style={{ paddingLeft: `${paddingLeft + 12}px` }}
         onClick={isDirectory ? handleClick : handleFileSelect}
       >
         {/* Horizontal connector line (F-012) */}
         {level > 0 && showLines && (
           <div
-            className="absolute top-1/2 -translate-y-1/2 h-px bg-gray-200 pointer-events-none"
+            className="absolute top-1/2 -translate-y-1/2 h-px bg-slate-200 pointer-events-none"
             style={{
               left: `${paddingLeft}px`,
               width: "12px",
@@ -317,7 +317,7 @@ const FileTreeItem = ({
 
         {/* Name */}
         <span
-          className="flex-1 text-sm text-gray-700 truncate"
+          className="flex-1 text-sm truncate"
           title={entry.name}
         >
           {entry.name}
@@ -325,12 +325,14 @@ const FileTreeItem = ({
 
         {/* Directory counts (TASK-322) */}
         {isDirectory && directoryCounts && (
-          <span className="text-xs text-gray-500 ml-2">{directoryCounts}</span>
+          <span className="text-xs text-slate-500 ml-2">
+            {directoryCounts}
+          </span>
         )}
 
         {/* Size (only for files) */}
         {!isDirectory && (
-          <span className="text-xs text-gray-500">{entry.sizeFormatted}</span>
+          <span className="text-xs text-slate-500">{entry.sizeFormatted}</span>
         )}
 
         {/* Action Buttons (files only, TASK-313, TASK-323: always visible) */}
@@ -343,7 +345,7 @@ const FileTreeItem = ({
                 handleDownload();
               }}
               disabled={isDownloading}
-              className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+              className="p-1 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded disabled:opacity-50 disabled:cursor-not-allowed"
               title={`Download ${entry.name}`}
               type="button"
             >
@@ -358,7 +360,7 @@ const FileTreeItem = ({
             {onDelete && (
               <button
                 onClick={handleDelete}
-                className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded"
+                className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded"
                 aria-label={`Delete ${entry.name}`}
                 title={`Delete ${entry.name}`}
                 type="button"
@@ -494,8 +496,8 @@ export const FileTree = ({
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-8 text-gray-500 text-sm">
-        <div className="animate-spin h-4 w-4 border-2 border-gray-600 border-t-transparent rounded-full mr-2" />
+      <div className="flex items-center justify-center py-8 text-slate-500 text-sm">
+        <div className="animate-spin h-4 w-4 border-2 border-slate-500 border-t-transparent rounded-full mr-2" />
         Loading OPFS files...
       </div>
     );
@@ -503,7 +505,7 @@ export const FileTree = ({
 
   if (error) {
     return (
-      <div className="flex items-center justify-center py-8 text-red-600 text-sm">
+      <div className="flex items-center justify-center py-8 text-rose-600 text-sm">
         <span>{error}</span>
         <button
           onClick={reload}
@@ -518,7 +520,7 @@ export const FileTree = ({
 
   if (!entries || entries.length === 0) {
     return (
-      <div className="flex items-center justify-center py-8 text-gray-500 text-sm">
+      <div className="flex items-center justify-center py-8 text-slate-500 text-sm">
         No OPFS files found
       </div>
     );

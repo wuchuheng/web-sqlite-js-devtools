@@ -59,7 +59,7 @@ export const TreeLines = ({
       {/* Vertical line extends from top to bottom of container */}
       {/* For last child, we only extend to middle (handled by CSS in children) */}
       <div
-        className="tree-line-vertical absolute top-0 border-l border-dotted border-gray-300 pointer-events-none"
+        className="tree-line-vertical absolute top-0 border-l border-dotted border-slate-300 pointer-events-none"
         style={{
           left: "12px",
           // For non-last children: line goes full height

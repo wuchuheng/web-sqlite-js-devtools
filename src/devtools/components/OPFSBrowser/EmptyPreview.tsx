@@ -17,14 +17,17 @@ import { FiFileText } from "react-icons/fi";
  */
 export const EmptyPreview = (): JSX.Element => {
   return (
-    <div className="flex flex-col items-center justify-center h-full text-center p-8">
-      <div className="text-gray-400 mb-4">
+    <div className="flex flex-col items-center justify-center h-full text-center p-8 gap-4">
+      <div className="text-slate-300 mb-4">
         <FiFileText size={64} />
       </div>
-      <h3 className="text-gray-600 text-lg font-semibold mb-2">
+      <h3
+        className=" text-lg font-semibold mb-2 text-black text-bold"
+        style={{ fontWeight: "bold", color: "black" }}
+      >
         No file selected
       </h3>
-      <p className="text-gray-500 text-sm">
+      <p className="text-slate-500 text-sm">
         Select a file from the tree to preview its contents
       </p>
     </div>

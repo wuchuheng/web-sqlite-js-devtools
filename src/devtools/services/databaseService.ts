@@ -14,6 +14,7 @@ import type {
   LogEntry as DBLogEntry,
   ReleaseConfig,
 } from "../../types/DB";
+import { LOG_ENTRY_MESSAGE, LOG_ENTRY_SOURCE } from "@/shared/messages";
 
 /**
  * Standard response envelope for service operations
@@ -577,7 +578,12 @@ export const subscribeLogs = async (
 
   return inspectedWindowBridge
     .execute({
-      func: (databaseName: string, subId: string) => {
+      func: (
+        databaseName: string,
+        subId: string,
+        logEntryType: string,
+        logEntrySource: string,
+      ) => {
         try {
           const ok = <T>(data: T) => ({ success: true as const, data });
           const fail = (message: string) => ({
@@ -603,13 +609,16 @@ export const subscribeLogs = async (
           // Phase 2: Register log callback and get unsubscribe function
           // db.onLog returns an unsubscribe function
           const unsubscribe = db.onLog((entry: DBLogEntry) => {
-            // Send log entry via chrome.runtime.sendMessage to DevTools panel
-            // Include subscriptionId for routing
-            chrome.runtime.sendMessage({
-              type: "LOG_ENTRY",
-              subscriptionId: subId,
-              entry,
-            });
+            // Relay log entry to content script via window messaging
+            window.postMessage(
+              {
+                source: logEntrySource,
+                type: logEntryType,
+                subscriptionId: subId,
+                entry,
+              },
+              "*",
+            );
           });
 
           // Store unsubscribe function in window for later cleanup
@@ -623,7 +632,7 @@ export const subscribeLogs = async (
           return { success: false as const, error: String(error) };
         }
       },
-      args: [db_name, subscriptionId],
+      args: [db_name, subscriptionId, LOG_ENTRY_MESSAGE, LOG_ENTRY_SOURCE],
     })
     .then((response) => {
       // If subscription was successful, store it in the Map

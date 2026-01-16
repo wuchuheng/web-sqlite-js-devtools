@@ -7,7 +7,11 @@
  */
 
 import { useEffect } from "react";
-import { ICON_STATE_MESSAGE } from "@/shared/messages";
+import {
+  ICON_STATE_MESSAGE,
+  LOG_ENTRY_MESSAGE,
+  LOG_ENTRY_SOURCE,
+} from "@/shared/messages";
 
 /**
  * Main content script component
@@ -17,6 +21,13 @@ import { ICON_STATE_MESSAGE } from "@/shared/messages";
  */
 export default function App() {
   useEffect(() => {
+    type LogEntryRelayMessage = {
+      source?: string;
+      type?: string;
+      subscriptionId?: string;
+      entry?: unknown;
+    };
+
     /**
      * 1. Check if web-sqlite-js API is available on the page
      * 2. Log detection for debugging
@@ -87,13 +98,32 @@ export default function App() {
       webSqlite.onDatabaseChange(updateIconState);
     }
 
-    /**
-     * 1. Cleanup function (optional)
-     * 2. Handlers persist until page unload
-     * 3. No explicit cleanup needed for content script lifecycle
-     */
+    const onWindowMessage = (event: MessageEvent) => {
+      if (event.source !== window) {
+        return;
+      }
+
+      const data = event.data as LogEntryRelayMessage | null;
+      if (
+        !data
+        || data.source !== LOG_ENTRY_SOURCE
+        || data.type !== LOG_ENTRY_MESSAGE
+        || typeof data.subscriptionId !== "string"
+      ) {
+        return;
+      }
+
+      chrome.runtime.sendMessage({
+        type: LOG_ENTRY_MESSAGE,
+        subscriptionId: data.subscriptionId,
+        entry: data.entry,
+      });
+    };
+
+    window.addEventListener("message", onWindowMessage);
+
     return () => {
-      // Handlers automatically cleaned up on page unload
+      window.removeEventListener("message", onWindowMessage);
       console.log(
         "[Web Sqlite DevTools Content Script] Unmounting (page unloading)",
       );

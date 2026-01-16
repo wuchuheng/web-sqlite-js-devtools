@@ -22,5 +22,5 @@ chromium \
   --user-data-dir="$USER_DATA_DIR" \
   --disable-extensions-except="$EXT_DIR" \
   --load-extension="$EXT_DIR" \
-  # --auto-open-devtools-for-tabs \
-  --no-first-run
+  --no-first-run 
+  # --auto-open-devtools-for-tabs

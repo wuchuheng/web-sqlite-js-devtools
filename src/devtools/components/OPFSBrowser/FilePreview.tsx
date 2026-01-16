@@ -33,7 +33,7 @@ interface FilePreviewProps {
  *
  * @remarks
  * 1. Load file content when file prop changes
- * 2. Display loading state with emerald spinner
+ * 2. Display loading state with subtle spinner
  * 3. Display error state with retry button
  * 4. Display green header bar with filename and status badge (TASK-321)
  * 5. Delegate to appropriate preview component based on file type
@@ -52,6 +52,7 @@ export const FilePreview = ({ file }: FilePreviewProps): JSX.Element => {
     () => databaseService.getFileContent(file?.path || ""),
     [file?.path],
     null,
+    { enabled: Boolean(file?.path) },
   );
 
   // 2. No file selected - show empty state (TASK-319)
@@ -59,11 +60,11 @@ export const FilePreview = ({ file }: FilePreviewProps): JSX.Element => {
     return <EmptyPreview />;
   }
 
-  // 3. Loading state - show emerald spinner
+  // 3. Loading state - show subtle spinner
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="animate-spin h-8 w-8 border-4 border-emerald-600 border-t-transparent rounded-full" />
+        <div className="animate-spin h-8 w-8 border-4 border-slate-300 border-t-transparent rounded-full" />
       </div>
     );
   }
@@ -107,11 +108,7 @@ export const FilePreview = ({ file }: FilePreviewProps): JSX.Element => {
       // TextPreview component (TASK-316)
       return (
         <>
-          <PreviewHeader
-            fileName={file.name}
-            showStatus={true}
-            statusText="started"
-          />
+          <PreviewHeader fileName={file.name} fileSize={file.sizeFormatted} />
           <TextPreview
             file={file}
             content={data.content as string}
@@ -124,11 +121,7 @@ export const FilePreview = ({ file }: FilePreviewProps): JSX.Element => {
       // ImagePreview component (TASK-317)
       return (
         <>
-          <PreviewHeader
-            fileName={file.name}
-            showStatus={true}
-            statusText="started"
-          />
+          <PreviewHeader fileName={file.name} fileSize={file.sizeFormatted} />
           <ImagePreview
             file={file}
             content={data.content as Blob}
@@ -141,11 +134,7 @@ export const FilePreview = ({ file }: FilePreviewProps): JSX.Element => {
       // UnsupportedPreview - Binary files cannot be previewed (TASK-319)
       return (
         <>
-          <PreviewHeader
-            fileName={file.name}
-            showStatus={true}
-            statusText="started"
-          />
+          <PreviewHeader fileName={file.name} fileSize={file.sizeFormatted} />
           <UnsupportedPreview file={file} metadata={data.metadata} />
         </>
       );
