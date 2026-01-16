@@ -36,25 +36,30 @@ Perform comprehensive integration testing for F-014 OPFS UI Visual Redesign:
 ## F-014 Changes Summary
 
 **TASK-320**: Color Scheme Updates
+
 - Header icon: blue → green
 - Helper notice removed
 - Preview background: emerald-50 → white
 
 **TASK-321**: Preview Header Component
+
 - New green header bar (bg-green-600)
 - "Preview: [filename]" title
 - Status badge (white bg, green text)
 
 **TASK-322**: File Tree Directory Counts
+
 - getDirectoryCounts helper function
 - Display counts for directories
 - Style: text-xs text-gray-500 ml-2
 
 **TASK-323**: Icon Visibility
+
 - Action icons always visible (opacity-100)
 - Removed hover-only behavior
 
 **TASK-324**: Footer Removal
+
 - Removed footer tip section
 - Clean layout without footer
 
@@ -134,30 +139,30 @@ This task is testing/documentation only:
 
 ## Testing Checklist
 
-| Category              | Test Item                                | Expected Result                          |
-| --------------------- | ---------------------------------------- | ---------------------------------------- |
-| **Visual**            | Green color theme                         | Consistent green (#4CAF50) throughout    |
-| **Visual**            | Preview header                            | Green bar with "Preview: [filename]"     |
-| **Visual**            | File counts                               | Displayed next to directory names        |
-| **Visual**            | Action icons                              | Always visible (not hover-only)          |
-| **Visual**            | Helper notice                             | Removed from OPFSGallery                  |
-| **Visual**            | Footer                                    | Removed from OPFSGallery                  |
-| **Functional**        | Expand/collapse directories               | Works as before                           |
-| **Functional**        | Download files                            | Works as before                           |
-| **Functional**        | Delete files                              | Works with confirmation modal             |
-| **Functional**        | Text preview                              | Displays correctly                        |
-| **Functional**        | Image preview                             | Displays correctly                        |
-| **Functional**        | Unsupported preview                      | Displays placeholder                      |
-| **Functional**        | Panel resize                              | Works correctly                           |
-| **Accessibility**     | Color contrast                            | Meets WCAG AA                             |
-| **Accessibility**     | Keyboard navigation                      | Tab, Enter, Escape work                   |
-| **Accessibility**     | ARIA labels                               | Present on interactive elements           |
-| **Code Quality**      | ESLint                                    | No new warnings                           |
-| **Code Quality**      | Build                                     | No errors                                 |
-| **Code Quality**      | Type check                                | No errors                                 |
-| **Code Quality**      | TSDoc comments                            | Present on PreviewHeader.tsx              |
-| **Documentation**     | Feature spec                              | F-014 marked complete                     |
-| **Documentation**     | Status board                              | F-014 marked complete                     |
+| Category          | Test Item                   | Expected Result                       |
+| ----------------- | --------------------------- | ------------------------------------- |
+| **Visual**        | Green color theme           | Consistent green (#4CAF50) throughout |
+| **Visual**        | Preview header              | Green bar with "Preview: [filename]"  |
+| **Visual**        | File counts                 | Displayed next to directory names     |
+| **Visual**        | Action icons                | Always visible (not hover-only)       |
+| **Visual**        | Helper notice               | Removed from OPFSGallery              |
+| **Visual**        | Footer                      | Removed from OPFSGallery              |
+| **Functional**    | Expand/collapse directories | Works as before                       |
+| **Functional**    | Download files              | Works as before                       |
+| **Functional**    | Delete files                | Works with confirmation modal         |
+| **Functional**    | Text preview                | Displays correctly                    |
+| **Functional**    | Image preview               | Displays correctly                    |
+| **Functional**    | Unsupported preview         | Displays placeholder                  |
+| **Functional**    | Panel resize                | Works correctly                       |
+| **Accessibility** | Color contrast              | Meets WCAG AA                         |
+| **Accessibility** | Keyboard navigation         | Tab, Enter, Escape work               |
+| **Accessibility** | ARIA labels                 | Present on interactive elements       |
+| **Code Quality**  | ESLint                      | No new warnings                       |
+| **Code Quality**  | Build                       | No errors                             |
+| **Code Quality**  | Type check                  | No errors                             |
+| **Code Quality**  | TSDoc comments              | Present on PreviewHeader.tsx          |
+| **Documentation** | Feature spec                | F-014 marked complete                 |
+| **Documentation** | Status board                | F-014 marked complete                 |
 
 ## Rollback Strategy
 
