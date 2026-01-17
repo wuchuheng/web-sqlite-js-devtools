@@ -1837,19 +1837,19 @@ NOTES
     - [x] TypeScript strict mode compliance
     - [x] ESLint passed (no new warnings)
 
-- [ ] **TASK-340**: Popup Component Rewrite (F-019)
+- [x] **TASK-340**: Popup Component Rewrite (F-019)
   - **Priority**: P1 (High)
   - **Dependencies**: TASK-337, TASK-338, TASK-339
   - **Boundary**: `src/popup/Popup.tsx`
   - **Maps to**: F-019, FR-002
   - **Feature**: [F-019: Popup DevTools Status Indicator](agent-docs/01-discovery/features/F-019-popup-devtools-status.md)
-  - **Micro-Spec**: [pending](agent-docs/08-task/active/TASK-340.md)
+  - **Micro-Spec**: [complete](agent-docs/08-task/active/TASK-340.md)
   - **Estimated**: 0.6 hours
   - **DoD**:
-    - [ ] Complete rewrite of `src/popup/Popup.tsx` (remove template counter)
-    - [ ] Add `hasDatabase` state: `useState<boolean | null>(null)`
-    - [ ] Add `showStatus` state: `useState<boolean>(false)`
-    - [ ] Implement `useEffect` to query background on mount:
+    - [x] Complete rewrite of `src/popup/Popup.tsx` (remove template counter)
+    - [x] Add `hasDatabase` state: `useState<boolean | null>(null)`
+    - [x] Add `showStatus` state: `useState<boolean>(false)`
+    - [x] Implement `useEffect` to query background on mount:
       ```typescript
       useEffect(() => {
         chrome.runtime.sendMessage(
@@ -1860,18 +1860,18 @@ NOTES
         );
       }, []);
       ```
-    - [ ] Implement `handleMouseEnter()`: `setShowStatus(true)`
-    - [ ] Implement `handleMouseLeave()`: `setShowStatus(false)`
-    - [ ] Render logo based on state:
+    - [x] Implement `handleMouseEnter()`: `setShowStatus(true)`
+    - [x] Implement `handleMouseLeave()`: `setShowStatus(false)`
+    - [x] Render logo based on state:
       - Loading: `<div className="loading-spinner" />`
       - Active: `<img src="img/logo-48.png" alt="..." />`
       - Inactive: `<img src="img/logo-48-inactive.png" alt="..." />`
-    - [ ] Render status text on hover: "DevTools Active" or "No databases detected"
-    - [ ] Add ARIA labels: `aria-label`, `role="status"`, `aria-live="polite"`
-    - [ ] Add title attribute to icon for native tooltip
-    - [ ] TSDoc comments on component
-    - [ ] TypeScript strict mode compliance
-    - [ ] ESLint passed (no new warnings)
+    - [x] Render status text on hover: "DevTools Active" or "No databases detected"
+    - [x] Add ARIA labels: `aria-label`, `role="status"`, `aria-live="polite"`
+    - [x] Add title attribute to icon for native tooltip
+    - [x] TSDoc comments on component
+    - [x] TypeScript strict mode compliance
+    - [x] ESLint passed (no new warnings)
 
 - [ ] **TASK-341**: Popup Styles Update (F-019)
   - **Priority**: P1 (High)
