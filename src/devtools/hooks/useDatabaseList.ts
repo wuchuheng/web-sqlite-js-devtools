@@ -7,7 +7,7 @@
  * Filters messages by tabId to ensure correct panel receives updates.
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { DATABASE_LIST_MESSAGE } from "@/shared/messages";
 import { databaseService } from "@/devtools/services/databaseService";
 
@@ -45,28 +45,27 @@ interface UseDatabaseListReturn {
 export const useDatabaseList = (): UseDatabaseListReturn => {
   const [databases, setDatabases] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const tabIdRef = useRef<number | null>(null);
+  const initialFetchStartedRef = useRef(false);
 
   useEffect(() => {
+    const resolveTabId = () => {
+      const currentTabId = chrome.devtools?.inspectedWindow?.tabId;
+      if (typeof currentTabId === "number" && currentTabId > 0) {
+        tabIdRef.current = currentTabId;
+        return true;
+      }
+      return false;
+    };
+
     // Get current tab ID - may be undefined on initial load
-    let tabId = chrome.devtools.inspectedWindow.tabId;
+    resolveTabId();
 
     /**
      * 1. Fetch initial database list on mount
      * 2. Set loading to false after fetch
      */
     const fetchInitialData = async () => {
-      // Wait for tabId to be available before fetching
-      if (!tabId) {
-        tabId = chrome.devtools.inspectedWindow.tabId;
-        if (!tabId) {
-          console.warn(
-            "[useDatabaseList] tabId not available yet, skipping initial fetch",
-          );
-          setIsLoading(false);
-          return;
-        }
-      }
-
       try {
         const response = await databaseService.getDatabases();
         if (response.success && response.data) {
@@ -82,8 +81,41 @@ export const useDatabaseList = (): UseDatabaseListReturn => {
       }
     };
 
+    const startInitialFetch = () => {
+      if (initialFetchStartedRef.current) {
+        return;
+      }
+
+      if (!resolveTabId()) {
+        return;
+      }
+
+      initialFetchStartedRef.current = true;
+      void fetchInitialData();
+    };
+
     // Small delay to ensure DevTools context is ready
-    const timeoutId = setTimeout(fetchInitialData, 100);
+    const timeoutId = setTimeout(startInitialFetch, 100);
+    let tabIdPolls = 0;
+    const maxTabIdPolls = 20;
+    const tabIdPollId = setInterval(() => {
+      tabIdPolls += 1;
+      if (resolveTabId()) {
+        startInitialFetch();
+        clearInterval(tabIdPollId);
+        return;
+      }
+
+      if (tabIdPolls >= maxTabIdPolls) {
+        clearInterval(tabIdPollId);
+        if (!tabIdRef.current) {
+          console.warn(
+            "[useDatabaseList] tabId not available after waiting; updates may be delayed",
+          );
+          setIsLoading(false);
+        }
+      }
+    }, 50);
 
     /**
      * 1. Listen for DATABASE_LIST_MESSAGE from background worker
@@ -99,7 +131,15 @@ export const useDatabaseList = (): UseDatabaseListReturn => {
           }
         | undefined;
 
-      if (msg?.type === DATABASE_LIST_MESSAGE && msg.tabId === tabId) {
+      if (msg?.type !== DATABASE_LIST_MESSAGE) {
+        return;
+      }
+
+      if (!resolveTabId()) {
+        return;
+      }
+
+      if (msg.tabId === tabIdRef.current) {
         setDatabases(msg.databases);
         setIsLoading(false);
       }
@@ -113,6 +153,7 @@ export const useDatabaseList = (): UseDatabaseListReturn => {
     return () => {
       chrome.runtime.onMessage.removeListener(messageListener);
       clearTimeout(timeoutId);
+      clearInterval(tabIdPollId);
     };
   }, []);
 

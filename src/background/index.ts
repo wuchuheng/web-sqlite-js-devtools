@@ -15,6 +15,7 @@ import {
   handleDatabaseListMessage,
   cleanupTab,
   getCurrentTabDatabaseStatus,
+  getTabDatabaseStatus,
 } from "./iconState";
 import { initRouter } from "@/messaging/core";
 import {
@@ -166,7 +167,7 @@ initializeBackground();
  * - GET_TAB_DATABASE_STATUS: Popup status query (F-019)
  * - "request": Wake up offscreen document
  */
-// eslint-disable-next-line consistent-return -- Chrome extension async message handling requires return true only for async handlers
+// eslint-disable-next-line consistent-return -- Some message types need async sendResponse.
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   // DEBUG: Log all messages
   console.log(
@@ -209,10 +210,20 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   // F-019: Popup status query
   if (message?.type === GET_TAB_DATABASE_STATUS) {
     console.log("[Background DEBUG] Handling GET_TAB_DATABASE_STATUS");
-    getCurrentTabDatabaseStatus().then((status) => {
+    void (async () => {
+      const requestedTabId =
+        typeof message?.tabId === "number" ? message.tabId : null;
+      const status = requestedTabId
+        ? await getTabDatabaseStatus(requestedTabId)
+        : await getCurrentTabDatabaseStatus();
+      console.log(
+        "[Background DEBUG] Responding to GET_TAB_DATABASE_STATUS with:",
+        status,
+        requestedTabId ? `(tabId ${requestedTabId})` : "",
+      );
       sendResponse(status);
-    });
-    return true; // Async response
+    })();
+    return true;
   }
 
   // Wake up offscreen document
@@ -241,8 +252,6 @@ chrome.tabs.onActivated.addListener(({ tabId }) => {
  * @remarks
  * When tab is closed, clean up the database map to free memory.
  */
-chrome.tabs.onRemoved.addListener((tabId) => {
-  cleanupTab(tabId);
-});
+chrome.tabs.onRemoved.addListener((tabId) => cleanupTab(tabId));
 
 export {};

@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import "./Popup.css";
-import { DATABASE_STATUS_CHANGED } from "@/shared/messages";
-
-const ACTIVE_ICON = "img/logo-48.png";
-const INACTIVE_ICON = "img/logo-48-inactive.png";
+import {
+  DATABASE_STATUS_CHANGED,
+  GET_TAB_DATABASE_STATUS,
+} from "@/shared/messages";
 
 /**
  * Popup component displaying DevTools status indicator
@@ -23,33 +23,54 @@ export const Popup = () => {
   // 1. Track database state for current tab (boolean)
   // 2. Track hover state for status text visibility
   const [hasDatabase, setHasDatabase] = useState<boolean | null>(null);
-  const [showStatus, setShowStatus] = useState(false);
+  const getActiveTabId = async (): Promise<number | null> => {
+    const query = (queryInfo: chrome.tabs.QueryInfo) =>
+      new Promise<chrome.tabs.Tab[]>((resolve) => {
+        chrome.tabs.query(queryInfo, resolve);
+      });
+
+    const [primary] = await query({
+      active: true,
+      lastFocusedWindow: true,
+      windowType: "normal",
+    });
+    if (primary?.id) {
+      return primary.id;
+    }
+
+    const [fallback] = await query({ active: true, windowType: "normal" });
+    if (fallback?.id) {
+      return fallback.id;
+    }
+
+    const [currentWindow] = await query({
+      active: true,
+      currentWindow: true,
+    });
+    return currentWindow?.id ?? null;
+  };
+  const updateState = async () => {
+    const tabId = await getActiveTabId();
+    const result = await chrome.runtime.sendMessage({
+      type: GET_TAB_DATABASE_STATUS,
+      tabId,
+    });
+    console.log("Popup received database status:", result, "tabId:", tabId);
+    setHasDatabase(Boolean(result));
+  };
 
   useEffect(() => {
-    // 1. Query initial status on mount
-    chrome.runtime.sendMessage(
-      { type: "GET_TAB_DATABASE_STATUS" },
-      (response: boolean) => {
-        if (chrome.runtime.lastError) {
-          return;
-        }
-        setHasDatabase(response);
-      },
-    );
-
-    // 2. Listen for proactive updates from background
-    const messageListener = (message: unknown) => {
-      if (
-        typeof message === "object"
-        && message !== null
-        && "type" in message
-        && message.type === DATABASE_STATUS_CHANGED
-        && "hasDatabase" in message
-      ) {
+    updateState().then();
+    const messageListener = (message: any) => {
+      console.log("Popup received message:", message);
+      if (message?.type === DATABASE_STATUS_CHANGED) {
+        console.log(
+          "Popup received DATABASE_STATUS_CHANGED message:",
+          message.hasDatabase,
+        );
         setHasDatabase(Boolean(message.hasDatabase));
       }
     };
-
     chrome.runtime.onMessage.addListener(messageListener);
 
     // Cleanup listener on unmount
@@ -58,39 +79,32 @@ export const Popup = () => {
     };
   }, []);
 
-  const handleMouseEnter = () => setShowStatus(true);
-  const handleMouseLeave = () => setShowStatus(false);
-
-  // Show loading spinner while querying
+  // Show loading message while querying
   if (hasDatabase === null) {
     return (
-      <main className="popup-container">
-        <div className="loading-spinner" />
+      <main className="popup-container" data-status="loading">
+        <div className="popup-status">Checking status...</div>
       </main>
     );
   }
 
-  const iconSrc = hasDatabase ? ACTIVE_ICON : INACTIVE_ICON;
-  const statusText = hasDatabase ? "DevTools Active" : "No databases detected";
+  const statusText = hasDatabase
+    ? "Web-Sqlite-js detected"
+    : "Web-Sqlite-js not detected";
 
   return (
-    <main
-      className="popup-container"
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
+    <div
+      className="popup-status"
+      role="status"
+      aria-live="polite"
+      style={{
+        padding: "10px",
+        fontSize: "14px",
+        color: hasDatabase ? "green" : "red",
+      }}
     >
-      <img
-        src={iconSrc}
-        alt="Web SQLite DevTools"
-        className="popup-logo"
-        title={statusText}
-      />
-      {showStatus && (
-        <div className="popup-status" role="status" aria-live="polite">
-          {statusText}
-        </div>
-      )}
-    </main>
+      {statusText}
+    </div>
   );
 };
 

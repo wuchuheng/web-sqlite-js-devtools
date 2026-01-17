@@ -24,6 +24,82 @@ import { DATABASE_STATUS_CHANGED } from "@/shared/messages";
  */
 const databaseMap = new Map<number, FrameDatabases[]>();
 
+const getActiveTabId = (): Promise<number | null> => {
+  return new Promise((resolve) => {
+    chrome.tabs.query(
+      {
+        active: true,
+        lastFocusedWindow: true,
+        windowType: "normal",
+      },
+      (tabs) => {
+        const activeTab = tabs[0];
+        if (activeTab?.id) {
+          resolve(activeTab.id);
+          return;
+        }
+
+        chrome.tabs.query({ active: true, currentWindow: true }, (fallback) => {
+          const fallbackTab = fallback[0];
+          resolve(fallbackTab?.id ?? null);
+        });
+      },
+    );
+  });
+};
+
+const queryTabDatabases = async (
+  tabId: number,
+): Promise<FrameDatabases[] | null> => {
+  if (!chrome?.scripting?.executeScript) {
+    return null;
+  }
+
+  try {
+    const results = await chrome.scripting.executeScript({
+      target: { tabId, allFrames: true },
+      world: "MAIN",
+      func: () => {
+        try {
+          const api = window.__web_sqlite;
+          return api?.databases ? Object.keys(api.databases) : [];
+        } catch {
+          return [];
+        }
+      },
+    });
+
+    return results.map((result) => {
+      const databases = Array.isArray(result.result) ? result.result : [];
+      const frameId =
+        typeof result.frameId === "number" && result.frameId > 0
+          ? result.frameId
+          : undefined;
+      return { databases, frameId };
+    });
+  } catch (error) {
+    console.warn("[Icon State] Failed to query databases for tab:", tabId, error);
+    return null;
+  }
+};
+
+export const getTabDatabaseStatus = async (
+  tabId: number,
+): Promise<boolean> => {
+  const existingFrames = databaseMap.get(tabId);
+  if (existingFrames && existingFrames.length > 0) {
+    return tabHasDatabases(tabId);
+  }
+
+  const frames = await queryTabDatabases(tabId);
+  if (!frames) {
+    return false;
+  }
+
+  databaseMap.set(tabId, frames);
+  return frames.some((frame) => frame.databases.length > 0);
+};
+
 /**
  * 1. Check if hasDatabase is true/false
  * 2. Set icon path to active (colored) or inactive (grayscale)
@@ -121,6 +197,9 @@ export const updateIconForTab = (tabId: number): void => {
   console.log(
     `[Icon State] Tab ${tabId}: ${hasDatabase ? "active" : "inactive"} (${totalDatabases} databases in ${frames?.length || 0} frame(s))`,
   );
+
+  // Broadcast status change to popup for real-time updates
+  broadcastStatusChange(hasDatabase);
 };
 
 /**
@@ -167,8 +246,8 @@ export const handleDatabaseListMessage = (
   );
 
   // Update icon if this is the active tab
-  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    if (tabs[0]?.id === tabId) {
+  void getActiveTabId().then((activeTabId) => {
+    if (activeTabId === tabId) {
       const hasDatabase = tabHasDatabases(tabId);
       updateIconForTab(tabId);
       // Broadcast status change to popup for real-time updates
@@ -224,19 +303,14 @@ export const getCurrentTabDatabaseStatus = async (): Promise<boolean> => {
   // 1. Query current active tab ID
   // 2. Look up tab in databaseMap
   // 3. Return boolean indicating if databases exist
-  return new Promise((resolve) => {
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      const activeTab = tabs[0];
+  const tabId = await getActiveTabId();
+  if (!tabId) {
+    return false;
+  }
 
-      // Handle case when activeTab is undefined
-      if (!activeTab?.id) {
-        resolve(false);
-        return;
-      }
-
-      resolve(tabHasDatabases(activeTab.id));
-    });
-  });
+  const status = await getTabDatabaseStatus(tabId);
+  updateIconForTab(tabId);
+  return status;
 };
 
 /**

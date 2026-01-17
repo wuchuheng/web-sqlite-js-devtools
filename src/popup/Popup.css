@@ -1,61 +1,55 @@
-/* Popup container - 200×200px centered layout */
+/* Popup container - text-only, DevTools palette */
+:root {
+  --popup-bg: #f9fafb;
+  --popup-border: #e5e7eb;
+  --popup-text: #374151;
+  --popup-muted: #6b7280;
+  --popup-active: #047857;
+  --popup-inactive: #b45309;
+}
+
 .popup-container {
-  width: 200px;
-  height: 200px;
+  width: 220px;
+  height: 140px;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 16px;
+  padding: 16px;
+  background: var(--popup-bg);
+  border: 1px solid var(--popup-border);
+  border-radius: 12px;
   font-family:
-    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    "Open Sans",
+    "Helvetica Neue",
+    sans-serif;
 }
 
-/* Logo styles - 64×64px with hover animation */
-.popup-logo {
-  width: 64px;
-  height: 64px;
-  cursor: pointer;
-  transition: transform 150ms ease-in-out;
-}
-
-.popup-logo:hover {
-  transform: scale(1.1);
-}
-
-/* Status text - 13px with fade-in animation */
 .popup-status {
-  font-size: 13px;
-  color: #4b5563; /* gray-600 */
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--popup-text);
   text-align: center;
-  padding: 4px 8px;
-  border-radius: 4px;
-  animation: fadeIn 150ms ease-in-out;
+  line-height: 1.4;
+  letter-spacing: 0.15px;
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.popup-container[data-status="active"] .popup-status {
+  color: var(--popup-active);
 }
 
-/* Loading spinner */
-.loading-spinner {
-  width: 24px;
-  height: 24px;
-  border: 2px solid #e5e7eb;
-  border-top-color: #059669;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+.popup-container[data-status="inactive"] .popup-status {
+  color: var(--popup-inactive);
 }
 
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
+.popup-container[data-status="loading"] .popup-status {
+  color: var(--popup-muted);
+  font-weight: 500;
 }

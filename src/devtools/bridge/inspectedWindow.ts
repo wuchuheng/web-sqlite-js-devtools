@@ -60,8 +60,32 @@ async function executeInMainWorld<
     );
   }
 
+  const resolveTabId = async (
+    candidateTabId: number | null | undefined,
+  ): Promise<number> => {
+    if (typeof candidateTabId === "number" && candidateTabId > 0) {
+      return candidateTabId;
+    }
+
+    const startTime = Date.now();
+    const timeoutMs = 1000;
+    const pollIntervalMs = 50;
+
+    while (Date.now() - startTime < timeoutMs) {
+      const currentTabId = chrome.devtools?.inspectedWindow?.tabId;
+      if (typeof currentTabId === "number" && currentTabId > 0) {
+        return currentTabId;
+      }
+      await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
+    }
+
+    return candidateTabId as number;
+  };
+
   const { func, args = [], options } = config;
-  const tabId = options?.tabId ?? chrome.devtools.inspectedWindow.tabId;
+  const tabId = await resolveTabId(
+    options?.tabId ?? chrome.devtools.inspectedWindow.tabId,
+  );
 
   // Validate tabId before proceeding - it must be a valid number for executeScript
   if (typeof tabId !== "number" || tabId <= 0) {

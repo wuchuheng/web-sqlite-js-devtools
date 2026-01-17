@@ -35,6 +35,29 @@ export const useInspectedWindowRequest = <T>(
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const isEnabled = options?.enabled ?? true;
+  const isTabIdReady = () => {
+    const tabId = chrome.devtools?.inspectedWindow?.tabId;
+    return typeof tabId === "number" && tabId > 0;
+  };
+  const [isTabReady, setIsTabReady] = useState(isTabIdReady);
+
+  useEffect(() => {
+    if (!isEnabled || isTabReady) {
+      return;
+    }
+
+    const pollId = setInterval(() => {
+      if (isTabIdReady()) {
+        setIsTabReady(true);
+        clearInterval(pollId);
+        return;
+      }
+    }, 50);
+
+    return () => {
+      clearInterval(pollId);
+    };
+  }, [isEnabled, isTabReady]);
 
   /**
    * 1. Trigger async request
@@ -44,6 +67,12 @@ export const useInspectedWindowRequest = <T>(
   const load = useCallback(async () => {
     if (!isEnabled) {
       setIsLoading(false);
+      setError(null);
+      return;
+    }
+
+    if (!isTabReady) {
+      setIsLoading(true);
       setError(null);
       return;
     }
@@ -79,7 +108,7 @@ export const useInspectedWindowRequest = <T>(
     } finally {
       setIsLoading(false);
     }
-  }, [...deps, isEnabled]);
+  }, [...deps, isEnabled, isTabReady]);
 
   useEffect(() => {
     void load();

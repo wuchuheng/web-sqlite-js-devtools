@@ -16,6 +16,7 @@ This task updates the popup CSS styles to support the new DevTools status indica
 ## Current State
 
 `src/popup/Popup.css` contains:
+
 - Template counter styles (buttons, labels, links)
 - Light/dark mode media queries
 - Unrelated to new popup design
@@ -23,6 +24,7 @@ This task updates the popup CSS styles to support the new DevTools status indica
 ## Desired State
 
 Replace with minimal, clean styles for status indicator:
+
 - 200×200px popup container with centered content
 - 64×64px logo with hover scale animation
 - 13px status text with fade-in animation
@@ -42,7 +44,8 @@ Replace with minimal, clean styles for status indicator:
   align-items: center;
   justify-content: center;
   gap: 16px;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 /* Logo styles - 64×64px with hover animation */
@@ -96,6 +99,7 @@ Replace with minimal, clean styles for status indicator:
 ```
 
 **Rationale**:
+
 - Minimal, clean design (similar to Vue DevTools)
 - Smooth animations (150ms for logo, 150ms for text fade)
 - Accessible colors (WCAG AA compliance)
@@ -121,6 +125,7 @@ Replace with minimal, clean styles for status indicator:
 ## Testing Strategy
 
 Manual verification:
+
 1. Open popup → verify 200×200px size
 2. Hover over logo → verify scale(1.1) animation
 3. Hover over logo → verify status text fades in

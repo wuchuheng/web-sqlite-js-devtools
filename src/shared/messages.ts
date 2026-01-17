@@ -72,6 +72,8 @@ export interface DatabaseListMessage {
  */
 export interface GetTabDatabaseStatusMessage {
   type: typeof GET_TAB_DATABASE_STATUS;
+  /** Optional tab ID to query explicitly */
+  tabId?: number;
 }
 
 /**
