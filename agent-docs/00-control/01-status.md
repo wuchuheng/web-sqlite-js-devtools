@@ -565,3 +565,20 @@ NOTES
   - **Documentation Updates**: Updated agent-docs/00-control/00-spec.md (current stage to S7, status summary with F-013 documentation complete, added comprehensive change log entry with all stage details); Updated agent-docs/00-control/01-status.md (current stage to S7, current focus to F-013 documentation complete, added F-013 to Active work table, added R10 risk, updated upcoming section with F-013 implementation details, added C49 change log)
   - **Ready for Stage 8**: All documentation complete, ready for implementation by S8:worker, estimated 9 hours for 6 tasks, LOW risk (proven patterns from F-006, F-012, 90% code reusability)
   - **Next Task**: Stage 8 Implementation (S8:worker) - TASK-314 through TASK-319
+- **C50**: 2026-01-17 - TASK-331: SVG to PNG Logo Generator (F-016) - Implementation Complete
+  - **Implementation**: Rewrote `scripts/generate-logos.tsx` (295 lines) using SVG filter approach
+    - Added `addGrayscaleFilter()` function: Injects `<feColorMatrix type="saturate" values="0"/>` into SVG `<defs>`
+    - Added `applyGrayscaleFilter()` function: Applies `filter="url(#grayscale)"` to SVG root element
+    - Added `addGrayBackground()` function: Adds gray rectangle `<rect fill="#808080"/>` as first child
+    - Added `createInactiveSVG()` function: Orchestrates 3-step transformation (filter → apply → background)
+  - **SVG Filter Benefits**: Native W3C standard, 50 lines vs 200+ for manual color manipulation, hardware-accelerated rendering, works with ANY SVG structure
+  - **PNG Generation**: All 8 files generated successfully (16/32/48/128px × active/inactive states)
+    - logo-16.png (538 bytes), logo-16-inactive.png (507 bytes)
+    - logo-32.png (978 bytes), logo-32-inactive.png (939 bytes)
+    - logo-48.png (1452 bytes), logo-48-inactive.png (1361 bytes)
+    - logo-128.png (3854 bytes), logo-128-inactive.png (3753 bytes)
+  - **Code Quality**: Three-phase comments (Input → Process → Output), TSDoc documentation, functional design (pure functions, no classes), proper error handling
+  - **Build Status**: ESLint passed with no errors
+  - **Documentation**: Created SVG filter research docs (SVG_FILTER_RESEARCH.md, SVG_COLOR_CONVERSION_RULES.md), updated feature spec as complete, marked TASK-331 complete in task catalog
+  - **Feature F-016 Complete**: Developer tooling for logo generation ready for use
+  - **Next Task**: Resume F-015 (OPFS Tree Enhancements) - TASK-326/327/328/329

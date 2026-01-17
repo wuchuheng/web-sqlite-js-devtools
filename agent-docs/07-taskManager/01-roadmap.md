@@ -1625,3 +1625,140 @@ Enhance the OPFS File Browser with guided tree lines for visual hierarchy, delet
 - [ ] Type check passed with no errors
 - [ ] Feature spec marked complete
 - [ ] Documentation updated (HLD Section 20, LLD Section 13, status board)
+
+---
+
+#### Phase 13: Developer Tooling - Logo Generator (ASAP)
+
+**Milestone**: F-016 Complete - Automated SVG to PNG logo generation
+
+**Feature**: F-016 - SVG to PNG Logo Generator
+
+**Overview**: Create a developer tooling script to automate the conversion of `public/icons/logo.svg` into multiple PNG files (4 sizes × 2 states = 8 files). This eliminates manual image conversion work when the extension logo design changes.
+
+**Target Date**: ASAP
+**Duration**: 2.5 hours (REDUCED from 3 hours - using SVG filters)
+**Baseline**: Feature spec complete, ready for implementation
+
+### Task Breakdown
+
+- [ ] **TASK-331**: SVG to PNG Logo Generator (F-016)
+  - **Estimated**: 2.5 hours (single consolidated task)
+  - **Priority**: P2 (Medium) - Developer Tooling
+  - **Dependencies**: None
+  - **Micro-Spec**: [TASK-331.md](../../08-task/active/TASK-331.md)
+
+  **Implementation Phases**:
+  1. **Setup & Configuration** (0.5 hour)
+     - Create `scripts/` directory if not exists
+     - Verify `tsx` is installed in devDependencies
+     - Add `generate:logos` script to package.json scripts section
+     - Test that `npm run generate:logos` is recognized
+
+  2. **Script Implementation** (1.5 hours - REDUCED from 2 hours)
+     - Create `scripts/generate-logos.ts` with TypeScript
+     - Define TypeScript interfaces: `LogoSize`, `LogoState`, `GenerateOptions`
+     - Implement SVG file reading (read `public/icons/logo.svg` as text/string)
+     - Implement SVG filter approach for inactive state:
+       - Add grayscale filter to SVG `<defs>` section:
+         ```xml
+         <filter id="grayscale">
+           <feColorMatrix type="saturate" values="0"/>
+         </filter>
+         ```
+       - Apply filter to SVG root element: `filter="url(#grayscale)"`
+       - Handle existing `<defs>` case (append filter)
+       - Handle no `<defs>` case (create new defs section)
+       - Handle existing filter attribute (replace)
+     - Implement gray background addition:
+       - Extract viewBox dimensions from SVG
+       - Create background rectangle: `<rect fill="#808080" .../>`
+       - Insert as first child (behind all content)
+     - Use native SVG filters - NO color parsing/replacement needed!
+       - Works automatically with ALL colors (hex, rgb, named, gradients)
+       - No regex patterns for colors needed
+       - No color format conversion needed
+       - Much simpler and more maintainable
+     - Implement PNG generation for 4 sizes: 16, 32, 48, 128
+       - Active state: Use original SVG (full blue gradient colors)
+       - Inactive state: Use modified SVG (filter applied + gray background)
+     - Use `sharp` library for SVG to PNG rendering (recommended by research)
+     - Implement file system operations (write PNGs to `public/img/`)
+     - Add error handling for missing SVG, write permissions, invalid sizes
+     - Add validation that all 8 files were created successfully
+     - Add console output with progress and completion messages
+     - Add TSDoc comments to all functions
+     - TypeScript strict mode compliance
+     - Reference: See `agent-docs/08-task/active/SVG_COLOR_CONVERSION_RULES.md` for detailed rules
+     - Research: See `agent-docs/08-task/active/SVG_FILTER_RESEARCH.md` for best practices research
+
+  3. **Testing & Verification** (0.5 hour)
+     - Run `npm run generate:logos` and verify all 8 PNGs generated
+     - Test error scenarios: missing SVG, invalid directory
+     - Verify output quality in image viewer (all sizes and states)
+     - Verify active state has full blue gradient color
+     - Verify inactive state has grayscale content on gray background (SVG filter applied)
+     - Verify grayscale filter works correctly with all logo colors
+     - Verify gray background (`#808080`) is added behind content
+     - Verify SVG filter is properly embedded in output PNGs
+     - Verify file sizes are reasonable (not corrupted or empty)
+     - ESLint verification (no new warnings for script)
+     - Build verification (script compiles with tsx)
+     - Update feature spec with completion status
+     - Update status board with completion evidence
+
+### Acceptance Criteria
+
+**Happy Path**:
+
+- [ ] Running `npm run generate:logos` successfully creates 8 PNG files in `public/img/`:
+  - [ ] `logo-16.png`, `logo-16-inactive.png`
+  - [ ] `logo-32.png`, `logo-32-inactive.png`
+  - [ ] `logo-48.png`, `logo-48-inactive.png`
+  - [ ] `logo-128.png`, `logo-128-inactive.png`
+- [ ] All PNGs are rendered correctly from the SVG source
+- [ ] Active state uses the full-color SQLite logo (blue gradient) - original SVG
+- [ ] Inactive state uses grayscale content on gray background (SVG filter applied)
+- [ ] Grayscale filter properly converts all colors (native SVG feature)
+- [ ] Gray background added: `<rect fill="#808080"/>`
+- [ ] Script completes without errors in < 5 seconds
+
+**Error Path**:
+
+- [ ] Script fails with clear error message if `public/icons/logo.svg` is missing
+- [ ] Script fails with clear error message if `public/img/` directory cannot be written
+- [ ] Script validates file creation (checks if all 8 files were successfully written)
+
+**Non-Functional Requirements**:
+
+- [ ] **Performance**: Script completes in < 5 seconds for all 8 PNG files
+- [ ] **Maintainability**: TypeScript code with clear comments and type definitions
+- [ ] **Dependencies**: Uses `tsx` for TypeScript execution + `sharp` for SVG→PNG rendering
+- [ ] **Compatibility**: Works on Node.js 18+ (matches project's Node version)
+
+### Risk Mitigation
+
+| Risk                    | Impact | Mitigation                                                   |
+| ----------------------- | ------ | ------------------------------------------------------------ |
+| Image quality issues    | Low    | Test with various SVG sizes and compare to manual export     |
+| Performance issues      | Low    | SVG filters are hardware-accelerated, should be fast         |
+| Platform compatibility  | Low    | `sharp` library is cross-platform (Linux/Mac/Windows)        |
+| SVG filter support      | Low    | Native SVG feature (W3C standard), supported by all browsers |
+| Filter rendering issues | Low    | Test with actual SQLite logo SVG before finalizing           |
+
+### Definition of Done
+
+- [ ] `scripts/generate-logos.ts` created and compiles without errors
+- [ ] `package.json` updated with `generate:logos` script
+- [ ] All 8 PNG files generated successfully on test run
+- [ ] Active state has full blue gradient color (original SVG)
+- [ ] Inactive state has grayscale content on gray background (SVG filter applied)
+- [ ] Grayscale filter (`<feColorMatrix type="saturate" values="0"/>`) properly embedded
+- [ ] Gray background (`#808080`) added and visible
+- [ ] Error handling tested (missing SVG, write permissions)
+- [ ] Output quality verified in image viewer
+- [ ] File sizes are reasonable (not corrupted or empty)
+- [ ] Script completes in < 5 seconds
+- [ ] ESLint passed with no new warnings
+- [ ] Feature spec marked complete
+- [ ] Documentation updated (status board)

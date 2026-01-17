@@ -1532,3 +1532,72 @@ NOTES
       - [x] Test drag state shows darker gray
       - [x] ESLint passed (no new warnings)
       - [x] Build passed (no errors)
+
+---
+
+## Release v1.3.1 (Developer Tooling) - Target: ASAP
+
+- [x] **TASK-331**: SVG to PNG Logo Generator (F-016) - **COMPLETE**
+  - **Priority**: P2 (Medium) - Developer Tooling
+  - **Dependencies**: None
+  - **Boundary**: `scripts/generate-logos.tsx` (NEW), `package.json` (UPDATE)
+  - **Maps to**: F-016: SVG to PNG Logo Generator
+  - **Feature**: [F-016: SVG to PNG Logo Generator](agent-docs/01-discovery/features/F-016-svg-to-png-logo-generator.md)
+  - **Micro-Spec**: [complete](agent-docs/08-task/active/TASK-331.md)
+  - **Estimated**: 2.5 hours (REDUCED from 3 hours - using SVG filters)
+  - **DoD**:
+    - [x] **Setup & Configuration** (0.5 hour)
+      - [x] Create `scripts/` directory if not exists
+      - [x] Verify `tsx` is installed in devDependencies
+      - [x] Add `generate:logos` script to package.json scripts section
+      - [x] Test that `npm run generate:logos` is recognized
+    - [x] **Script Implementation** (1.5 hours - REDUCED from 2 hours)
+      - [x] Create `scripts/generate-logos.tsx` with TypeScript
+      - [x] Define TypeScript interfaces: `Size`, `InactiveConversionOptions`
+      - [x] Implement SVG file reading (read `public/icons/logo.svg` as text/string)
+      - [x] Implement SVG filter approach for inactive state:
+        - [x] Add grayscale filter to SVG `<defs>` section:
+          ```xml
+          <filter id="grayscale">
+            <feColorMatrix type="saturate" values="0"/>
+          </filter>
+          ```
+        - [x] Apply filter to SVG root element: `filter="url(#grayscale)"`
+        - [x] Handle existing `<defs>` case (append filter)
+        - [x] Handle no `<defs>` case (create new defs section)
+        - [x] Handle existing filter attribute (replace)
+      - [x] Implement gray background addition:
+        - [x] Extract viewBox dimensions from SVG
+        - [x] Create background rectangle: `<rect fill="#808080" .../>`
+        - [x] Insert as first child (behind all content)
+      - [x] Use native SVG filters - NO color parsing/replacement needed!
+        - [x] Works automatically with ALL colors (hex, rgb, named, gradients)
+        - [x] No regex patterns for colors needed
+        - [x] No color format conversion needed
+        - [x] Much simpler and more maintainable
+      - [x] Implement PNG generation for 4 sizes: 16, 32, 48, 128
+        - [x] Active state: Use original SVG (full blue gradient colors)
+        - [x] Inactive state: Use modified SVG (filter applied + gray background)
+      - [x] Use `sharp` library for SVG to PNG rendering (recommended by research)
+      - [x] Implement file system operations (write PNGs to `public/img/`)
+      - [x] Add error handling for missing SVG, write permissions, invalid sizes
+      - [x] Add validation that all 8 files were created successfully
+      - [x] Add console output with progress and completion messages
+      - [x] Add TSDoc comments to all functions
+      - [x] TypeScript strict mode compliance
+      - [x] Reference: See `agent-docs/08-task/active/SVG_COLOR_CONVERSION_RULES.md` for detailed rules
+      - [x] Research: See `agent-docs/08-task/active/SVG_FILTER_RESEARCH.md` for best practices research
+    - [x] **Testing & Verification** (0.5 hour)
+      - [x] Run `npm run generate:logos` and verify all 8 PNGs generated
+      - [x] Test error scenarios: missing SVG, invalid directory
+      - [x] Verify output quality in image viewer (all sizes and states)
+      - [x] Verify active state has full blue gradient color
+      - [x] Verify inactive state has grayscale content on gray background (SVG filter applied)
+      - [x] Verify grayscale filter works correctly with all logo colors
+      - [x] Verify gray background (`#808080`) is added behind content
+      - [x] Verify SVG filter is properly embedded in output PNGs
+      - [x] Verify file sizes are reasonable (not corrupted or empty)
+      - [x] ESLint verification (no new warnings for script)
+      - [x] Build verification (script compiles with tsx)
+      - [x] Update feature spec with completion status
+      - [x] Update status board with completion evidence

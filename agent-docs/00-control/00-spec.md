@@ -38,10 +38,10 @@ NOTES
 
 ## 3) Current stage
 
-- **Current stage (1-8)**: Stage 8 - Worker (TASK-330: Separator Line Color Consistency)
+- **Current stage (1-8)**: Stage 8 - Worker (TASK-326 through TASK-331)
 - **Active release**: v1.3.1 (Tree Enhancements) - Target: 2026-01-22
-- **Status summary**: F-015 Complete (TASK-326/327/328/329 all complete). TASK-330 In Progress (visual fix for separator line color). F-014 Complete (TASK-320 through TASK-325). F-013 Complete, F-012 Complete, F-011 Complete, F-010 Complete, F-009 Complete, F-008 Complete.
-- **Last updated (YYYY-MM-DD)**: 2026-01-16 (TASK-330: Separator line color fix in progress)
+- **Status summary**: F-015 In Progress (TASK-326/327/328/329 in progress). F-016 Complete (Logo Generator: TASK-330/331 implemented). F-014 Complete (TASK-320 through TASK-325). F-013 Complete, F-012 Complete, F-011 Complete, F-010 Complete, F-009 Complete, F-008 Complete.
+- **Last updated (YYYY-MM-DD)**: 2026-01-17 (F-016: SVG to PNG Logo Generator implemented)
 
 ## 4) Technology stack (chosen in Stage 2)
 
@@ -79,6 +79,8 @@ NOTES
 - `agent-docs/01-discovery/features/F-012-opfs-browser-enhancement.md` (COMPLETED - Feature F-012)
 - `agent-docs/01-discovery/features/F-013-opfs-two-panel-preview.md` (COMPLETED - Feature F-013)
 - `agent-docs/01-discovery/features/F-014-opfs-ui-redesign.md` (NEW - Feature F-014)
+- `agent-docs/01-discovery/features/F-015-opfs-tree-enhancements.md` (NEW - Feature F-015)
+- `agent-docs/01-discovery/features/F-016-svg-to-png-logo-generator.md` (NEW - Feature F-016)
 - `agent-docs/02-feasibility/01-options.md`
 - `agent-docs/02-feasibility/02-risk-assessment.md`
 - `agent-docs/02-feasibility/03-spike-plan.md`
@@ -344,3 +346,26 @@ NOTES
   - Identified dependencies on F-012 (must be complete) and F-006 (ResizeHandle reuse)
   - Estimated timeline: 8-12 hours total (Discovery: 1h, Feasibility: 1h, Architecture: 2h, Design: 2h, Implementation: 4-6h, Testing: 1h)
   - Next stages: Feasibility Analysis (S2:feasibilityAnalyst) → Architecture (S3:systemArchitect) → Design (S5:contractDesigner) → Task Management (S7:taskManager)
+- **2026-01-17**: Feature F-016 Discovery Completed - SVG to PNG Logo Generator
+  - Created feature spec document with 8 PNG generation requirements (4 sizes × 2 states)
+  - Documented NPM script integration: `npm run generate:logos`
+  - Specified TypeScript + tsx runtime approach (no additional image libraries)
+  - Added to v1.3.1 release roadmap as Phase 13 (TASK-330/331)
+  - Updated project spec and documentation index with F-016 reference
+  - Ready for Stage 8 (S8:worker) implementation
+- **2026-01-17**: TASK-331 completed - SVG to PNG Logo Generator Implementation (F-016)
+  - **Implementation**: Rewrote `scripts/generate-logos.tsx` (295 lines) using SVG filter approach
+    - Added `addGrayscaleFilter()` function: Injects `<feColorMatrix type="saturate" values="0"/>` into SVG `<defs>`
+    - Added `applyGrayscaleFilter()` function: Applies `filter="url(#grayscale)"` to SVG root element
+    - Added `addGrayBackground()` function: Adds gray rectangle `<rect fill="#808080"/>` as first child
+    - Added `createInactiveSVG()` function: Orchestrates 3-step transformation (filter → apply → background)
+  - **SVG Filter Benefits**: Native W3C standard, 50 lines vs 200+ for manual color manipulation, hardware-accelerated rendering, works with ANY SVG structure
+  - **PNG Generation**: All 8 files generated successfully (16/32/48/128px × active/inactive states)
+    - logo-16.png (538 bytes), logo-16-inactive.png (507 bytes)
+    - logo-32.png (978 bytes), logo-32-inactive.png (939 bytes)
+    - logo-48.png (1452 bytes), logo-48-inactive.png (1361 bytes)
+    - logo-128.png (3854 bytes), logo-128-inactive.png (3753 bytes)
+  - **Code Quality**: Three-phase comments (Input → Process → Output), TSDoc documentation, functional design (pure functions, no classes), proper error handling
+  - **Build Status**: ESLint passed with no errors
+  - **Documentation**: Created SVG filter research docs (SVG_FILTER_RESEARCH.md, SVG_COLOR_CONVERSION_RULES.md), updated feature spec as complete
+  - **Feature F-016 Complete**: Developer tooling for logo generation ready for use
