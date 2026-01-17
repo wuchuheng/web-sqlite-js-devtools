@@ -29,6 +29,11 @@ export const Popup = () => {
     chrome.runtime.sendMessage(
       { type: "GET_TAB_DATABASE_STATUS" },
       (response) => {
+        // Check for runtime errors (e.g., popup closed before response)
+        if (chrome.runtime.lastError) {
+          // Silently handle - popup may have closed
+          return;
+        }
         if (response) {
           setHasDatabase(response.hasDatabase);
         }
