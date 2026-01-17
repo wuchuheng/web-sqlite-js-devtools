@@ -1800,24 +1800,24 @@ NOTES
     - [x] TypeScript strict mode compliance
     - [x] ESLint passed (no new warnings)
 
-- [ ] **TASK-338**: Background Status Query Function (F-019)
+- [x] **TASK-338**: Background Status Query Function (F-019)
   - **Priority**: P1 (High)
   - **Dependencies**: TASK-337, F-017 (databaseMap)
   - **Boundary**: `src/background/iconState/index.ts`
   - **Maps to**: F-019, FR-002
   - **Feature**: [F-019: Popup DevTools Status Indicator](agent-docs/01-discovery/features/F-019-popup-devtools-status.md)
-  - **Micro-Spec**: [pending](agent-docs/08-task/active/TASK-338.md)
+  - **Micro-Spec**: [complete](agent-docs/08-task/active/TASK-338.md)
   - **Estimated**: 0.3 hours
   - **DoD**:
-    - [ ] Add `getCurrentTabDatabaseStatus()` function to `src/background/iconState/index.ts`
-    - [ ] Query active tab ID: `chrome.tabs.query({ active: true, currentWindow: true })`
-    - [ ] Look up tab in `databaseMap` (from F-017)
-    - [ ] Return `Promise<{ hasDatabase: boolean, databaseCount?: number }>`
-    - [ ] Handle case when activeTab is undefined (return { hasDatabase: false })
-    - [ ] Add TSDoc comments with @example block
-    - [ ] Three-phase comments for function >5 lines
-    - [ ] TypeScript strict mode compliance
-    - [ ] ESLint passed (no new warnings)
+    - [x] Add `getCurrentTabDatabaseStatus()` function to `src/background/iconState/index.ts`
+    - [x] Query active tab ID: `chrome.tabs.query({ active: true, currentWindow: true })`
+    - [x] Look up tab in `databaseMap` (from F-017)
+    - [x] Return `Promise<{ hasDatabase: boolean, databaseCount?: number }>`
+    - [x] Handle case when activeTab is undefined (return { hasDatabase: false })
+    - [x] Add TSDoc comments with @example block
+    - [x] Three-phase comments for function >5 lines
+    - [x] TypeScript strict mode compliance
+    - [x] ESLint passed (no new warnings)
 
 - [ ] **TASK-339**: Background Message Handler (F-019)
   - **Priority**: P1 (High)

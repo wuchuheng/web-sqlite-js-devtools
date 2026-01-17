@@ -200,3 +200,51 @@ export const cleanupTab = (tabId: number): void => {
 export const initializeIconState = (): void => {
   setIconState(false);
 };
+
+/**
+ * Get database status for current tab
+ *
+ * @remarks
+ * Used by popup component to determine whether to show active or inactive icon.
+ * Queries the current active tab and checks if it has any databases in the databaseMap.
+ *
+ * @example
+ * ```typescript
+ * const status = await getCurrentTabDatabaseStatus();
+ * if (status.hasDatabase) {
+ *   console.log(`Found ${status.databaseCount} databases`);
+ * }
+ * ```
+ *
+ * @returns Promise resolving to status object
+ */
+export const getCurrentTabDatabaseStatus = async (): Promise<{
+  hasDatabase: boolean;
+  databaseCount?: number;
+}> => {
+  // 1. Query current active tab ID
+  // 2. Look up tab in databaseMap
+  // 3. Return status with database count
+  return new Promise((resolve) => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      const activeTab = tabs[0];
+
+      // Handle case when activeTab is undefined
+      if (!activeTab?.id) {
+        resolve({ hasDatabase: false });
+        return;
+      }
+
+      const frames = databaseMap.get(activeTab.id) || [];
+      const databaseCount = frames.reduce(
+        (sum, frame) => sum + frame.databases.length,
+        0,
+      );
+
+      resolve({
+        hasDatabase: databaseCount > 0,
+        databaseCount,
+      });
+    });
+  });
+};
