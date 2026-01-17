@@ -1,7 +1,7 @@
 {
   "name": "web-sqlite-devtools",
   "displayName": "Web Sqlite DevTools",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "",
   "description": "Chrome DevTools extension for debugging web-sqlite-js databases",
   "type": "module",

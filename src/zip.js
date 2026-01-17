@@ -23,3 +23,8 @@ export const createZip = () => {
 
 // Run the zip task
 gulp.task("default", createZip);
+
+// Print success message to notify completion
+createZip().on("end", () => {
+  console.log(`Created ZIP: ${pkg.name}-${pkg.version}.zip in ${outputDir}`);
+});
