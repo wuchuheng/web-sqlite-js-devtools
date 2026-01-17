@@ -113,13 +113,25 @@ initializeBackground();
  * - "request": Wake up offscreen document
  */
 chrome.runtime.onMessage.addListener((message, sender) => {
+  // DEBUG: Log all messages
+  console.log(
+    "[Background DEBUG] Received message:",
+    message,
+    "from tab:",
+    sender.tab?.id,
+    "frame:",
+    sender.frameId,
+  );
+
   // Backward compatibility: old icon state message
   if (message?.type === ICON_STATE_MESSAGE) {
+    console.log("[Background DEBUG] Handling ICON_STATE_MESSAGE");
     setIconState(Boolean(message.hasDatabase));
   }
 
   // New per-tab, per-frame database tracking
   if (message?.type === DATABASE_LIST_MESSAGE) {
+    console.log("[Background DEBUG] Handling DATABASE_LIST_MESSAGE");
     if (sender.tab?.id !== undefined) {
       // sender.frameId contains the frame ID (0 for top-level, >0 for iframes)
       handleDatabaseListMessage(

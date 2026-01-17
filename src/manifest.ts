@@ -19,7 +19,6 @@ export default defineManifest({
     default_popup: "popup.html",
     default_icon: "img/logo-48.png",
   },
-  options_page: "options.html",
   devtools_page: "devtools.html",
   background: {
     service_worker: "src/background/index.ts",
@@ -29,11 +28,16 @@ export default defineManifest({
     {
       matches: ["http://*/*", "https://*/*"],
       js: ["src/contentScript/index.tsx"],
+      all_frames: true,
+      world: "MAIN",
+    },
+    {
+      matches: ["http://*/*", "https://*/*"],
+      js: ["src/contentScript/relay.ts"],
+      all_frames: true,
+      // world: "ISOLATED" is the default
     },
   ],
-  side_panel: {
-    default_path: "sidepanel.html",
-  },
   content_security_policy: {
     extension_pages: "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';",
   },

@@ -100,10 +100,21 @@ const tabHasDatabases = (tabId: number): boolean => {
  * @param tabId - Tab ID to update icon for
  */
 export const updateIconForTab = (tabId: number): void => {
+  const frames = databaseMap.get(tabId);
+
+  // DEBUG: Log raw state
+  console.log(
+    `[Icon State DEBUG] Tab ${tabId} frames:`,
+    JSON.stringify(frames),
+  );
+
   const hasDatabase = tabHasDatabases(tabId);
+
+  // DEBUG: Log computed hasDatabase value
+  console.log(`[Icon State DEBUG] tabHasDatabases(${tabId}) = ${hasDatabase}`);
+
   setIconState(hasDatabase);
 
-  const frames = databaseMap.get(tabId);
   const totalDatabases =
     frames?.reduce((sum, frame) => sum + frame.databases.length, 0) ?? 0;
   console.log(

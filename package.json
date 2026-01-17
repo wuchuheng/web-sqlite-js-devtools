@@ -27,7 +27,8 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "zip": "npm run build && node src/zip.js"
+    "zip": "npm run build && node src/zip.js",
+    "generate:logos": "tsx scripts/generate-logos.tsx"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.8",
@@ -59,6 +60,8 @@
     "gulp": "^5.0.0",
     "gulp-zip": "^6.0.0",
     "prettier": "^3.0.3",
+    "sharp": "^0.34.5",
+    "tsx": "^4.21.0",
     "typescript": "^5.2.2",
     "vite": "^5.4.10"
   }

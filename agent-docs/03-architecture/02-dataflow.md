@@ -100,12 +100,14 @@ sequenceDiagram
 sequenceDiagram
     participant Panel as LogTab
     participant BG as Background SW
+    participant Relay as Relay Script
     participant CS as Content Script
     participant Sub as SubscriptionManager
     participant DB as web-sqlite-js
 
     Panel->>BG: SUBSCRIBE_LOGS({ dbname })
-    BG->>CS: Forward subscribe request
+    BG->>Relay: Forward via CrossWorldChannel
+    Relay->>CS: window.postMessage
     CS->>Sub: Create subscription for dbname
     Sub->>DB: db.onLog(callback)
     activate Sub
@@ -114,13 +116,15 @@ sequenceDiagram
         DB->>Sub: LogEntry { level, data }
         Sub->>Sub: Add to ring buffer (max 500)
         Sub->>CS: Send buffered logs
-        CS-->>BG: LOG_EVENT { logs: [...] }
+        CS->>Relay: window.postMessage
+        Relay->>BG: chrome.runtime.sendMessage
         BG-->>Panel: LOG_EVENT { logs: [...] }
         Panel->>Panel: Append to LogList (filter by level/field)
     end
 
     Panel->>BG: UNSUBSCRIBE_LOGS({ dbname })
-    BG->>CS: Forward unsubscribe
+    BG->>Relay: Forward via CrossWorldChannel
+    Relay->>CS: window.postMessage
     CS->>Sub: Remove subscription
     Sub->>DB: unsubscribe()
     deactivate Sub
@@ -131,24 +135,45 @@ sequenceDiagram
 **Goal**: Update extension icon when database is opened/closed
 **Concurrency**: Event-driven, no conflicts
 
+**Architecture**:
+- MAIN world content script monitors `window.__web_sqlite` (can access page JavaScript)
+- ISOLATED world relay script forwards to chrome.runtime (has chrome.* API access)
+- Uses `CrossWorldChannel` abstraction for MAIN ↔ ISOLATED communication
+- Uses `WebSqliteMonitor` utility for database change detection
+
 ```mermaid
 sequenceDiagram
     participant Page as Web Page
-    participant CS as Content Script
+    participant Monitor as WebSqliteMonitor
+    participant Channel as CrossWorldChannel
+    participant Relay as Relay Script (ISOLATED)
     participant BG as Background SW
-    participant Icon as Popup Icon
+    participant Icon as Extension Icon
 
-    Page->>Page: App calls openDB("mydb.sqlite3")
-    Page->>Page: window.__web_sqlite.onDatabaseChange callback fires
-    Page->>CS: Global event detected
-    CS->>CS: Check window.__web_sqlite.databases
-    alt Databases exist
-        CS->>BG: ICON_STATE_MESSAGE({ hasDatabase: true })
+    Note over Page,Icon: Initial Page Load
+    Page->>Monitor: monitorAndNotifyBackground()
+    Monitor->>Page: Check window.__web_sqlite
+    alt API available
+        Monitor->>Channel: channel.send(DATABASE_LIST, { databases: [...] })
+        Channel->>Page: window.postMessage({ type, data })
+        Page->>Relay: Message event
+        Relay->>BG: chrome.runtime.sendMessage(DATABASE_LIST_MESSAGE)
         BG->>Icon: Set active icon
-    else No databases
-        CS->>BG: ICON_STATE_MESSAGE({ hasDatabase: false })
-        BG->>Icon: Set inactive icon
+    else API not available
+        Monitor->>Page: Set up property interceptor
+        Note over Page: Waiting for __web_sqlite to be set
     end
+
+    Note over Page,Icon: Database Opened
+    Page->>Page: App calls openDB("mydb.sqlite3")
+    Page->>Page: window.__web_sqlite.onDatabaseChange fires
+    Page->>Monitor: notify() callback
+    Monitor->>Channel: channel.send(DATABASE_LIST, { databases: [...] })
+    Channel->>Page: window.postMessage({ type, data })
+    Page->>Relay: Message event
+    Relay->>BG: chrome.runtime.sendMessage(DATABASE_LIST_MESSAGE)
+    BG->>BG: Update databaseMap for current tab
+    BG->>Icon: Set active icon
 ```
 
 ### Flow 6: Migration Playground (Safe Testing)
@@ -161,6 +186,7 @@ sequenceDiagram
     actor Dev as Developer
     participant Panel as MigrationTab
     participant BG as Background SW
+    participant Relay as Relay Script
     participant CS as Content Script
     participant DB as web-sqlite-js
 
@@ -169,12 +195,14 @@ sequenceDiagram
     Panel->>Panel: Show "Creating dev version..." loading state
 
     Panel->>BG: DEV_RELEASE({ dbname, version: "x.y.z.dev", migrationSQL })
-    BG->>CS: Forward request
+    BG->>Relay: Forward via CrossWorldChannel
+    Relay->>CS: window.postMessage
     CS->>DB: await db.devTool.release({ version, migrationSQL })
 
     alt Release successful
         DB-->>CS: Dev version created
-        CS-->>BG: { success: true }
+        CS->>Relay: window.postMessage response
+        Relay->>BG: chrome.runtime.sendMessage response
         BG-->>Panel: { success: true }
         Panel->>Panel: Show "Dev version created, testing..."
         Panel->>Panel: Execute validation queries
@@ -182,13 +210,15 @@ sequenceDiagram
 
         Dev->>Panel: Clicks "Rollback" or closes tab
         Panel->>BG: DEV_ROLLBACK({ dbname, toVersion: "original" })
-        BG->>CS: Forward rollback
+        BG->>Relay: Forward via CrossWorldChannel
+        Relay->>CS: window.postMessage
         CS->>DB: await db.devTool.rollback("original")
         DB-->>CS: Rolled back
         Panel->>Panel: Show "Rollback complete"
     else Migration error
         DB-->>CS: throws error (SQLITE_ERROR, etc.)
-        CS-->>BG: { success: false, error: "..." }
+        CS->>Relay: window.postMessage error
+        Relay->>BG: chrome.runtime.sendMessage error
         BG-->>Panel: { success: false, error: "..." }
         Panel->>Panel: Show inline error, no rollback needed
     end
@@ -211,7 +241,7 @@ sequenceDiagram
     Panel->>Panel: Panel remains open (DevTools)
 
     Panel->>BG: HEARTBEAT
-    BG->>CS: Forward heartbeat
+    BG->>CS: chrome.tabs.sendMessage
     CS-->>BG: No response (script reloaded)
     BG-->>Panel: Timeout after 15s
 
@@ -246,13 +276,15 @@ sequenceDiagram
     actor Dev as Developer
     participant Panel as OPFSView
     participant BG as Background SW
+    participant Relay as Relay Script
     participant CS as Content Script
     participant OPFS as OPFS API
 
     Dev->>Panel: Expands folder, clicks download button
     Panel->>Panel: Show loading state on file row
     Panel->>BG: DOWNLOAD_OPFS_FILE({ path: "/dbname/file.sqlite3" })
-    BG->>CS: Forward download request
+    BG->>Relay: Forward via CrossWorldChannel
+    Relay->>CS: window.postMessage
     CS->>OPFS: navigator.storage.getDirectory()
     OPFS-->>CS: DirectoryHandle
 
@@ -263,7 +295,8 @@ sequenceDiagram
 
     CS->>CS: Convert File to ArrayBuffer
     CS->>CS: Create Blob from ArrayBuffer
-    CS-->>BG: { success: true, data: blobUrl }
+    CS->>Relay: window.postMessage response
+    Relay->>BG: chrome.runtime.sendMessage response
     BG-->>Panel: { success: true, data: blobUrl }
     Panel->>Panel: Trigger browser download (hidden <a> tag)
     Panel->>Panel: Remove loading state
@@ -271,22 +304,23 @@ sequenceDiagram
 
 ## 2) Asynchronous Event Flows
 
-**Pattern**: Runtime messaging for icon state; other event flows TBD
+**Pattern**: CrossWorldChannel for MAIN ↔ ISOLATED communication; chrome.runtime for ISOLATED ↔ Background.
 
 ### Event: Database Changed
 
-- **Event**: `DATABASE_CHANGED`
-- **Producer**: Content Script (listens to `window.__web_sqlite.onDatabaseChange`)
-- **Consumers**: Background Service Worker (icon state), DevTools Panel (refresh DB list)
+- **Event**: `DATABASE_CHANGED` (via `DATABASE_LIST_MESSAGE`)
+- **Producer**: WebSqliteMonitor (MAIN world content script)
+- **Consumer**: Background Service Worker (icon state)
 
 ```mermaid
 flowchart LR
     App[Web Application] -->|1. openDB/closeDB| API[window.__web_sqlite]
-    API -->|2. onDatabaseChange| CS[Content Script]
-    CS -->|3. ICON_STATE_MESSAGE| BG[Background SW]
-    CS -->|4. DATABASES_UPDATED| Panel[DevTools Panel]
-    BG -->|5. setActiveIcon| Icon[Popup Icon]
-    Panel -->|6. Refresh Sidebar| UI[Sidebar Database List]
+    API -->|2. onDatabaseChange| Monitor[WebSqliteMonitor]
+    Monitor -->|3. channel.send| Channel[CrossWorldChannel]
+    Channel -->|4. postMessage| Relay[Relay Script]
+    Relay -->|5. chrome.runtime.sendMessage| BG[Background SW]
+    BG -->|6. updateIconForTab| Icon[Extension Icon]
+    BG -->|7. setActiveIcon| State[Per-Tab Icon State]
 ```
 
 ### Event: Log Entry
@@ -300,11 +334,13 @@ flowchart LR
     DB[web-sqlite-js] -->|1. onLog callback| Sub[Subscription Manager]
     Sub -->|2. Add to ring buffer| Buffer[(500 entry ring buffer)]
     Sub -->|3. Batch send| CS[Content Script]
-    CS -->|4. LOG_EVENT| BG[Background SW]
-    BG -->|5. Forward to subscribers| Panel1[DevTools Panel 1]
-    BG -->|5. Forward to subscribers| Panel2[DevTools Panel 2]
-    Panel1 -->|6. Filter & render| LogUI1[Log Tab 1]
-    Panel2 -->|6. Filter & render| LogUI2[Log Tab 2]
+    CS -->|4. CrossWorldChannel| Channel[CrossWorldChannel]
+    Channel -->|5. postMessage| Relay[Relay Script]
+    Relay -->|6. chrome.runtime.sendMessage| BG[Background SW]
+    BG -->|7. Forward to subscribers| Panel1[DevTools Panel 1]
+    BG -->|7. Forward to subscribers| Panel2[DevTools Panel 2]
+    Panel1 -->|8. Filter & render| LogUI1[Log Tab 1]
+    Panel2 -->|8. Filter & render| LogUI2[Log Tab 2]
 ```
 
 ## 3) Entity State Machines
@@ -365,3 +401,51 @@ stateDiagram-v2
   - Message timeout: Retry with exponential backoff (1s, 2s, 4s, 8s)
   - Database closed: Show "Database closed" message, redirect to database list
   - Page navigation: Auto-reconnect with loading state
+
+## 5) Cross-World Communication Architecture
+
+**Problem**: Content scripts need both access to page JavaScript (`window.__web_sqlite`) AND chrome APIs (`chrome.runtime`), but these are available in different execution worlds.
+
+**Solution**: Dual-world content script architecture with CrossWorldChannel abstraction.
+
+### Execution Worlds
+
+| World | JavaScript Context | chrome.* APIs | Page JS Access |
+|-------|-------------------|--------------|----------------|
+| MAIN | Page context | ❌ Not available | ✅ Full access |
+| ISOLATED | Extension context | ✅ Available | ❌ Not available |
+
+### Communication Flow
+
+```mermaid
+flowchart LR
+    subgraph MAIN_World["MAIN World"]
+        Page[Page JS] --> Monitor[WebSqliteMonitor]
+        Monitor --> Channel["CrossWorldChannel.send()"]
+    end
+
+    subgraph ISOLATED_World["ISOLATED World"]
+        Relay[Relay Script] --> ChannelListen["CrossWorldChannel.listen()"]
+        ChannelListen --> Runtime["chrome.runtime.sendMessage()"]
+    end
+
+    subgraph Background["Background Worker"]
+        Runtime --> Handler["Message Handler"]
+    end
+
+    Channel -->|window.postMessage| ChannelListen
+```
+
+### Abstractions
+
+1. **CrossWorldChannel** (`src/shared/messaging/channel.ts`)
+   - Pub/Sub pattern for MAIN → ISOLATED messaging
+   - Type-safe send/listen API
+   - Automatic handler management
+
+2. **WebSqliteMonitor** (`src/shared/web-sqlite/monitor.ts`)
+   - Monitors `window.__web_sqlite` availability
+   - Watches for API to be set (property interceptor)
+   - Subscribes to `onDatabaseChange` events
+   - Notifies listeners on changes
+   - Sends updates via CrossWorldChannel
