@@ -24,8 +24,8 @@ src/background/
 
 ## 1) Assets (Traceability)
 
-- **API**: Handles icon state updates, database list updates, and log forwarding (F-018 UPDATED)
-- **Events**: Handles `ICON_STATE_MESSAGE`, `DATABASE_LIST_MESSAGE`, `LOG_ENTRY_MESSAGE` from content script
+- **API**: Handles icon state updates, database list updates, log forwarding (F-018 UPDATED), and popup status queries (F-019 NEW)
+- **Events**: Handles `ICON_STATE_MESSAGE`, `DATABASE_LIST_MESSAGE`, `LOG_ENTRY_MESSAGE` from content script, `GET_TAB_DATABASE_STATUS` from popup (F-019 NEW)
 - **Types**: See `src/shared/messages.ts`
 
 ## 2) Responsibilities
@@ -34,6 +34,7 @@ src/background/
 - Track databaseMap per tab for icon state (F-017)
 - Forward DATABASE_LIST_MESSAGE to DevTools panel (F-018 NEW)
 - Forward LOG_ENTRY_MESSAGE to DevTools panel (F-018 NEW)
+- Query current tab's database status for popup display (F-019 NEW)
 - Initialize offscreen document for log storage (internal)
 - Manage extension lifecycle on install/update
 
@@ -73,6 +74,21 @@ flowchart TD
     Log -->|database filter| Display[Filtered Logs]
 ```
 
+### Popup Status Query Flow (F-019 NEW)
+
+```mermaid
+flowchart TD
+    Popup[Extension Popup] -->|GET_TAB_DATABASE_STATUS| BG[Background Worker]
+    BG -->|chrome.tabs.query| Tab[Get Active Tab ID]
+    Tab -->|tabId| Map[Query databaseMap]
+    Map -->|databases| Status{Has databases?}
+    Status -->|Yes| Response[hasDatabase: true]
+    Status -->|No| Response2[hasDatabase: false]
+    Response -->|sendResponse| Popup
+    Response2 -->|sendResponse| Popup
+    Popup -->|Set state| Render[Render Active/Inactive Icon]
+```
+
 ## 4) Classes / Functions
 
 ### Service Worker (src/background/index.ts)
@@ -81,10 +97,11 @@ flowchart TD
   - Creates offscreen document for log storage
   - Retries in dev mode if load fails
 
-- **onMessage** (F-018 UPDATED)
+- **onMessage** (F-018 UPDATED, F-019 UPDATED)
   - Handle `ICON_STATE_MESSAGE` → Update icon state via `setIconState`
   - Handle `DATABASE_LIST_MESSAGE` → Update databaseMap AND forward to DevTools panel
   - Handle `LOG_ENTRY_MESSAGE` → Forward enriched entry to DevTools panel
+  - Handle `GET_TAB_DATABASE_STATUS` → Query current tab's database status and respond (F-019 NEW)
 
 ### Message Forwarding Functions (F-018 NEW)
 
@@ -98,6 +115,12 @@ flowchart TD
 - **setIconState(hasDatabase)**
   - Sets `active` or `inactive` icon
   - Returns: `void`
+
+- **getCurrentTabDatabaseStatus()** (F-019 NEW)
+  - Queries current active tab ID via chrome.tabs.query
+  - Looks up tab in databaseMap to get database list
+  - Returns: `Promise<{ hasDatabase: boolean, databaseCount?: number }>`
+  - Used by popup to determine icon state on mount
 
 ## 5) Dependencies
 

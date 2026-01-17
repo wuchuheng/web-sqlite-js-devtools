@@ -38,10 +38,10 @@ NOTES
 
 ## 3) Current stage
 
-- **Current stage (1-8)**: Stage 8 - Worker (TASK-341)
-- **Active release**: v1.4.0 (Popup Status Indicator) - Target: 2026-01-18
-- **Status summary**: TASK-341 Complete (Popup Styles Update). TASK-340 Complete (Popup Component Rewrite). TASK-339 Complete (Background Message Handler). TASK-338 Complete (Background Status Query Function). TASK-337 Complete (Message Type Definition). F-019 Task Catalog Complete. F-019 Design Complete. F-019 Discovery Complete. F-018 Task Catalog Complete (DevTools Real-time Communication). F-017 Complete (TASK-331). F-015 Complete (TASK-326/327/328/329). F-016 Complete (Logo Generator: TASK-330). F-014 Complete (TASK-320 through TASK-325). F-013 Complete, F-012 Complete, F-011 Complete, F-010 Complete, F-009 Complete, F-008 Complete.
-- **Last updated (YYYY-MM-DD)**: 2026-01-18 (TASK-341: Popup Styles Update - Complete)
+- **Current stage (1-8)**: Stage 8 - Worker (TASK-342) - COMPLETE
+- **Active release**: v1.4.0 (Popup Status Indicator) - Target: 2026-01-18 ✅ COMPLETE
+- **Status summary**: F-019 COMPLETE (Popup DevTools Status Indicator). TASK-342 Complete (Testing & Validation). TASK-341 Complete (Popup Styles Update). TASK-340 Complete (Popup Component Rewrite). TASK-339 Complete (Background Message Handler). TASK-338 Complete (Background Status Query Function). TASK-337 Complete (Message Type Definition). F-019 Task Catalog Complete. F-019 Design Complete. F-019 Discovery Complete. F-018 Task Catalog Complete (DevTools Real-time Communication). F-017 Complete (TASK-331). F-015 Complete (TASK-326/327/328/329). F-016 Complete (Logo Generator: TASK-330). F-014 Complete (TASK-320 through TASK-325). F-013 Complete, F-012 Complete, F-011 Complete, F-010 Complete, F-009 Complete, F-008 Complete.
+- **Last updated (YYYY-MM-DD)**: 2026-01-18 (F-019: Popup DevTools Status Indicator - COMPLETE)
 
 ## 4) Technology stack (chosen in Stage 2)
 

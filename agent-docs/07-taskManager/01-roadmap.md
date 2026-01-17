@@ -1829,3 +1829,115 @@ Enhance the OPFS File Browser with guided tree lines for visual hierarchy, delet
 - [ ] Build passed with no errors
 - [ ] Manual testing completed
 - [ ] Documentation updated (feature spec, status board)
+
+---
+
+### Release v1.4.0 (Popup Status Indicator)
+
+**Target Date**: 2026-01-18 (TODAY)
+**Total Estimated**: 1.8 hours
+**Focus**: Extension popup displays at-a-glance DevTools status with active/inactive icon
+
+**Feature Overview**: Refactor extension popup to show a simple logo (app icon) that changes based on database state (active/inactive icons from F-016). Hovering over the logo reveals a status text tooltip: "DevTools Active" when databases are opened, "No databases detected" when inactive. Similar to Vue DevTools popup behavior with minimal, clean interface.
+
+**Tasks Breakdown**:
+
+- [ ] **TASK-337**: Message Type Definition (F-019)
+  - Add `GET_TAB_DATABASE_STATUS` constant to `src/shared/messages.ts`
+  - Add `GetTabDatabaseStatusMessage` interface
+  - Add `TabDatabaseStatusResponse` interface
+  - Export all new types
+  - Estimated time: 0.2 hours
+
+- [ ] **TASK-338**: Background Status Query Function (F-019)
+  - Add `getCurrentTabDatabaseStatus()` function to `src/background/iconState/index.ts`
+  - Query active tab ID using `chrome.tabs.query({ active: true, currentWindow: true })`
+  - Look up tab in `databaseMap` (from F-017)
+  - Return `Promise<{ hasDatabase: boolean, databaseCount?: number }>`
+  - Add TSDoc comments with @example
+  - Estimated time: 0.3 hours
+
+- [ ] **TASK-339**: Background Message Handler (F-019)
+  - Update `src/background/index.ts` onMessage handler
+  - Handle `GET_TAB_DATABASE_STATUS` message type
+  - Call `getCurrentTabDatabaseStatus()` and send response
+  - Return `true` for async response
+  - Estimated time: 0.2 hours
+
+- [ ] **TASK-340**: Popup Component Rewrite (F-019)
+  - Complete rewrite of `src/popup/Popup.tsx`
+  - Add `hasDatabase` state (boolean | null)
+  - Add `showStatus` state (boolean)
+  - Implement `useEffect` to query background on mount
+  - Implement hover handlers (handleMouseEnter, handleMouseLeave)
+  - Render logo (active/inactive based on state)
+  - Render status text on hover
+  - Add loading spinner state
+  - Add ARIA labels and accessibility
+  - Estimated time: 0.6 hours
+
+- [ ] **TASK-341**: Popup Styles Update (F-019)
+  - Update `src/popup/Popup.css` with new styles
+  - Set popup container: 200×200px, flex column, centered
+  - Add logo styles: 64×64px, cursor pointer, hover scale(1.1)
+  - Add status text styles: 13px font, gray-600 color, fadeIn animation
+  - Add loading spinner styles with spin animation
+  - Ensure responsive and accessible design
+  - Estimated time: 0.3 hours
+
+- [ ] **TASK-342**: Testing & Validation (F-019)
+  - Test popup renders with loading state
+  - Test popup queries background and receives response
+  - Test active icon shows when databases exist
+  - Test inactive icon shows when no databases
+  - Test hover shows correct status text
+  - Test status text changes based on state
+  - Test ARIA labels and keyboard accessibility
+  - ESLint verification (no new warnings)
+  - Build verification (no errors)
+  - Estimated time: 0.2 hours
+
+**Success Criteria**:
+
+- **Popup Container**: [ ] 200×200px popup with centered content
+- **Icon Display**: [ ] Active icon (logo-48.png) when databases exist, inactive icon (logo-48-inactive.png) when no databases
+- **Status Text**: [ ] "DevTools Active" on hover when active, "No databases detected" on hover when inactive
+- **Hover Animation**: [ ] Logo scales to 1.1 on hover, status text fades in (150ms)
+- **Loading State**: [ ] Loading spinner shows on initial mount
+- **Query Pattern**: [ ] Popup sends GET_TAB_DATABASE_STATUS on mount, receives response with hasDatabase
+- **Accessibility**: [ ] ARIA labels, keyboard focusable, screen reader support
+- **Code Quality**: [ ] ESLint passed, build passed, TSDoc comments added
+
+**Risk Mitigation**:
+
+| Risk                    | Impact | Mitigation                              |
+| ----------------------- | ------ | --------------------------------------- |
+| Background not ready    | Low    | Timeout fallback to inactive state      |
+| databaseMap missing     | Low    | Reuses existing F-017 infrastructure    |
+| Popup load time > 100ms | Low    | Simple render, no complex logic         |
+| Icon files not found    | Low    | Verify F-016 completed before this task |
+
+**Timeline**:
+
+- **Phase 1** (0.5h): TASK-337 (Message Types) + TASK-338 (Background Function)
+- **Phase 2** (0.8h): TASK-339 (Message Handler) + TASK-340 (Popup Component)
+- **Phase 3** (0.5h): TASK-341 (Popup Styles) + TASK-342 (Testing)
+
+**Total**: 1.8 hours (TODAY)
+
+**Definition of Done**:
+
+- [ ] All 6 tasks complete (TASK-337 through TASK-342)
+- [ ] GET_TAB_DATABASE_STATUS message type defined and exported
+- [ ] getCurrentTabDatabaseStatus() function implemented
+- [ ] Background message handler updated
+- [ ] Popup component completely rewritten with new UI
+- [ ] Popup styles updated with minimal, clean design
+- [ ] Active/inactive icons display correctly based on database state
+- [ ] Status text displays on hover with correct text
+- [ ] Loading state works correctly
+- [ ] ARIA labels and accessibility implemented
+- [ ] ESLint passed with no new warnings
+- [ ] Build passed with no errors
+- [ ] Manual testing completed (all scenarios)
+- [ ] Documentation updated (feature spec, status board)

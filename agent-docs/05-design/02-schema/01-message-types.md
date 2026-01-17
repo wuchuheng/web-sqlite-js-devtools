@@ -258,6 +258,16 @@ interface LogEntryMessage {
   };
 }
 
+// Popup Status Query (F-019 NEW)
+interface GetTabDatabaseStatusMessage {
+  type: "GET_TAB_DATABASE_STATUS";
+}
+
+interface TabDatabaseStatusResponse {
+  hasDatabase: boolean;      // True if current tab has databases opened
+  databaseCount?: number;    // Number of databases (optional, for future use)
+}
+
 // Migration & Seed testing (deprecated)
 interface DevReleaseRequest {
   dbname: string;

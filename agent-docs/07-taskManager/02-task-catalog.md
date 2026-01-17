@@ -1934,42 +1934,42 @@ NOTES
     - [x] Ensure responsive and accessible design
     - [x] Test color contrast (WCAG AA compliance)
 
-- [ ] **TASK-342**: Testing & Validation (F-019)
+- [x] **TASK-342**: Testing & Validation (F-019)
   - **Priority**: P1 (High)
   - **Dependencies**: TASK-337, TASK-338, TASK-339, TASK-340, TASK-341
   - **Boundary**: All F-019 files
   - **Maps to**: F-019, FR-002
   - **Feature**: [F-019: Popup DevTools Status Indicator](agent-docs/01-discovery/features/F-019-popup-devtools-status.md)
-  - **Micro-Spec**: [pending](agent-docs/08-task/active/TASK-342.md)
+  - **Micro-Spec**: [complete](agent-docs/08-task/active/TASK-342.md)
   - **Estimated**: 0.2 hours
   - **DoD**:
-    - [ ] **Loading State Testing**:
-      - [ ] Popup renders with loading spinner on initial mount
-      - [ ] Loading spinner animation works correctly
-    - [ ] **Query Pattern Testing**:
-      - [ ] Popup sends GET_TAB_DATABASE_STATUS message on mount
-      - [ ] Background worker receives and processes message
-      - [ ] Popup receives response with hasDatabase field
-    - [ ] **Active State Testing**:
-      - [ ] When databases exist, active icon (logo-48.png) displays
-      - [ ] Status text shows "DevTools Active" on hover
-      - [ ] Icon scales to 1.1 on hover
-    - [ ] **Inactive State Testing**:
-      - [ ] When no databases, inactive icon (logo-48-inactive.png) displays
-      - [ ] Status text shows "No databases detected" on hover
-    - [ ] **Accessibility Testing**:
-      - [ ] ARIA labels present and descriptive
-      - [ ] Keyboard navigation works (Tab, Enter)
-      - [ ] Screen reader announces status changes
-    - [ ] **Edge Cases**:
-      - [ ] Background not responding → timeout to inactive
-      - [ ] Multiple rapid popup open/close → clean listeners
-      - [ ] Current tab has no content script → inactive state
-    - [ ] **Code Quality**:
-      - [ ] ESLint passed (no new warnings)
-      - [ ] Build passed (no errors)
-      - [ ] TypeScript strict mode compliance
-      - [ ] TSDoc comments on all exported functions
-    - [ ] **Documentation**:
-      - [ ] Feature spec marked complete (F-019)
-      - [ ] Status board updated with completion evidence
+    - [x] **Loading State Testing**:
+      - [x] Popup renders with loading spinner on initial mount
+      - [x] Loading spinner animation works correctly
+    - [x] **Query Pattern Testing**:
+      - [x] Popup sends GET_TAB_DATABASE_STATUS message on mount
+      - [x] Background worker receives and processes message
+      - [x] Popup receives response with hasDatabase field
+    - [x] **Active State Testing**:
+      - [x] When databases exist, active icon (logo-48.png) displays
+      - [x] Status text shows "DevTools Active" on hover
+      - [x] Icon scales to 1.1 on hover
+    - [x] **Inactive State Testing**:
+      - [x] When no databases, inactive icon (logo-48-inactive.png) displays
+      - [x] Status text shows "No databases detected" on hover
+    - [x] **Accessibility Testing**:
+      - [x] ARIA labels present and descriptive
+      - [x] Keyboard navigation works (Tab, Enter)
+      - [x] Screen reader announces status changes
+    - [x] **Edge Cases**:
+      - [x] Background not responding → timeout to inactive
+      - [x] Multiple rapid popup open/close → clean listeners
+      - [x] Current tab has no content script → inactive state
+    - [x] **Code Quality**:
+      - [x] ESLint passed (no new warnings)
+      - [x] Build passed (no errors)
+      - [x] TypeScript strict mode compliance
+      - [x] TSDoc comments on all exported functions
+    - [x] **Documentation**:
+      - [x] Feature spec marked complete (F-019)
+      - [x] Status board updated with completion evidence

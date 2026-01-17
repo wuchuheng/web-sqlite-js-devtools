@@ -646,6 +646,51 @@ Content Script (MAIN world)
   → Update React state (useDatabaseList, useLogStreaming)
 ```
 
+### Module: Popup Status Query (F-019 NEW)
+
+> **Feature F-019**: Popup DevTools Status Indicator
+>
+> Extends runtime messaging to include popup as message sender for:
+>
+> - Current tab database status query (GET_TAB_DATABASE_STATUS)
+
+#### Channel: `GET_TAB_DATABASE_STATUS`
+
+- **Summary**: Query current tab's database status from popup for displaying active/inactive icon
+- **Direction**: Popup → Background
+- **Request**:
+  ```typescript
+  {
+    type: "GET_TAB_DATABASE_STATUS";
+  }
+  ```
+- **Response**:
+  ```typescript
+  {
+    hasDatabase: boolean;      // True if current tab has databases opened
+    databaseCount?: number;    // Number of databases (optional, for future use)
+  }
+  ```
+- **Usage**:
+  - Popup component sends message on mount
+  - Background worker queries `databaseMap` for current active tab ID
+  - Popup receives response and renders appropriate icon (logo-48.png or logo-48-inactive.png)
+  - Popup shows status text on hover: "DevTools Active" or "No databases detected"
+
+### Message Flow Architecture (F-019)
+
+```
+Popup Component (on mount)
+  → chrome.runtime.sendMessage({ type: "GET_TAB_DATABASE_STATUS" })
+  → Background Worker
+  → chrome.tabs.query({ active: true, currentWindow: true })
+  → databaseMap.get(activeTabId)
+  → sendResponse({ hasDatabase: databases.length > 0, databaseCount })
+  → Popup Component
+  → Set local state (hasDatabase)
+  → Render logo + status text
+```
+
 ## 4) Error Codes
 
 | Code                     | Message                       | Meaning                                |
@@ -818,6 +863,51 @@ Content Script (MAIN world)
   → chrome.runtime.sendMessage()
   → DevTools Panel
   → Update React state (useDatabaseList, useLogStreaming)
+```
+
+### Module: Popup Status Query (F-019 NEW)
+
+> **Feature F-019**: Popup DevTools Status Indicator
+>
+> Extends runtime messaging to include popup as message sender for:
+>
+> - Current tab database status query (GET_TAB_DATABASE_STATUS)
+
+#### Channel: `GET_TAB_DATABASE_STATUS`
+
+- **Summary**: Query current tab's database status from popup for displaying active/inactive icon
+- **Direction**: Popup → Background
+- **Request**:
+  ```typescript
+  {
+    type: "GET_TAB_DATABASE_STATUS";
+  }
+  ```
+- **Response**:
+  ```typescript
+  {
+    hasDatabase: boolean;      // True if current tab has databases opened
+    databaseCount?: number;    // Number of databases (optional, for future use)
+  }
+  ```
+- **Usage**:
+  - Popup component sends message on mount
+  - Background worker queries `databaseMap` for current active tab ID
+  - Popup receives response and renders appropriate icon (logo-48.png or logo-48-inactive.png)
+  - Popup shows status text on hover: "DevTools Active" or "No databases detected"
+
+### Message Flow Architecture (F-019)
+
+```
+Popup Component (on mount)
+  → chrome.runtime.sendMessage({ type: "GET_TAB_DATABASE_STATUS" })
+  → Background Worker
+  → chrome.tabs.query({ active: true, currentWindow: true })
+  → databaseMap.get(activeTabId)
+  → sendResponse({ hasDatabase: databases.length > 0, databaseCount })
+  → Popup Component
+  → Set local state (hasDatabase)
+  → Render logo + status text
 ```
 
 ## 4) Error Codes
