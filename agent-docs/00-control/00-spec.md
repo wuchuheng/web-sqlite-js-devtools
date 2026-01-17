@@ -38,10 +38,10 @@ NOTES
 
 ## 3) Current stage
 
-- **Current stage (1-8)**: Stage 7 - Task Manager (F-018)
-- **Active release**: v1.3.1 (Real-time Communication) - Target: 2026-01-19
-- **Status summary**: F-018 Task Catalog Complete (DevTools Real-time Communication). F-017 Complete (TASK-331). F-015 Complete (TASK-326/327/328/329). F-016 Complete (Logo Generator: TASK-330). F-014 Complete (TASK-320 through TASK-325). F-013 Complete, F-012 Complete, F-011 Complete, F-010 Complete, F-009 Complete, F-008 Complete.
-- **Last updated (YYYY-MM-DD)**: 2026-01-17 (F-018: DevTools Real-time Communication - Task Catalog)
+- **Current stage (1-8)**: Stage 8 - Worker (TASK-337)
+- **Active release**: v1.4.0 (Popup Status Indicator) - Target: 2026-01-18
+- **Status summary**: TASK-337 Complete (Message Type Definition). F-019 Task Catalog Complete. F-019 Design Complete. F-019 Discovery Complete. F-018 Task Catalog Complete (DevTools Real-time Communication). F-017 Complete (TASK-331). F-015 Complete (TASK-326/327/328/329). F-016 Complete (Logo Generator: TASK-330). F-014 Complete (TASK-320 through TASK-325). F-013 Complete, F-012 Complete, F-011 Complete, F-010 Complete, F-009 Complete, F-008 Complete.
+- **Last updated (YYYY-MM-DD)**: 2026-01-18 (TASK-337: Message Type Definition - Complete)
 
 ## 4) Technology stack (chosen in Stage 2)
 
@@ -83,6 +83,7 @@ NOTES
 - `agent-docs/01-discovery/features/F-016-svg-to-png-logo-generator.md` (COMPLETED - Feature F-016)
 - `agent-docs/01-discovery/features/F-017-realtime-database-status.md` (COMPLETED - Feature F-017)
 - `agent-docs/01-discovery/features/F-018-devtools-realtime-communication.md` (NEW - Feature F-018)
+- `agent-docs/01-discovery/features/F-019-popup-devtools-status.md` (NEW - Feature F-019)
 - `agent-docs/02-feasibility/01-options.md`
 - `agent-docs/02-feasibility/02-risk-assessment.md`
 - `agent-docs/02-feasibility/03-spike-plan.md`

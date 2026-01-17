@@ -1766,3 +1766,210 @@ NOTES
       - [ ] Update documentation:
         - [ ] Feature spec marked complete (F-018)
         - [ ] Status board marked complete (F-018)
+
+---
+
+## Release v1.4.0 (Popup Status Indicator) - Target: 2026-01-18 (TODAY)
+
+### Feature F-019: Popup DevTools Status Indicator
+
+- [x] **TASK-337**: Message Type Definition (F-019)
+  - **Priority**: P1 (High)
+  - **Dependencies**: None
+  - **Boundary**: `src/shared/messages.ts`
+  - **Maps to**: F-019, FR-002
+  - **Feature**: [F-019: Popup DevTools Status Indicator](agent-docs/01-discovery/features/F-019-popup-devtools-status.md)
+  - **Micro-Spec**: [complete](agent-docs/08-task/active/TASK-337.md)
+  - **Estimated**: 0.2 hours
+  - **DoD**:
+    - [x] Add `GET_TAB_DATABASE_STATUS` constant to `src/shared/messages.ts`
+    - [x] Add `GetTabDatabaseStatusMessage` interface:
+      ```typescript
+      interface GetTabDatabaseStatusMessage {
+        type: typeof GET_TAB_DATABASE_STATUS;
+      }
+      ```
+    - [x] Add `TabDatabaseStatusResponse` interface:
+      ```typescript
+      interface TabDatabaseStatusResponse {
+        hasDatabase: boolean;
+        databaseCount?: number;
+      }
+      ```
+    - [x] Export all new types from `src/shared/messages.ts`
+    - [x] TypeScript strict mode compliance
+    - [x] ESLint passed (no new warnings)
+
+- [ ] **TASK-338**: Background Status Query Function (F-019)
+  - **Priority**: P1 (High)
+  - **Dependencies**: TASK-337, F-017 (databaseMap)
+  - **Boundary**: `src/background/iconState/index.ts`
+  - **Maps to**: F-019, FR-002
+  - **Feature**: [F-019: Popup DevTools Status Indicator](agent-docs/01-discovery/features/F-019-popup-devtools-status.md)
+  - **Micro-Spec**: [pending](agent-docs/08-task/active/TASK-338.md)
+  - **Estimated**: 0.3 hours
+  - **DoD**:
+    - [ ] Add `getCurrentTabDatabaseStatus()` function to `src/background/iconState/index.ts`
+    - [ ] Query active tab ID: `chrome.tabs.query({ active: true, currentWindow: true })`
+    - [ ] Look up tab in `databaseMap` (from F-017)
+    - [ ] Return `Promise<{ hasDatabase: boolean, databaseCount?: number }>`
+    - [ ] Handle case when activeTab is undefined (return { hasDatabase: false })
+    - [ ] Add TSDoc comments with @example block
+    - [ ] Three-phase comments for function >5 lines
+    - [ ] TypeScript strict mode compliance
+    - [ ] ESLint passed (no new warnings)
+
+- [ ] **TASK-339**: Background Message Handler (F-019)
+  - **Priority**: P1 (High)
+  - **Dependencies**: TASK-337, TASK-338
+  - **Boundary**: `src/background/index.ts`
+  - **Maps to**: F-019, FR-002
+  - **Feature**: [F-019: Popup DevTools Status Indicator](agent-docs/01-discovery/features/F-019-popup-devtools-status.md)
+  - **Micro-Spec**: [pending](agent-docs/08-task/active/TASK-339.md)
+  - **Estimated**: 0.2 hours
+  - **DoD**:
+    - [ ] Update `chrome.runtime.onMessage` listener in `src/background/index.ts`
+    - [ ] Add handler for `message?.type === GET_TAB_DATABASE_STATUS`
+    - [ ] Call `getCurrentTabDatabaseStatus()` function
+    - [ ] Send response via `sendResponse(response)`
+    - [ ] Return `true` for async response
+    - [ ] Preserve existing message handlers (ICON_STATE, DATABASE_LIST, LOG_ENTRY)
+    - [ ] TypeScript strict mode compliance
+    - [ ] ESLint passed (no new warnings)
+
+- [ ] **TASK-340**: Popup Component Rewrite (F-019)
+  - **Priority**: P1 (High)
+  - **Dependencies**: TASK-337, TASK-338, TASK-339
+  - **Boundary**: `src/popup/Popup.tsx`
+  - **Maps to**: F-019, FR-002
+  - **Feature**: [F-019: Popup DevTools Status Indicator](agent-docs/01-discovery/features/F-019-popup-devtools-status.md)
+  - **Micro-Spec**: [pending](agent-docs/08-task/active/TASK-340.md)
+  - **Estimated**: 0.6 hours
+  - **DoD**:
+    - [ ] Complete rewrite of `src/popup/Popup.tsx` (remove template counter)
+    - [ ] Add `hasDatabase` state: `useState<boolean | null>(null)`
+    - [ ] Add `showStatus` state: `useState<boolean>(false)`
+    - [ ] Implement `useEffect` to query background on mount:
+      ```typescript
+      useEffect(() => {
+        chrome.runtime.sendMessage(
+          { type: "GET_TAB_DATABASE_STATUS" },
+          (response) => {
+            if (response) setHasDatabase(response.hasDatabase);
+          },
+        );
+      }, []);
+      ```
+    - [ ] Implement `handleMouseEnter()`: `setShowStatus(true)`
+    - [ ] Implement `handleMouseLeave()`: `setShowStatus(false)`
+    - [ ] Render logo based on state:
+      - Loading: `<div className="loading-spinner" />`
+      - Active: `<img src="img/logo-48.png" alt="..." />`
+      - Inactive: `<img src="img/logo-48-inactive.png" alt="..." />`
+    - [ ] Render status text on hover: "DevTools Active" or "No databases detected"
+    - [ ] Add ARIA labels: `aria-label`, `role="status"`, `aria-live="polite"`
+    - [ ] Add title attribute to icon for native tooltip
+    - [ ] TSDoc comments on component
+    - [ ] TypeScript strict mode compliance
+    - [ ] ESLint passed (no new warnings)
+
+- [ ] **TASK-341**: Popup Styles Update (F-019)
+  - **Priority**: P1 (High)
+  - **Dependencies**: TASK-340
+  - **Boundary**: `src/popup/Popup.css`
+  - **Maps to**: F-019, FR-002
+  - **Feature**: [F-019: Popup DevTools Status Indicator](agent-docs/01-discovery/features/F-019-popup-devtools-status.md)
+  - **Micro-Spec**: [pending](agent-docs/08-task/active/TASK-341.md)
+  - **Estimated**: 0.3 hours
+  - **DoD**:
+    - [ ] Update `src/popup/Popup.css` with new styles
+    - [ ] Popup container:
+      ```css
+      .popup-container {
+        width: 200px;
+        height: 200px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      }
+      ```
+    - [ ] Logo styles:
+      ```css
+      .popup-logo {
+        width: 64px;
+        height: 64px;
+        cursor: pointer;
+        transition: transform 150ms ease-in-out;
+      }
+      .popup-logo:hover {
+        transform: scale(1.1);
+      }
+      ```
+    - [ ] Status text styles:
+      ```css
+      .popup-status {
+        font-size: 13px;
+        color: #4b5563;
+        text-align: center;
+        padding: 4px 8px;
+        border-radius: 4px;
+        animation: fadeIn 150ms ease-in-out;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(-4px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      ```
+    - [ ] Loading spinner styles with spin animation
+    - [ ] Ensure responsive and accessible design
+    - [ ] Test color contrast (WCAG AA compliance)
+
+- [ ] **TASK-342**: Testing & Validation (F-019)
+  - **Priority**: P1 (High)
+  - **Dependencies**: TASK-337, TASK-338, TASK-339, TASK-340, TASK-341
+  - **Boundary**: All F-019 files
+  - **Maps to**: F-019, FR-002
+  - **Feature**: [F-019: Popup DevTools Status Indicator](agent-docs/01-discovery/features/F-019-popup-devtools-status.md)
+  - **Micro-Spec**: [pending](agent-docs/08-task/active/TASK-342.md)
+  - **Estimated**: 0.2 hours
+  - **DoD**:
+    - [ ] **Loading State Testing**:
+      - [ ] Popup renders with loading spinner on initial mount
+      - [ ] Loading spinner animation works correctly
+    - [ ] **Query Pattern Testing**:
+      - [ ] Popup sends GET_TAB_DATABASE_STATUS message on mount
+      - [ ] Background worker receives and processes message
+      - [ ] Popup receives response with hasDatabase field
+    - [ ] **Active State Testing**:
+      - [ ] When databases exist, active icon (logo-48.png) displays
+      - [ ] Status text shows "DevTools Active" on hover
+      - [ ] Icon scales to 1.1 on hover
+    - [ ] **Inactive State Testing**:
+      - [ ] When no databases, inactive icon (logo-48-inactive.png) displays
+      - [ ] Status text shows "No databases detected" on hover
+    - [ ] **Accessibility Testing**:
+      - [ ] ARIA labels present and descriptive
+      - [ ] Keyboard navigation works (Tab, Enter)
+      - [ ] Screen reader announces status changes
+    - [ ] **Edge Cases**:
+      - [ ] Background not responding → timeout to inactive
+      - [ ] Multiple rapid popup open/close → clean listeners
+      - [ ] Current tab has no content script → inactive state
+    - [ ] **Code Quality**:
+      - [ ] ESLint passed (no new warnings)
+      - [ ] Build passed (no errors)
+      - [ ] TypeScript strict mode compliance
+      - [ ] TSDoc comments on all exported functions
+    - [ ] **Documentation**:
+      - [ ] Feature spec marked complete (F-019)
+      - [ ] Status board updated with completion evidence
