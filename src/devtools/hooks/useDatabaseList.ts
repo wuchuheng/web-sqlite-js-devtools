@@ -47,14 +47,26 @@ export const useDatabaseList = (): UseDatabaseListReturn => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Get current tab ID
-    const tabId = chrome.devtools.inspectedWindow.tabId;
+    // Get current tab ID - may be undefined on initial load
+    let tabId = chrome.devtools.inspectedWindow.tabId;
 
     /**
      * 1. Fetch initial database list on mount
      * 2. Set loading to false after fetch
      */
     const fetchInitialData = async () => {
+      // Wait for tabId to be available before fetching
+      if (!tabId) {
+        tabId = chrome.devtools.inspectedWindow.tabId;
+        if (!tabId) {
+          console.warn(
+            "[useDatabaseList] tabId not available yet, skipping initial fetch",
+          );
+          setIsLoading(false);
+          return;
+        }
+      }
+
       try {
         const response = await databaseService.getDatabases();
         if (response.success && response.data) {
@@ -70,7 +82,8 @@ export const useDatabaseList = (): UseDatabaseListReturn => {
       }
     };
 
-    fetchInitialData();
+    // Small delay to ensure DevTools context is ready
+    const timeoutId = setTimeout(fetchInitialData, 100);
 
     /**
      * 1. Listen for DATABASE_LIST_MESSAGE from background worker
@@ -95,10 +108,11 @@ export const useDatabaseList = (): UseDatabaseListReturn => {
     chrome.runtime.onMessage.addListener(messageListener);
 
     /**
-     * Cleanup: Remove message listener on unmount
+     * Cleanup: Remove message listener and timeout on unmount
      */
     return () => {
       chrome.runtime.onMessage.removeListener(messageListener);
+      clearTimeout(timeoutId);
     };
   }, []);
 

@@ -62,6 +62,14 @@ async function executeInMainWorld<
 
   const { func, args = [], options } = config;
   const tabId = options?.tabId ?? chrome.devtools.inspectedWindow.tabId;
+
+  // Validate tabId before proceeding - it must be a valid number for executeScript
+  if (typeof tabId !== "number" || tabId <= 0) {
+    throw new Error(
+      `Invalid tabId: ${tabId}. Ensure chrome.devtools.inspectedWindow.tabId is available.`,
+    );
+  }
+
   const target = { tabId };
 
   console.log("[inspectedWindowBridge] executeInMainWorld called", {
