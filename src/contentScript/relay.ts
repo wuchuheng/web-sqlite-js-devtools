@@ -39,14 +39,21 @@ crossWorldChannel.listen(
   },
 );
 
-// Log entry messages → background worker
+// Log entry messages → background worker (F-018: enriched format)
 crossWorldChannel.listen(
   LOG_ENTRY_MESSAGE,
-  (data: { subscriptionId: string; entry: unknown }) => {
+  (data: {
+    database: string;
+    level: string;
+    message: unknown;
+    timestamp: number;
+  }) => {
     chrome.runtime.sendMessage({
       type: LOG_ENTRY_MESSAGE,
-      subscriptionId: data.subscriptionId,
-      entry: data.entry,
+      database: data.database,
+      level: data.level,
+      message: data.message,
+      timestamp: data.timestamp,
     });
   },
 );

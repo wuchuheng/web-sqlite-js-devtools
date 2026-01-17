@@ -136,8 +136,9 @@ sequenceDiagram
 **Concurrency**: Event-driven, no conflicts
 
 **Architecture**:
+
 - MAIN world content script monitors `window.__web_sqlite` (can access page JavaScript)
-- ISOLATED world relay script forwards to chrome.runtime (has chrome.* API access)
+- ISOLATED world relay script forwards to chrome.runtime (has chrome.\* API access)
 - Uses `CrossWorldChannel` abstraction for MAIN ↔ ISOLATED communication
 - Uses `WebSqliteMonitor` utility for database change detection
 
@@ -302,15 +303,112 @@ sequenceDiagram
     Panel->>Panel: Remove loading state
 ```
 
+### Flow 9: Database List Update to DevTools Panel (F-018 NEW)
+
+**Goal**: Auto-refresh database list in DevTools panel when databases are opened/closed
+**Concurrency**: Event-driven, no conflicts (fire-and-forget)
+
+```mermaid
+sequenceDiagram
+    participant Page as Web Page
+    participant Monitor as WebSqliteMonitor
+    participant Channel as CrossWorldChannel
+    participant Relay as Relay Script
+    participant BG as Background SW
+    participant Panel as DevTools Panel
+    participant UI as OpenedDBList
+
+    Note over Page:UI: Initial State
+    Panel->>Panel: useDatabaseList hook mounted
+    Panel->>BG: chrome.runtime.onMessage listener active
+
+    Note over Page,UI: Database Opened
+    Page->>Page: App calls openDB("mydb.sqlite3")
+    Page->>Page: window.__web_sqlite.onDatabaseChange fires
+    Page->>Monitor: notify() callback
+    Monitor->>Channel: channel.send(DATABASE_LIST, { databases: ["mydb.sqlite3"] })
+    Channel->>Relay: window.postMessage
+    Relay->>BG: chrome.runtime.sendMessage(DATABASE_LIST_MESSAGE)
+    BG->>BG: Update databaseMap for current tab
+    BG->>Icon: Set active icon
+
+    BG->>Panel: chrome.runtime.sendMessage(DATABASE_LIST_MESSAGE, { databases: ["mydb.sqlite3"] })
+    Panel->>Panel: useDatabaseList receives update
+    Panel->>Panel: Update React state
+    Panel->>UI: Re-render with new database list
+    UI->>UI: Show "mydb.sqlite3" card
+
+    Note over Page,UI: Database Closed
+    Page->>Page: App calls db.close()
+    Page->>Page: window.__web_sqlite.onDatabaseChange fires
+    Page->>Monitor: notify() callback
+    Monitor->>Channel: channel.send(DATABASE_LIST, { databases: [] })
+    Channel->>Relay: window.postMessage
+    Relay->>BG: chrome.runtime.sendMessage(DATABASE_LIST_MESSAGE)
+    BG->>BG: Update databaseMap for current tab
+    BG->>Icon: Set inactive icon
+
+    BG->>Panel: chrome.runtime.sendMessage(DATABASE_LIST_MESSAGE, { databases: [] })
+    Panel->>Panel: useDatabaseList receives update
+    Panel->>Panel: Update React state
+    Panel->>UI: Re-render with empty list
+    UI->>UI: Show EmptyDatabaseList component
+```
+
+### Flow 10: Log Streaming to DevTools Panel (F-018 NEW)
+
+**Goal**: Stream real-time logs from database to DevTools panel with database identification
+**Concurrency**: Multiple databases streaming concurrently
+
+```mermaid
+sequenceDiagram
+    participant Page as Web Page
+    participant CS as Content Script (MAIN)
+    participant Channel as CrossWorldChannel
+    participant Relay as Relay Script (ISOLATED)
+    participant BG as Background SW
+    participant Panel as DevTools Panel
+    participant LogUI as LogTab (/openedDB/:dbname/logs)
+
+    Note over Page,LogUI: Initial Subscription
+    Panel->>Panel: useLogStreaming("mydb.sqlite3") mounted
+    Panel->>BG: chrome.runtime.onMessage listener active (for LOG_ENTRY_MESSAGE)
+
+    Page->>CS: window.__web_sqlite.databases["mydb.sqlite3"]
+    CS->>CS: Subscribe to db.onLog(callback)
+
+    Note over Page,LogUI: Log Event Fired
+    Page->>CS: db.onLog fires: { level: "info", data: {...} }
+    CS->>CS: Wrap entry: { database: "mydb.sqlite3", level: "info", message: {...} }
+    CS->>Channel: channel.send(LOG_ENTRY_MESSAGE, enrichedEntry)
+    Channel->>Relay: window.postMessage
+    Relay->>BG: chrome.runtime.sendMessage(LOG_ENTRY_MESSAGE, enrichedEntry)
+
+    BG->>Panel: chrome.runtime.sendMessage(LOG_ENTRY_MESSAGE, enrichedEntry)
+    Panel->>Panel: useLogStreaming receives entry
+    Panel->>Panel: Filter: entry.database === "mydb.sqlite3"
+    Panel->>LogUI: Append to log list (if matches)
+    LogUI->>LogUI: Render new log entry
+
+    Note over Page,LogUI: Multiple Databases
+    Page->>CS: db2.onLog fires: { level: "error", data: {...} }
+    CS->>CS: Wrap entry: { database: "other.sqlite3", level: "error", message: {...} }
+    CS->>BG: Send via message chain
+    BG->>Panel: chrome.runtime.sendMessage(LOG_ENTRY_MESSAGE, enrichedEntry)
+    Panel->>Panel: Filter: entry.database === "mydb.sqlite3"
+    Panel->>Panel: Entry filtered out (doesn't match)
+    LogUI->>LogUI: No update (log not for this database)
+```
+
 ## 2) Asynchronous Event Flows
 
 **Pattern**: CrossWorldChannel for MAIN ↔ ISOLATED communication; chrome.runtime for ISOLATED ↔ Background.
 
-### Event: Database Changed
+### Event: Database Changed (F-018 UPDATED)
 
 - **Event**: `DATABASE_CHANGED` (via `DATABASE_LIST_MESSAGE`)
 - **Producer**: WebSqliteMonitor (MAIN world content script)
-- **Consumer**: Background Service Worker (icon state)
+- **Consumers**: Background Service Worker (icon state), DevTools Panel (database list updates)
 
 ```mermaid
 flowchart LR
@@ -321,26 +419,29 @@ flowchart LR
     Relay -->|5. chrome.runtime.sendMessage| BG[Background SW]
     BG -->|6. updateIconForTab| Icon[Extension Icon]
     BG -->|7. setActiveIcon| State[Per-Tab Icon State]
+    BG -->|8. Forward to DevTools| Panel[DevTools Panel]
+    Panel -->|9. Update database list| UI[OpenedDBList UI]
 ```
 
-### Event: Log Entry
+### Event: Log Entry (F-018 UPDATED)
 
-- **Event**: `LOG_ENTRY`
+- **Event**: `LOG_ENTRY_MESSAGE`
 - **Producer**: Content Script (subscribes to `db.onLog()`)
-- **Consumers**: DevTools Panel (LogTab), Multiple panels can subscribe
+- **Consumers**: DevTools Panel (LogTab with database filtering)
+- **Entry Format**: `{ database: string, level: string, message: any }` (F-018)
 
 ```mermaid
 flowchart LR
     DB[web-sqlite-js] -->|1. onLog callback| Sub[Subscription Manager]
-    Sub -->|2. Add to ring buffer| Buffer[(500 entry ring buffer)]
-    Sub -->|3. Batch send| CS[Content Script]
-    CS -->|4. CrossWorldChannel| Channel[CrossWorldChannel]
-    Channel -->|5. postMessage| Relay[Relay Script]
-    Relay -->|6. chrome.runtime.sendMessage| BG[Background SW]
-    BG -->|7. Forward to subscribers| Panel1[DevTools Panel 1]
-    BG -->|7. Forward to subscribers| Panel2[DevTools Panel 2]
-    Panel1 -->|8. Filter & render| LogUI1[Log Tab 1]
-    Panel2 -->|8. Filter & render| LogUI2[Log Tab 2]
+    Sub -->|2. Wrap with dbname| Wrap[Enriched Entry]
+    Wrap -->|3. Add to ring buffer| Buffer[(500 entry ring buffer)]
+    Sub -->|4. Send enriched entry| CS[Content Script MAIN]
+    CS -->|5. CrossWorldChannel| Channel[CrossWorldChannel]
+    Channel -->|6. postMessage| Relay[Relay Script ISOLATED]
+    Relay -->|7. chrome.runtime.sendMessage| BG[Background SW]
+    BG -->|8. Forward to DevTools| Panel[DevTools Panel]
+    Panel -->|9. Filter by database| Filter[useLogStreaming Hook]
+    Filter -->|10. Render filtered logs| UI[LogView UI]
 ```
 
 ## 3) Entity State Machines
@@ -410,10 +511,10 @@ stateDiagram-v2
 
 ### Execution Worlds
 
-| World | JavaScript Context | chrome.* APIs | Page JS Access |
-|-------|-------------------|--------------|----------------|
-| MAIN | Page context | ❌ Not available | ✅ Full access |
-| ISOLATED | Extension context | ✅ Available | ❌ Not available |
+| World    | JavaScript Context | chrome.\* APIs   | Page JS Access   |
+| -------- | ------------------ | ---------------- | ---------------- |
+| MAIN     | Page context       | ❌ Not available | ✅ Full access   |
+| ISOLATED | Extension context  | ✅ Available     | ❌ Not available |
 
 ### Communication Flow
 

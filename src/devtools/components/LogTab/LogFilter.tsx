@@ -1,8 +1,8 @@
 /**
- * Log filter component
+ * Log filter component (F-018: added warn level support)
  *
  * @remarks
- * Provides level filter buttons (All/Info/Debug/Error) for filtering log entries.
+ * Provides level filter buttons (All/Info/Debug/Error/Warn) for filtering log entries.
  *
  * @param props.levelFilter - Current filter level
  * @param props.onLevelChange - Callback when filter level changes
@@ -12,18 +12,14 @@
  * @returns JSX.Element - Filter controls
  */
 interface LogFilterProps {
-  levelFilter: "all" | "info" | "debug" | "error";
-  onLevelChange: (level: "all" | "info" | "debug" | "error") => void;
+  levelFilter: "all" | "info" | "debug" | "error" | "warn";
+  onLevelChange: (level: "all" | "info" | "debug" | "error" | "warn") => void;
   entryCount: number;
   filteredCount: number;
 }
 
-const LEVEL_OPTIONS: readonly ("all" | "info" | "debug" | "error")[] = [
-  "all",
-  "info",
-  "debug",
-  "error",
-] as const;
+const LEVEL_OPTIONS: readonly ("all" | "info" | "debug" | "error" | "warn")[] =
+  ["all", "info", "debug", "error", "warn"] as const;
 
 export const LogFilter = ({
   levelFilter,

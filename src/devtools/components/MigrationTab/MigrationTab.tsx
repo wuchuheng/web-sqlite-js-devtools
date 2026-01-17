@@ -104,9 +104,6 @@ export const MigrationTab = () => {
     <div className="flex flex-col h-full">
       {/* Helper Notice */}
       <div className="p-4 bg-primary-50 border-b border-primary-200">
-        <h3 className="text-sm font-medium text-primary-800 mb-1">
-          Migration Testing Playground
-        </h3>
         <p className="text-xs text-primary-600">
           Test your migration SQL safely. A dev version will be created and you
           can rollback when done.

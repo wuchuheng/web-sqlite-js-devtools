@@ -178,8 +178,7 @@ export const QueryTab = ({
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col h-full">
         {/* Header with history toggle */}
-        <div className="px-4 py-2 border-b border-secondary-200 bg-white flex items-center justify-between">
-          <h3 className="text-sm font-medium text-secondary-700">SQL Query</h3>
+        <div className="px-4 py-2 bg-white flex items-center flex-row-reverse">
           <button
             type="button"
             onClick={handleToggleHistory}
@@ -209,7 +208,10 @@ export const QueryTab = ({
           />
 
           {/* Action buttons */}
-          <div className="mt-3 flex items-center gap-2">
+          <div
+            className="mt-3 flex items-center gap-2"
+            style={{ marginTop: "1rem" }}
+          >
             <button
               onClick={handleExecute}
               disabled={isLoading}

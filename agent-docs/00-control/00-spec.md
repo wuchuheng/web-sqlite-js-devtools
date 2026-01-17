@@ -38,10 +38,10 @@ NOTES
 
 ## 3) Current stage
 
-- **Current stage (1-8)**: Stage 1 - Discovery (F-017)
-- **Active release**: v1.3.1 (Tree Enhancements) - Target: 2026-01-22
-- **Status summary**: F-017 Discovery (Real-time Database Status). F-015 Complete (TASK-326/327/328/329). F-016 Complete (Logo Generator: TASK-330/331). F-014 Complete (TASK-320 through TASK-325). F-013 Complete, F-012 Complete, F-011 Complete, F-010 Complete, F-009 Complete, F-008 Complete.
-- **Last updated (YYYY-MM-DD)**: 2026-01-17 (F-017: Real-time Database Status Updates - Discovery)
+- **Current stage (1-8)**: Stage 7 - Task Manager (F-018)
+- **Active release**: v1.3.1 (Real-time Communication) - Target: 2026-01-19
+- **Status summary**: F-018 Task Catalog Complete (DevTools Real-time Communication). F-017 Complete (TASK-331). F-015 Complete (TASK-326/327/328/329). F-016 Complete (Logo Generator: TASK-330). F-014 Complete (TASK-320 through TASK-325). F-013 Complete, F-012 Complete, F-011 Complete, F-010 Complete, F-009 Complete, F-008 Complete.
+- **Last updated (YYYY-MM-DD)**: 2026-01-17 (F-018: DevTools Real-time Communication - Task Catalog)
 
 ## 4) Technology stack (chosen in Stage 2)
 
@@ -81,7 +81,8 @@ NOTES
 - `agent-docs/01-discovery/features/F-014-opfs-ui-redesign.md` (NEW - Feature F-014)
 - `agent-docs/01-discovery/features/F-015-opfs-tree-enhancements.md` (NEW - Feature F-015)
 - `agent-docs/01-discovery/features/F-016-svg-to-png-logo-generator.md` (COMPLETED - Feature F-016)
-- `agent-docs/01-discovery/features/F-017-realtime-database-status.md` (NEW - Feature F-017)
+- `agent-docs/01-discovery/features/F-017-realtime-database-status.md` (COMPLETED - Feature F-017)
+- `agent-docs/01-discovery/features/F-018-devtools-realtime-communication.md` (NEW - Feature F-018)
 - `agent-docs/02-feasibility/01-options.md`
 - `agent-docs/02-feasibility/02-risk-assessment.md`
 - `agent-docs/02-feasibility/03-spike-plan.md`
@@ -370,3 +371,52 @@ NOTES
   - **Build Status**: ESLint passed with no errors
   - **Documentation**: Created SVG filter research docs (SVG_FILTER_RESEARCH.md, SVG_COLOR_CONVERSION_RULES.md), updated feature spec as complete
   - **Feature F-016 Complete**: Developer tooling for logo generation ready for use
+- **2026-01-17**: Feature F-018 Discovery Completed - DevTools Real-time Communication
+  - Created feature spec document with 4 functional requirements (FR-RT-001 through FR-RT-004)
+  - Analyzed web-sqlite-js API (`dev-tool-README.md`) for `db.onLog()` and `onDatabaseChange` events
+  - Identified message flow: Content Script → Relay → Background → DevTools Panel
+  - Documented log entry enrichment pattern: `{ database: string, level: string, message: any }`
+  - Specified auto-refresh database list on `/openedDB` route (no polling, event-driven)
+  - Specified real-time log streaming with database filtering for `/openedDB/:dbname/logs` route
+  - Added to v1.3.1 release as Feature F-018
+  - Updated project spec with F-018 reference
+  - Ready for Stage 2 (S2:feasibilityAnalyst) feasibility analysis
+- **2026-01-17**: Feature F-018 Feasibility Completed - DevTools Real-time Communication
+  - Analyzed 3 technical options: chrome.runtime.sendMessage (A), chrome.runtime.Port (B), Polling (C)
+  - **Recommended**: Option A (chrome.runtime.sendMessage extension) - 4-6 hours effort
+  - Reuses 100% of existing CrossWorldChannel infrastructure from F-017
+  - Zero new infrastructure: fire-and-forget semantics match log streaming use case
+  - Tradeoff analysis: Option A fastest (4-6h), lowest complexity, meets all NFR targets
+  - Risk assessment: 8 risks identified (R-RT-001 through R-RT-008), all mitigated
+  - Spike plan: 3 spikes defined (S-RT-001, S-RT-002, S-RT-003) - 1.5 hours total
+  - Key decision: Best-effort delivery acceptable for logs; databaseMap provides source of truth
+  - Updated project spec: Stage 2 status, feasibility documents ready
+  - Ready for Stage 3 (S3:systemArchitect) architecture updates
+- **2026-01-17**: Feature F-018 Architecture Completed - DevTools Real-time Communication
+  - Updated HLD (01-hld.md) message protocol section with DevTools panel as message recipient
+  - Updated code structure: Added useDatabaseList.ts and useLogStreaming.ts hooks
+  - Updated contentScript section to include log subscription manager functionality
+  - Updated shared section with CrossWorldChannel and WebSqliteMonitor utilities
+  - Updated background worker section to include message forwarding to DevTools
+  - Updated dataflow (02-dataflow.md) with 2 new flows (Flow 9, Flow 10)
+  - Flow 9: Database List Update to DevTools Panel - shows auto-refresh on database open/close
+  - Flow 10: Log Streaming to DevTools Panel - shows real-time log streaming with database identification
+  - Updated event flows: Database Changed now includes DevTools panel as consumer
+  - Updated event flows: Log Entry now shows enriched format { database, level, message }
+  - Updated project spec: Stage 3 status, architecture documents ready
+  - Ready for Stage 4 (S4:adrSteward) or Stage 5 (S5:contractDesigner) for design updates
+- **2026-01-17**: Feature F-018 Design Completed - DevTools Real-time Communication
+  - Updated API contracts (01-api.md) with DevTools Panel Real-time Messaging section
+  - Added DATABASE_LIST_MESSAGE channel for auto-refresh database list updates
+  - Added LOG_ENTRY_MESSAGE channel for real-time log streaming with database identification
+  - Message flow diagram: Content Script → CrossWorldChannel → Relay → Background → DevTools Panel
+  - Updated events (02-events.md) with enriched LOG_ENTRY event format { database, level, message }
+  - Updated message types (01-message-types.md) with new F-018 types:
+    - DatabaseListMessage, LogEntryMessage, DatabaseListUpdateEvent, LogEntryUpdateEvent
+  - Updated LogTabState with database filtering: filter.database field
+  - Updated LogEntry interface with database field and renamed 'data' to 'message'
+  - Updated module LLDs:
+    - content-script-proxy.md: Added log subscription responsibilities and enriched relay implementation
+    - background-service.md: Added DevTools panel message forwarding flow and functions
+  - Updated project spec: Stage 5 status, design documents ready
+  - Ready for Stage 7 (S7:taskManager) for task breakdown and implementation

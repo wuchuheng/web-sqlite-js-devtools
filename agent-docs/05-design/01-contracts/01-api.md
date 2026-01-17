@@ -576,6 +576,76 @@ agent-docs/05-design/
 - **Response**: `{ success: true }`
 - **Usage**: Runtime messaging only (content script detects `window.__web_sqlite`)
 
+### Module: DevTools Panel Real-time Messaging (F-018 NEW)
+
+> **Feature F-018**: DevTools Real-time Communication
+>
+> Extends runtime messaging to include DevTools panel as message recipient for:
+>
+> - Database list auto-refresh (DATABASE_LIST_MESSAGE)
+> - Log streaming with database identification (LOG_ENTRY_MESSAGE)
+
+#### Channel: `DATABASE_LIST_MESSAGE`
+
+- **Summary**: Auto-refresh database list in DevTools panel when databases are opened/closed
+- **Direction**: Content Script → Background → DevTools Panel
+- **Request**:
+  ```typescript
+  {
+    type: "DATABASE_LIST";
+    data: {
+      databases: string[];  // List of opened database names
+      tabId: number;        // Source tab ID
+      frameId?: number;     // Source frame ID (if in iframe)
+    }
+  }
+  ```
+- **Response**: None (fire-and-forget)
+- **Usage**:
+  - OpenedDBList component uses `useDatabaseList` hook to receive updates
+  - Hook subscribes to `chrome.runtime.onMessage` on mount
+  - Hook unsubscribes on unmount
+
+#### Channel: `LOG_ENTRY_MESSAGE`
+
+- **Summary**: Stream real-time log entries from database to DevTools panel with database identification
+- **Direction**: Content Script (MAIN) → Relay (ISOLATED) → Background → DevTools Panel
+- **Request**:
+  ```typescript
+  {
+    type: "LOG_ENTRY";
+    data: {
+      database: string;           // Database name (F-018 enrichment)
+      level: "info" | "debug" | "error";
+      message: unknown;           // Log entry data
+      timestamp: number;
+      tabId: number;              // Source tab ID
+      frameId?: number;           // Source frame ID (if in iframe)
+    }
+  }
+  ```
+- **Response**: None (fire-and-forget, best-effort delivery)
+- **Usage**:
+  - LogTab component uses `useLogStreaming(dbname)` hook to receive updates
+  - Hook filters logs by `entry.database === dbname`
+  - Hook subscribes to `chrome.runtime.onMessage` on mount
+  - Hook unsubscribes on unmount
+
+### Message Flow Architecture (F-018)
+
+```
+Content Script (MAIN world)
+  → CrossWorldChannel.send()
+  → window.postMessage()
+  → Relay Script (ISOLATED world)
+  → chrome.runtime.sendMessage()
+  → Background Worker
+  → Update databaseMap (for icon state)
+  → chrome.runtime.sendMessage()
+  → DevTools Panel
+  → Update React state (useDatabaseList, useLogStreaming)
+```
+
 ## 4) Error Codes
 
 | Code                     | Message                       | Meaning                                |
@@ -679,6 +749,76 @@ type SQLParams = SqlValue[] | Record<string, SqlValue>;
 - **Request**: `{ hasDatabase: boolean }`
 - **Response**: `{ success: true }`
 - **Usage**: Runtime messaging only (content script detects `window.__web_sqlite`)
+
+### Module: DevTools Panel Real-time Messaging (F-018 NEW)
+
+> **Feature F-018**: DevTools Real-time Communication
+>
+> Extends runtime messaging to include DevTools panel as message recipient for:
+>
+> - Database list auto-refresh (DATABASE_LIST_MESSAGE)
+> - Log streaming with database identification (LOG_ENTRY_MESSAGE)
+
+#### Channel: `DATABASE_LIST_MESSAGE`
+
+- **Summary**: Auto-refresh database list in DevTools panel when databases are opened/closed
+- **Direction**: Content Script → Background → DevTools Panel
+- **Request**:
+  ```typescript
+  {
+    type: "DATABASE_LIST";
+    data: {
+      databases: string[];  // List of opened database names
+      tabId: number;        // Source tab ID
+      frameId?: number;     // Source frame ID (if in iframe)
+    }
+  }
+  ```
+- **Response**: None (fire-and-forget)
+- **Usage**:
+  - OpenedDBList component uses `useDatabaseList` hook to receive updates
+  - Hook subscribes to `chrome.runtime.onMessage` on mount
+  - Hook unsubscribes on unmount
+
+#### Channel: `LOG_ENTRY_MESSAGE`
+
+- **Summary**: Stream real-time log entries from database to DevTools panel with database identification
+- **Direction**: Content Script (MAIN) → Relay (ISOLATED) → Background → DevTools Panel
+- **Request**:
+  ```typescript
+  {
+    type: "LOG_ENTRY";
+    data: {
+      database: string;           // Database name (F-018 enrichment)
+      level: "info" | "debug" | "error";
+      message: unknown;           // Log entry data
+      timestamp: number;
+      tabId: number;              // Source tab ID
+      frameId?: number;           // Source frame ID (if in iframe)
+    }
+  }
+  ```
+- **Response**: None (fire-and-forget, best-effort delivery)
+- **Usage**:
+  - LogTab component uses `useLogStreaming(dbname)` hook to receive updates
+  - Hook filters logs by `entry.database === dbname`
+  - Hook subscribes to `chrome.runtime.onMessage` on mount
+  - Hook unsubscribes on unmount
+
+### Message Flow Architecture (F-018)
+
+```
+Content Script (MAIN world)
+  → CrossWorldChannel.send()
+  → window.postMessage()
+  → Relay Script (ISOLATED world)
+  → chrome.runtime.sendMessage()
+  → Background Worker
+  → Update databaseMap (for icon state)
+  → chrome.runtime.sendMessage()
+  → DevTools Panel
+  → Update React state (useDatabaseList, useLogStreaming)
+```
 
 ## 4) Error Codes
 

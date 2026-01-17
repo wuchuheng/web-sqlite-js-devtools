@@ -12,32 +12,32 @@ NOTES
 
 # 02 Risk Assessment
 
-| ID    | Risk                                                                     | Likelihood | Impact | Mitigation                                                          | Owner              |
-| ----- | ------------------------------------------------------------------------ | ---------- | ------ | ------------------------------------------------------------------- | ------------------ |
-| R-001 | Message serialization fails for Map objects in DatabaseRecord            | Medium     | High   | Convert Maps to Arrays before sending, reconstruct on DevTools side | S3:systemArchitect |
-| R-002 | chrome.runtime.sendMessage overhead exceeds NFR targets                  | Low        | Medium | Spike to benchmark; implement response caching if needed            | S3:systemArchitect |
-| R-003 | CodeMirror bundle size exceeds 2MB extension limit                       | Medium     | High   | Spike to test; consider lazy-loading or alternative if needed       | S3:systemArchitect |
-| R-004 | Content script lifecycle differs from DevTools panel                     | Medium     | Medium | Implement heartbeat/reconnect logic (FR-041)                        | S3:systemArchitect |
-| R-005 | Page refresh disrupts active DevTools session                            | High       | Medium | Auto-reconnect with timeout (FR-041), show loading state            | S3:systemArchitect |
-| R-006 | Large query results (1000+ rows) cause UI freeze                         | Medium     | Medium | Enforce pagination, implement virtual scrolling                     | S6:techLead        |
-| R-007 | Log subscription memory leak (FR-029, 500 entry limit)                   | Medium     | Low    | Implement ring buffer for logs, cleanup on unsubscribe              | S6:techLead        |
-| R-008 | web-sqlite-js version mismatch (v1.0.11 in template vs v2.1.0+ required) | High       | High   | Update dependency; verify API compatibility                         | S3:systemArchitect |
-| R-009 | OPFS access from DevTools context not possible                           | High       | High   | Content script proxy required (Option A handles this)               | S3:systemArchitect |
-| R-010 | Hash routing conflicts with existing DevTools navigation                 | Low        | Low    | React Router handles hash routing correctly                         | S6:techLead        |
-| R-011 | Icon state updates lag behind database changes                           | Low        | Low    | Content script listens to `onDatabaseChange`, notifies background   | S6:techLead        |
-| R-012 | CodeMirror auto-theme detection doesn't work                             | Low        | Low    | Fallback to light theme, document limitation                        | S6:techLead        |
+| ID       | Risk                                                       | Likelihood | Impact | Mitigation                                                                                | Owner              |
+| -------- | ---------------------------------------------------------- | ---------- | ------ | ----------------------------------------------------------------------------------------- | ------------------ |
+| R-RT-001 | DevTools panel misses database list messages when closed   | Medium     | Medium | Panel fetches current state on mount via chrome.runtime.sendMessage                       | S3:systemArchitect |
+| R-RT-002 | Log entries lost during DevTools panel closure             | Low        | Low    | Logs are ephemeral; acceptable to miss entries when panel closed                          | S3:systemArchitect |
+| R-RT-003 | Message forwarding latency exceeds 10ms target             | Low        | Medium | Measure latency; if needed, batch log entries                                             | S3:systemArchitect |
+| R-RT-004 | Memory leak from log subscriptions not cleaned up          | Medium     | High   | Implement unsubscribe on database close; track subscriptions in Map                       | S6:techLead        |
+| R-RT-005 | Multiple DevTools panels receive cross-tab messages        | Low        | High   | Background worker routes messages by tabId only                                           | S3:systemArchitect |
+| R-RT-006 | Rapid database open/close causes message flood             | Medium     | Low    | Existing databaseMap provides deduplication                                               | S6:techLead        |
+| R-RT-007 | Log entry payload too large for chrome.runtime.sendMessage | Low        | Low    | Log entries are small (level + data); < 1KB typical                                       | S6:techLead        |
+| R-RT-008 | Content script MAIN world cannot access chrome.runtime     | Low        | High   | Relay script (ISOLATED world) handles chrome.runtime calls (already implemented in F-017) | S3:systemArchitect |
 
 ## Key unknowns
 
-- **U1**: Actual serialized size of DatabaseRecord with large migration/seed Maps
-  - **Impact**: May need chunking or compression for large schemas
-  - **Mitigation**: Spike S-001 will test this
-- **U2**: Performance of content script → DevTools message round-trip
-  - **Impact**: Could affect real-time log streaming (FR-029)
-  - **Mitigation**: Spike S-002 will benchmark this
-- **U3**: CodeMirror 6 SQL mode availability and bundle size
-  - **Impact**: May need alternative SQL editor (e.g., CodeMirror 5, or simple textarea)
-  - **Mitigation**: Spike S-003 will validate this
-- **U4**: Whether `window.__web_sqlite.onDatabaseChange` is immediately available on page load
-  - **Impact**: Affects initial icon state detection
-  - **Mitigation**: Poll with fallback if event not immediately available
+- **U1**: Actual message latency from content script to DevTools panel
+  - **Impact**: Could affect real-time UX if > 100ms
+  - **Mitigation**: chrome.runtime.sendMessage is typically < 5ms; will measure during implementation
+
+- **U2**: Log entry frequency in production applications
+  - **Impact**: High-frequency logs could flood DevTools panel
+  - **Mitigation**: Existing ring buffer (500 entries) limits memory; consider rate limiting if needed
+
+- **U3**: Whether web-sqlite-js db.onLog callback fires synchronously
+  - **Impact**: Could cause performance issues if very frequent
+  - **Mitigation**: Web-sqlite-js logs are async; CrossWorldChannel uses postMessage (async)
+
+---
+
+**Maintainer**: S2: Feasibility Analyst
+**Status**: Draft — Ready for Review

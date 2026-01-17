@@ -30,23 +30,29 @@ src/
 
 ## 1) Assets (Traceability)
 
-- **API**: Sends `DATABASE_LIST_MESSAGE`, `ICON_STATE_MESSAGE` runtime updates
-- **Events**: Uses `window.__web_sqlite.onDatabaseChange`
+- **API**: Sends `DATABASE_LIST_MESSAGE`, `LOG_ENTRY_MESSAGE` runtime updates (F-018 UPDATED)
+- **Events**: Uses `window.__web_sqlite.onDatabaseChange`, `db.onLog()` (F-018)
 - **Types**: `src/shared/messages.ts`
 - **ADR**: `agent-docs/04-adr/0001-content-script-proxy.md`
 
 ## 2) Responsibilities
 
 ### MAIN World (App.tsx)
+
 - Inject into web page context
 - Monitor `window.__web_sqlite` availability via WebSqliteMonitor
 - Automatically send database updates to background
+- Subscribe to `db.onLog()` for all opened databases (F-018 NEW)
+- Enrich log entries with database name before forwarding (F-018 NEW)
 
 ### ISOLATED World (relay.ts)
+
 - Listen for messages from MAIN world via CrossWorldChannel
 - Forward to background service worker via chrome.runtime
+- Forward to DevTools panel via background worker (F-018 NEW)
 
 ### Shared Utilities
+
 - **CrossWorldChannel**: Abstraction for MAIN ↔ ISOLATED communication
 - **WebSqliteMonitor**: Monitors web-sqlite-js and notifies on changes
 
@@ -73,11 +79,12 @@ flowchart TD
 
 ### WebSqliteMonitor (src/shared/web-sqlite/monitor.ts)
 
-**Purpose**: Monitor window.__web_sqlite and notify on database changes
+**Purpose**: Monitor window.\_\_web_sqlite and notify on database changes
 
 **Functions**:
+
 - `monitorWebSqlite(listener: WebSqliteChangeListener): () => void`
-  - Starts monitoring window.__web_sqlite
+  - Starts monitoring window.\_\_web_sqlite
   - Calls listener when databases change
   - Returns cleanup function
 
@@ -90,6 +97,7 @@ flowchart TD
 **Purpose**: Type-safe communication between MAIN and ISOLATED worlds
 
 **Class Methods**:
+
 - `send<T>(type: MessageType, data: T): void`
   - Send message from MAIN world to ISOLATED world
   - Uses window.postMessage internally
@@ -109,6 +117,7 @@ flowchart TD
 **Purpose**: React component that starts monitoring on mount
 
 **Implementation**:
+
 ```typescript
 export default function App() {
   useEffect(() => {
@@ -124,19 +133,33 @@ export default function App() {
 **Purpose**: Forward messages from MAIN world to chrome.runtime
 
 **Implementation**:
+
 ```typescript
 crossWorldChannel.start();
 
 crossWorldChannel.listen(DATABASE_LIST_MESSAGE, (data) => {
-  chrome.runtime.sendMessage({ type: DATABASE_LIST_MESSAGE, databases: data.databases });
+  chrome.runtime.sendMessage({
+    type: DATABASE_LIST_MESSAGE,
+    databases: data.databases,
+  });
 });
 
 crossWorldChannel.listen(ICON_STATE_MESSAGE, (data) => {
-  chrome.runtime.sendMessage({ type: ICON_STATE_MESSAGE, hasDatabase: data.hasDatabase });
+  chrome.runtime.sendMessage({
+    type: ICON_STATE_MESSAGE,
+    hasDatabase: data.hasDatabase,
+  });
 });
 
 crossWorldChannel.listen(LOG_ENTRY_MESSAGE, (data) => {
-  chrome.runtime.sendMessage({ type: LOG_ENTRY_MESSAGE, subscriptionId: data.subscriptionId, entry: data.entry });
+  // F-018: Enriched log entry with database identification
+  chrome.runtime.sendMessage({
+    type: LOG_ENTRY_MESSAGE,
+    database: data.database,
+    level: data.level,
+    message: data.message,
+    timestamp: data.timestamp,
+  });
 });
 ```
 
@@ -173,13 +196,15 @@ crossWorldChannel.listen(LOG_ENTRY_MESSAGE, (data) => {
 ```
 
 **Notes**:
-- MAIN world script runs in page context (access to window.__web_sqlite)
+
+- MAIN world script runs in page context (access to window.\_\_web_sqlite)
 - ISOLATED world script runs in extension context (access to chrome.runtime)
 - Both scripts use `all_frames: true` to support iframes
 
 ## 7) Design Patterns
 
 ### Channel Pattern
+
 **Problem**: Need communication between MAIN and ISOLATED execution worlds
 
 **Solution**: CrossWorldChannel provides pub/sub abstraction
@@ -195,7 +220,8 @@ crossWorldChannel.listen(DATABASE_LIST, (data) => {
 ```
 
 ### Monitor Pattern
-**Problem**: Need to react to changes in window.__web_sqlite
+
+**Problem**: Need to react to changes in window.\_\_web_sqlite
 
 **Solution**: WebSqliteMonitor encapsulates all monitoring logic
 
@@ -205,12 +231,13 @@ const cleanup = monitorAndNotifyBackground();
 
 // Custom listener
 const cleanup = monitorWebSqlite(({ databases, hasDatabase }) => {
-  console.log('Databases:', databases);
-  console.log('Has database:', hasDatabase);
+  console.log("Databases:", databases);
+  console.log("Has database:", hasDatabase);
 });
 ```
 
 ### Observer Pattern
+
 **Problem**: Multiple components need to know about database changes
 
 **Solution**: CrossWorldChannel supports multiple listeners per message type

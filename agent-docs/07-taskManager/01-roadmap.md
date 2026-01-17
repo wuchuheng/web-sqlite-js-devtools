@@ -1762,3 +1762,70 @@ Enhance the OPFS File Browser with guided tree lines for visual hierarchy, delet
 - [ ] ESLint passed with no new warnings
 - [ ] Feature spec marked complete
 - [ ] Documentation updated (status board)
+
+---
+
+### Release v1.3.1 (Real-time Communication)
+
+**Target Date**: 2026-01-19 (2 days from 2026-01-17)
+**Total Estimated**: 6 hours (1.5-2 days)
+**Focus**: Real-time DevTools panel updates for database list and log streaming
+
+**Feature Overview**: Extend message forwarding to include DevTools panel as message recipient for DATABASE_LIST_MESSAGE and LOG_ENTRY_MESSAGE. Content script subscribes to db.onLog() for all databases and enriches log entries with database name. DevTools panel receives real-time updates without polling.
+
+**Tasks Breakdown**:
+
+- [ ] **TASK-332**: Content Script Log Subscription (F-018)
+  - Add log subscription manager to App.tsx
+  - Subscribe to db.onLog() for all opened databases
+  - Enrich log entries with database name
+  - Send via CrossWorldChannel to relay script
+  - Cleanup on unmount
+
+- [ ] **TASK-333**: Background Worker Message Forwarding (F-018)
+  - Create forwardToDevToolsPanel() function
+  - Handle DATABASE_LIST_MESSAGE (update databaseMap + forward)
+  - Handle LOG_ENTRY_MESSAGE (forward directly)
+  - TabId filtering for correct panel
+
+- [ ] **TASK-334**: useDatabaseList Hook (F-018)
+  - Create useDatabaseList.ts hook
+  - chrome.runtime.onMessage listener for DATABASE_LIST_MESSAGE
+  - Filter by tabId and message type
+  - Update databases state automatically
+  - Integration with OpenedDBList component
+
+- [ ] **TASK-335**: useLogStreaming Hook (F-018)
+  - Create useLogStreaming.ts hook with dbname parameter
+  - chrome.runtime.onMessage listener for LOG_ENTRY_MESSAGE
+  - Filter by tabId, message type, and database name
+  - Append matching entries to logs state
+  - Integration with LogView component
+  - Update LogEntry type (database field, message renamed from data)
+
+- [ ] **TASK-336**: Integration & Testing (F-018)
+  - End-to-end testing (database list auto-refresh, log streaming)
+  - Performance testing (< 10ms latency, 100+ entries/second)
+  - Memory leak verification (subscriptions cleanup)
+  - Multi-tab testing (no cross-tab leakage)
+
+**Success Criteria**:
+
+- **Database List Auto-Refresh**: [ ] Database list updates automatically when databases open/close
+- **Real-Time Log Streaming**: [ ] Log entries appear in DevTools panel within 10ms of db.onLog() firing
+- **Database Identification**: [ ] Log entries include database name for filtering
+- **No Polling**: [ ] All updates are event-driven (no polling loops)
+- **Tab Isolation**: [ ] Messages only go to DevTools panel for matching tab
+- **Memory Management**: [ ] No memory leaks from log subscriptions
+
+**Definition of Done**:
+
+- [ ] All 5 tasks complete (TASK-332 through TASK-336)
+- [ ] Database list auto-refreshes without manual refresh
+- [ ] Log streaming works in real-time with database filtering
+- [ ] LogEntry type updated with database field and message renamed
+- [ ] useDatabaseList and useLogStreaming hooks created and integrated
+- [ ] ESLint passed with no new warnings
+- [ ] Build passed with no errors
+- [ ] Manual testing completed
+- [ ] Documentation updated (feature spec, status board)

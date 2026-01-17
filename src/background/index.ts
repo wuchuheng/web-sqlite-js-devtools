@@ -5,6 +5,7 @@
  * Main entry point for Chrome extension background service worker.
  * Initializes offscreen document and icon state handling.
  * Tracks per-tab, per-frame database state for correct icon display.
+ * Forwards messages to DevTools panel (F-018).
  */
 
 import {
@@ -15,7 +16,11 @@ import {
   cleanupTab,
 } from "./iconState";
 import { initRouter } from "@/messaging/core";
-import { ICON_STATE_MESSAGE, DATABASE_LIST_MESSAGE } from "@/shared/messages";
+import {
+  ICON_STATE_MESSAGE,
+  DATABASE_LIST_MESSAGE,
+  LOG_ENTRY_MESSAGE,
+} from "@/shared/messages";
 
 console.log("[Background] Service worker starting...");
 initRouter();
@@ -68,6 +73,51 @@ async function setupOffscreen() {
 }
 
 // ============================================================================
+// DEVTOOLS MESSAGE FORWARDING (F-018)
+// ============================================================================
+
+/**
+ * Forward message to DevTools panel for the specific tab
+ *
+ * @param message - Message object to forward
+ * @param sender - chrome.runtime.MessageSender with tab information
+ *
+ * @remarks
+ * DevTools panel filters messages by tabId to ensure correct panel receives updates.
+ * Uses chrome.runtime.sendMessage which broadcasts to all extension contexts.
+ *
+ * @example
+ * ```ts
+ * forwardToDevToolsPanel(
+ *   { type: DATABASE_LIST_MESSAGE, databases: ["test.sqlite3"] },
+ *   { tab: { id: 123 } }
+ * );
+ * ```
+ */
+function forwardToDevToolsPanel(
+  message: Record<string, unknown>,
+  sender: chrome.runtime.MessageSender,
+): void {
+  if (!sender.tab?.id) {
+    console.warn("[Background] Cannot forward message: missing tabId");
+    return;
+  }
+
+  // Add tabId to message for filtering in DevTools panel
+  const messageWithTabId = { ...message, tabId: sender.tab.id };
+
+  // Send to all extension contexts (DevTools panel will filter by tabId)
+  chrome.runtime.sendMessage(messageWithTabId).catch((err) => {
+    // DevTools panel may not be open, ignore error
+    if (err.message?.includes("Receiving end does not exist")) {
+      // Silently ignore - DevTools panel not open
+    } else {
+      console.error("[Background] Failed to forward message to DevTools:", err);
+    }
+  });
+}
+
+// ============================================================================
 // INITIALIZATION
 // ============================================================================
 
@@ -109,7 +159,8 @@ initializeBackground();
  * Listen for messages from content scripts
  * @remarks
  * - ICON_STATE_MESSAGE: Backward compatibility (deprecated)
- * - DATABASE_LIST_MESSAGE: New per-tab, per-frame tracking
+ * - DATABASE_LIST_MESSAGE: Per-tab, per-frame tracking + forward to DevTools (F-018)
+ * - LOG_ENTRY_MESSAGE: Forward to DevTools panel (F-018)
  * - "request": Wake up offscreen document
  */
 chrome.runtime.onMessage.addListener((message, sender) => {
@@ -129,7 +180,7 @@ chrome.runtime.onMessage.addListener((message, sender) => {
     setIconState(Boolean(message.hasDatabase));
   }
 
-  // New per-tab, per-frame database tracking
+  // New per-tab, per-frame database tracking + DevTools forwarding (F-018)
   if (message?.type === DATABASE_LIST_MESSAGE) {
     console.log("[Background DEBUG] Handling DATABASE_LIST_MESSAGE");
     if (sender.tab?.id !== undefined) {
@@ -139,7 +190,16 @@ chrome.runtime.onMessage.addListener((message, sender) => {
         message.databases,
         sender.frameId && sender.frameId > 0 ? sender.frameId : undefined,
       );
+
+      // F-018: Forward to DevTools panel
+      forwardToDevToolsPanel(message, sender);
     }
+  }
+
+  // F-018: Forward log entries to DevTools panel
+  if (message?.type === LOG_ENTRY_MESSAGE) {
+    console.log("[Background DEBUG] Handling LOG_ENTRY_MESSAGE");
+    forwardToDevToolsPanel(message, sender);
   }
 
   // Wake up offscreen document

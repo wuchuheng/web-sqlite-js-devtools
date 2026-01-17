@@ -14,169 +14,182 @@ NOTES
 
 ## 1) Decision drivers (what matters most)
 
-- **D1 (Implementation Speed)**: F-015 is a focused visual enhancement, should be completed quickly
-- **D2 (Code Quality)**: Must follow existing S8 functional component patterns
-- **D3 (Bundle Size)**: Adding new react-icons imports increases bundle size
-- **D4 (User Experience)**: Default expansion improves discoverability but must not impact performance
+- **D1 (Development Speed)**: Leverage existing CrossWorldChannel and message infrastructure from F-017
+- **D2 (Reliability)**: Message delivery should work reliably for database list updates
+- **D3 (Simplicity)**: Minimal new abstractions, reuse existing patterns
+- **D4 (Compatibility)**: Work within Chrome Extension API constraints for DevTools panels
 
 ## 2) Constraints recap (from Stage 1)
 
 - **Key constraints**:
-  - Must modify existing `FileTree.tsx` component
-  - Must preserve lazy-loading for child directories
-  - Tree lines use `TreeLines` component for responsive hiding
-  - Icons come from react-icons library (multiple sub-packages)
-  - TypeScript strict mode enabled
+  - Chrome DevTools panels cannot directly access content script context
+  - DevTools panels have limited messaging options (chrome.runtime.sendMessage only)
+  - Must reuse existing CrossWorldChannel from F-017
+  - Log streaming must include database identification
+  - No polling allowed (event-driven only)
+
 - **Key success criteria**:
-  - Root directories expand by default on load
-  - Tree lines use dotted/dashed styling
-  - 6 file types get specific icons (sqlite3, images, txt, json, folders, unknown)
-  - No performance regression on initial load
-  - ESLint passes with no new warnings
+  - Database list auto-refreshes within 100ms of database open/close
+  - Log entries display in real-time with database filtering
+  - Message forwarding latency < 10ms
+  - No memory leaks from subscriptions
 
 ## 3) Options (A/B/C)
 
-### Option A — Component-Based Enhancement
+### Option A — Extend Existing chrome.runtime.sendMessage (RECOMMENDED)
 
-- **Summary**: Modify existing `FileTree.tsx` and `TreeLines.tsx` directly with new icon imports, expansion logic, and styling
-- **Approach**:
-  - Add 6 icon imports to FileTree.tsx (FaDatabase, FaRegFileImage, TiDocumentText, LuFileJson, FaFolder, FaFolderOpen)
-  - Create `getFileIcon(entry, isExpanded)` helper function that returns icon based on extension
-  - Update `isExpanded` initial state: `useState(level === 0)` for root-level auto-expansion
-  - Add `useEffect` hook to auto-load root directory children on mount
-  - Update `TreeLines.tsx` className: change `bg-gray-200` to `border-dotted border-gray-300`
+- **Summary**: Use existing chrome.runtime.sendMessage for background → DevTools panel communication. DevTools panel subscribes to chrome.runtime.onMessage for real-time updates. Content script uses existing CrossWorldChannel for log streaming.
+
+- **Architecture**:
+
+  ```
+  Content Script (MAIN) → CrossWorldChannel → Relay (ISOLATED) → chrome.runtime.sendMessage
+    → Background Worker → chrome.runtime.sendMessage → DevTools Panel
+  ```
+
 - **Pros**:
-  - Leverages existing FileTree structure and patterns
-  - Minimal code changes (2 files, ~50 lines added)
-  - No additional abstraction layers or wrapper components
-  - Direct performance benefits (no lazy-loading or wrapper overhead)
-  - Follows existing S8 functional component patterns with hooks
+  - Zero new infrastructure (reuses F-017 CrossWorldChannel)
+  - Consistent with existing message protocol
+  - Simple implementation (~100-150 lines)
+  - Fire-and-forget semantics acceptable for logs
+  - Tab-based routing already implemented in background worker
+
 - **Cons**:
-  - Tightly couples icon logic to FileTree component (harder to test in isolation)
-  - Icon imports increase bundle size for all react-icons variants (~15-20KB total)
-  - Less reusable if other components need same icon mapping
+  - Message delivery not guaranteed (best-effort)
+  - DevTools panel must be open to receive messages
+  - No built-in delivery confirmation
+
 - **Risks**:
-  - R1: Auto-expanding all root directories may slow initial load if many files exist
-  - R2: Missing icon libraries may cause build errors
-- **Estimated effort**: 2-3 hours for implementation
-- **Fits success criteria?**: **Yes** - Direct approach with minimal overhead, meets all functional requirements
+  - Low: chrome.runtime.sendMessage is well-documented and stable
+  - Low: Existing databaseMap provides source of truth
+  - Medium: DevTools panel may miss messages if closed (acceptable for logs)
 
-### Option B — Icon Component Abstraction
+- **Estimated effort**: 4-6 hours
+  - Background worker message forwarding: 1-2 hours
+  - DevTools panel message listener: 1-2 hours
+  - Log subscription in content script: 2 hours
+  - Integration testing: 1 hour
 
-- **Summary**: Create new `FileTypeIcon.tsx` component that encapsulates icon selection logic, then consume in FileTree
-- **Approach**:
-  - Create `src/devtools/components/OPFSBrowser/FileTypeIcon.tsx` (new file)
-  - Implement discriminated union type for file extensions
-  - Export component with `fileName: string` and `isExpanded?: boolean` props
-  - Use in FileTree: `<FileTypeIcon fileName={entry.name} isExpanded={isExpanded} />`
-  - Same expansion and tree line changes as Option A
+- **Fits success criteria?** Yes
+  - chrome.runtime.sendMessage latency is typically < 5ms
+  - Existing databaseMap ensures eventual consistency
+  - CrossWorldChannel already handles MAIN → ISOLATED communication
+
+### Option B — chrome.runtime.Port with Persistent Connections
+
+- **Summary**: Create persistent port connections between background worker and DevTools panel using chrome.runtime.connect. Messages sent via port.postMessage for reliable delivery.
+
+- **Architecture**:
+
+  ```
+  DevTools Panel: chrome.runtime.connect({name: "devtools-panel"})
+  Background Worker: Maintain Map<tabId, chrome.runtime.Port>
+  Content Script → Background → Port.postMessage → DevTools Panel
+  ```
+
 - **Pros**:
-  - Separates concerns (icon logic isolated in dedicated component)
-  - Reusable across other components (FilePreview, MetadataPanel, etc.)
-  - Easier to unit test icon mapping in isolation
-  - Clean component interface with TypeScript types
-  - Better maintainability if new file types are added
+  - Persistent connection ensures DevTools panel is reachable
+  - Port.onDisconnect signals panel closure
+  - Slightly more reliable message delivery
+  - Connection state is explicit
+
 - **Cons**:
-  - Additional file and component to maintain
-  - Slightly more complex component hierarchy (extra prop layer)
-  - Over-engineering for current use case (only used in FileTree today)
-  - Same bundle size impact as Option A
+  - More complex (connection lifecycle management)
+  - Need to handle port disconnection/reconnection
+  - Background worker must track active ports per tab
+  - Additional ~50 lines for connection management
+
 - **Risks**:
-  - R1: May be seen as "gold-plating" for a simple visual enhancement
-  - R2: Extra component may add minor render overhead
-- **Estimated effort**: 3-4 hours for implementation
-- **Fits success criteria?**: **Yes** - Meets all requirements with better code organization
+  - Medium: Port lifecycle adds complexity
+  - Low: Well-documented Chrome API
+  - Low: Connection errors can be handled gracefully
 
-### Option C (fallback) — CSS-Only with Icon Map
+- **Estimated effort**: 6-8 hours
+  - Port connection management: 2-3 hours
+  - Message routing via ports: 2 hours
+  - Disconnection handling: 1-2 hours
+  - Testing: 1 hour
 
-- **Summary**: Use plain JavaScript object for icon mapping and CSS-only tree line styling, avoiding React component overhead
-- **Approach**:
-  - Create `iconMap.ts` utility with object mapping extensions to component names
-  - Use dynamic imports: `const Icon = lazy(() => import(\`react-icons/${icon.library}\`).then(m => m[icon.name]))`
-  - Update FileTree to use dynamic icon rendering based on map lookup
-  - Same expansion changes as Option A
-  - Use Tailwind `@apply` or CSS modules for tree line dot styling
+- **Fits success criteria?** Yes
+  - Port delivery is still asynchronous (similar latency to sendMessage)
+  - Persistent connection doesn't significantly improve reliability
+  - Overkill for best-effort log streaming
+
+### Option C (fallback) — Polling via inspectedWindow.eval
+
+- **Summary**: Fallback to polling if message-based approach fails. DevTools panel periodically calls chrome.devtools.inspectedWindow.eval to check database list and logs.
+
+- **When to use**: Only if Options A and B prove infeasible (unlikely)
+
+- **Summary**:
+  - DevTools panel polls database list every 1-2 seconds
+  - Logs fetched via periodic eval calls
+  - Simple but violates NFR-RT-001 (no polling requirement)
+
 - **Pros**:
-  - Centralized icon configuration (easy to add new types without modifying component)
-  - Potential for code-splitting icon bundles (lazy loading)
-  - CSS-only tree line changes are simple
+  - Guaranteed to work (eval always succeeds)
+  - No new message infrastructure needed
+  - Works even if message forwarding has bugs
+
 - **Cons**:
-  - Dynamic imports add complexity and may cause icon flicker on render
-  - Type safety issues with object key lookups (need runtime validation)
-  - More difficult to maintain and debug than direct imports
-  - Lazy loading overhead defeats purpose for commonly-used icons
+  - Violates "no polling" requirement from Stage 1
+  - Higher latency (polling interval)
+  - Unnecessary CPU usage
+  - Poor user experience (delayed updates)
+
 - **Risks**:
-  - R1: Dynamic icon rendering may cause visual inconsistency during load
-  - R2: Type errors may not be caught at compile time
-- **Estimated effort**: 4-5 hours for implementation
-- **Fits success criteria?**: **Partial** - Meets functional requirements but may introduce UX issues
+  - High: Does not meet success criteria
+  - Medium: Performance impact from frequent eval calls
+
+- **Estimated effort**: 2-3 hours (but not recommended)
+
+- **Fits success criteria?** No
+  - Polling violates NFR-RT-001 (no polling requirement)
+  - Latency equals polling interval (not real-time)
 
 ## 4) Tradeoff table
 
-| Dimension           | Option A (Component-Based) | Option B (Abstraction) | Option C (CSS-Only)  |
-| ------------------- | -------------------------- | ---------------------- | -------------------- |
-| **Speed**           | Fast (2-3h)                | Medium (3-4h)          | Slower (4-5h)        |
-| **Cost**            | Low (2 files modified)     | Medium (new component) | Medium (new utility) |
-| **Ops complexity**  | Low (direct changes)       | Medium (abstraction)   | Medium (dynamic)     |
-| **Maintainability** | Medium                     | High                   | Low                  |
-| **Reusability**     | Low (FileTree only)        | High (any component)   | Medium (map lookup)  |
-| **Performance**     | High (no wrappers)         | High (minimal props)   | Medium (lazy load)   |
-| **Bundle size**     | +15-20KB                   | +15-20KB               | +15-20KB (same)      |
-| **Code quality**    | Medium                     | High                   | Low                  |
+| Dimension          | Option A (sendMessage) | Option B (Port)             | Option C (Polling)     |
+| ------------------ | ---------------------- | --------------------------- | ---------------------- |
+| **Speed**          | Fastest (4-6h)         | Medium (6-8h)               | Fast (2-3h)            |
+| **Cost**           | Low (reuse existing)   | Medium (new infrastructure) | Low (but violates NFR) |
+| **Ops complexity** | Low (fire-and-forget)  | Medium (connection mgmt)    | Low (simple loop)      |
+| **Scalability**    | High (event-driven)    | High (persistent)           | Low (polling overhead) |
+| **Security**       | High (Chrome API)      | High (Chrome API)           | Medium (eval risks)    |
+| **Latency**        | < 10ms                 | < 10ms                      | Polling interval       |
+| **Reliability**    | Medium (best-effort)   | Medium-High (persistent)    | High (always works)    |
 
 ## 5) Recommendation
 
-- **Recommended baseline**: **Option A — Component-Based Enhancement**
+- **Recommended baseline**: Option A — Extend Existing chrome.runtime.sendMessage
+
 - **Why (tie to decision drivers and success criteria)**:
-  - **D1 (Speed)**: Fastest implementation at 2-3 hours, gets feature to users quickly
-  - **D2 (Quality)**: Follows existing S8 patterns (hooks, functional components) already used in FileTree
-  - **D3 (Bundle)**: All react-icons already imported in other components (FaFile in FileNode, FiFileText in EmptyPreview), incremental cost is minimal
-  - **D4 (UX)**: No wrapper overhead or lazy-loading flicker, direct rendering ensures smooth experience
-  - FileTree already has direct icon usage (FaFile, FaDownload, IoMdTrash) - adding more is consistent
-  - F-015 is a focused enhancement, not a framework change - over-engineering is not warranted
+  1. **D1 (Speed)**: Reuses 100% of existing CrossWorldChannel infrastructure from F-017, minimizing new code
+  2. **D2 (Reliability)**: chrome.runtime.sendMessage is production-tested; databaseMap provides source of truth for recovery
+  3. **D3 (Simplicity)**: Fire-and-forget semantics match log streaming use case; no connection lifecycle to manage
+  4. **D4 (Compatibility)**: Uses standard Chrome Extension API; works within DevTools panel constraints
+  5. Meets all success criteria: < 10ms latency, event-driven, no polling
+
 - **What we postpone (explicit)**:
-  - Icon component abstraction (Option B) - can extract later if 3+ components need same mapping
-  - Code-splitting for icons (Option C) - not needed unless bundle size becomes critical
+  - Persistent connections (Option B) postponed unless message loss becomes a measurable problem
+  - Message delivery guarantees postponed (logs are ephemeral, acceptable to miss some entries)
+  - Cross-tab monitoring (out of scope per Stage 1)
 
 ## 6) Open questions / Needs spikes
 
-- **Q1**: Will auto-expanding all root directories cause performance issues with large OPFS file systems (100+ files)?
-  - **Spike needed?**: **No** - Lazy-loading is preserved for child directories, only root expands
-- **Q2**: Do all react-icons sub-packages (fa, fa6, ti, lu) exist in the project's dependencies?
-  - **Spike needed?**: **No** - Can verify with `npm list react-icons` before implementation
-- **Q3**: Will dotted tree lines be visible enough on high-DPI displays?
-  - **Spike needed?**: **No** - Can test during implementation, fallback to `border-dashed` if needed
-- **Q4**: Should we expand root directories immediately or after a short delay for perceived performance?
-  - **Spike needed?**: **No** - Immediate expansion is standard UX pattern (matches prototype)
+- **Q1**: Will chrome.runtime.sendMessage from background worker reach DevTools panel reliably?
+  - **Spike needed?**: No — Chrome API documentation confirms this is supported
+  - **Validation**: Quick test (15 min) to confirm DevTools panel receives chrome.runtime.onMessage from background
 
-## 7) Architectural Notes
+- **Q2**: Should we enable log streaming only when log page is mounted?
+  - **Spike needed?**: No — Standard React pattern (useEffect mount/unmount)
+  - **Validation**: Document in LLD, no spike needed
 
-**Relation to F-012, F-013, F-014**:
+- **Q3**: How to handle rapid database open/close cycles?
+  - **Spike needed?**: No — Existing databaseMap handles deduplication via Map<tabId, Set<dbname>>
+  - **Validation**: Verified in F-017 implementation
 
-F-015 builds on the existing OPFS browser architecture established in earlier features:
+---
 
-- **F-012**: Added TreeLines component, delete operations, metadata display
-- **F-013**: Added two-panel preview layout with file selection
-- **F-014**: Added green color theme, preview headers, file counts, always-visible icons
-- **F-015**: Enhances tree visual hierarchy (expansion, lines, file type icons)
-
-**Component Update Scope**:
-
-```
-src/devtools/components/OPFSBrowser/
-├── FileTree.tsx          [MODIFY] - Add icon imports, getFileIcon helper, auto-expand logic
-├── TreeLines.tsx         [MODIFY] - Change solid border to dotted/dashed
-├── FileTypeIcon.tsx      [SKIP - Option A] - Not creating abstraction layer
-└── iconMap.ts            [SKIP - Option C] - Not creating utility map
-```
-
-**Implementation Boundary**:
-
-F-015 ONLY touches FileTree.tsx and TreeLines.tsx. No changes to:
-
-- Service layer (databaseService.ts)
-- Bridge layer (inspectedWindow.ts)
-- Other components (FilePreview, MetadataPanel, etc.)
-- Routing or navigation
-
-This ensures minimal risk and focused delivery.
+**Maintainer**: S2: Feasibility Analyst
+**Status**: Draft — Ready for Review

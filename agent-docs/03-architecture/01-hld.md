@@ -89,10 +89,19 @@ C4Container
 
 ## 5) Cross-cutting Concerns (Implementation View)
 
-### 5.1 Message Protocol
+### 5.1 Message Protocol (F-018 UPDATED)
 
 - **DevTools Data Access**: Uses service layer → bridge layer → `chrome.scripting.executeScript`
-- **Runtime Messaging**: Only icon state updates and offscreen log storage
+- **Runtime Messaging**: Icon state updates, real-time database list updates, and log streaming to DevTools panel
+- **Message Recipients**:
+  - **Background Worker**: Receives DATABASE_LIST_MESSAGE, LOG_ENTRY_MESSAGE from content script
+  - **DevTools Panel**: Receives DATABASE_LIST_MESSAGE, LOG_ENTRY_MESSAGE from background worker (F-018 NEW)
+- **Message Flow** (F-018):
+  ```
+  Content Script (MAIN) → CrossWorldChannel → Relay (ISOLATED)
+    → chrome.runtime.sendMessage → Background Worker
+    → chrome.runtime.sendMessage → DevTools Panel
+  ```
 - **Error Handling**: Standard `{ success: boolean, data?: T, error?: string }` response format (ServiceResponse)
 
 ### 5.2 Reconnection Strategy
@@ -162,21 +171,28 @@ C4Container
           TreeLines.tsx        # Guide line connectors (F-012 NEW)
           Toast.tsx            # Toast notifications (F-012 NEW)
       /hooks            # Custom React hooks
+        useDatabaseList.ts   # Real-time database list updates (F-018 NEW)
+        useLogStreaming.ts   # Real-time log streaming with database filter (F-018 NEW)
       /utils            # Utilities
       inspectedWindow.ts # Public API re-exports
       DevTools.tsx      # Main DevTools component
       index.tsx         # Entry point
-    /contentScript      # Content Script (Icon State)
-      App.tsx           # Icon state updater
+    /contentScript      # Content Script (Icon State + Log Streaming)
+      App.tsx           # Icon state updater + log subscription manager (F-018 UPDATED)
+      relay.ts          # ISOLATED world relay script (F-017)
       index.tsx         # Entry point
     /background         # Background Service Worker
       /iconState        # Icon activation logic
-      index.ts          # Entry point
+      index.ts          # Entry point + message forwarding to DevTools (F-018 UPDATED)
     /messaging          # Offscreen log channels
       channels.ts       # Offscreen log channels
       core.ts           # Channel core
     /shared             # Shared constants
       messages.ts       # Runtime message IDs
+      /messaging        # Cross-world messaging utilities (F-017)
+        channel.ts      # CrossWorldChannel abstraction
+      /web-sqlite       # web-sqlite-js monitoring utilities (F-017)
+        monitor.ts      # WebSqliteMonitor utility
     /components         # Shared React components
       /CodeMirrorEditor # Reusable SQL editor
       /DataTable        # Reusable table display

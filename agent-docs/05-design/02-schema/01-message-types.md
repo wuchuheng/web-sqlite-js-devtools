@@ -227,12 +227,34 @@ interface LogEvent {
   source: "content-script";
   timestamp: number;
   data: {
-    dbname: string;
+    database: string;  // Database name (F-018)
     logs: Array<{
       level: "info" | "debug" | "error";
-      data: unknown;
+      message: unknown;  // Renamed from 'data' (F-018)
       timestamp: number;
     }>;
+  };
+}
+
+// DevTools Panel Real-time Messaging (F-018 NEW)
+interface DatabaseListMessage {
+  type: "DATABASE_LIST";
+  data: {
+    databases: string[];
+    tabId: number;
+    frameId?: number;
+  };
+}
+
+interface LogEntryMessage {
+  type: "LOG_ENTRY";
+  data: {
+    database: string;
+    level: "info" | "debug" | "error";
+    message: unknown;
+    timestamp: number;
+    tabId: number;
+    frameId?: number;
   };
 }
 
@@ -313,6 +335,24 @@ interface ConnectionStateEvent {
   reason?: string;
 }
 
+// DevTools Panel Real-time Events (F-018 NEW)
+interface DatabaseListUpdateEvent {
+  type: "DATABASE_LIST";
+  databases: string[];
+  tabId: number;
+  frameId?: number;
+}
+
+interface LogEntryUpdateEvent {
+  type: "LOG_ENTRY";
+  database: string;
+  level: "info" | "debug" | "error";
+  message: unknown;
+  timestamp: number;
+  tabId: number;
+  frameId?: number;
+}
+
 // Migration test event
 interface MigrationTestEvent {
   dbname: string;
@@ -356,13 +396,15 @@ interface QueryTabState {
 
 interface LogTabState {
   logs: Array<{
+    database: string; // Database name (F-018)
     level: "info" | "debug" | "error";
-    data: unknown;
+    message: unknown; // Renamed from 'data' (F-018)
     timestamp: number;
   }>;
   filter?: {
     levels?: Array<"info" | "debug" | "error">;
     fields?: string[]; // sql, action, event
+    database?: string; // Filter by database name (F-018)
   };
 }
 ```
@@ -382,8 +424,9 @@ interface ContentScriptState {
 }
 
 interface LogEntry {
+  database: string; // Database name (F-018)
   level: "info" | "debug" | "error";
-  data: unknown;
+  message: unknown; // Renamed from 'data' (F-018)
   timestamp: number;
 }
 ```

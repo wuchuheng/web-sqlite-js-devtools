@@ -87,17 +87,6 @@ export const SeedTab = () => {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Helper Notice */}
-      <div className="p-4 bg-success-50 border-b border-success-200">
-        <h3 className="text-sm font-medium text-success-800 mb-1">
-          Seed Testing Playground
-        </h3>
-        <p className="text-xs text-success-600">
-          Test your seed SQL safely. A dev version will be created with your
-          data and automatically rolled back after testing.
-        </p>
-      </div>
-
       <div className="flex-1 flex flex-col p-4 overflow-auto">
         {/* Current Version Info */}
         <div className="mb-4">

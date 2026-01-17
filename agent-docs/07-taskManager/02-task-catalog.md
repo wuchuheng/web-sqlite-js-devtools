@@ -1601,3 +1601,168 @@ NOTES
       - [x] Build verification (script compiles with tsx)
       - [x] Update feature spec with completion status
       - [x] Update status board with completion evidence
+
+---
+
+## Release v1.3.1 (Real-time Communication) - Target: 2026-01-19
+
+**Total Estimated**: 6 hours (1.5-2 days)
+
+- [ ] **TASK-332**: Content Script Log Subscription (F-018)
+  - **Priority**: P0 (Blocker)
+  - **Dependencies**: TASK-331 (F-017 - Icon State Per Tab must be complete)
+  - **Boundary**: `src/contentScript/App.tsx` (MODIFIED)
+  - **Maps to**: F-018: DevTools Real-time Communication
+  - **Feature**: [F-018: DevTools Real-time Communication](agent-docs/01-discovery/features/F-018-devtools-realtime-communication.md)
+  - **Micro-Spec**: [pending](agent-docs/08-task/active/TASK-332.md)
+  - **Estimated**: 2 hours
+  - **DoD**:
+    - [ ] **Log Subscription Manager** (1 hour)
+      - [ ] Add state: `logSubscriptions: Map<string, () => void>` in App.tsx
+      - [ ] Create `subscribeToLogs(dbname, db)` function
+        - [ ] Call `db.onLog(callback)` with enriched callback
+        - [ ] Enrich log entry: `{ database: dbname, level, message, timestamp }`
+        - [ ] Send via CrossWorldChannel: `channel.send(LOG_ENTRY_MESSAGE, enrichedEntry)`
+        - [ ] Store unsubscribe function in Map
+      - [ ] Create `unsubscribeAllLogs()` function
+        - [ ] Call all unsubscribe functions from Map
+        - [ ] Clear Map
+      - [ ] Add TSDoc comments
+    - [ ] **Database Change Integration** (0.5 hours)
+      - [ ] Update WebSqliteMonitor callback to handle new databases
+      - [ ] When database opens: Call `subscribeToLogs(dbname, db)`
+      - [ ] When database closes: Unsubscribe from logs for that database
+      - [ ] Handle rapid open/close cycles (unsubscribe before subscribe)
+    - [ ] **Cleanup on Unmount** (0.25 hours)
+      - [ ] Add useEffect cleanup: Call `unsubscribeAllLogs()` on unmount
+      - [ ] Verify no memory leaks from subscriptions
+    - [ ] **Testing** (0.25 hours)
+      - [ ] Test log subscription when database opens
+      - [ ] Test log entries enriched with database name
+      - [ ] Test messages sent via CrossWorldChannel
+      - [ ] Test unsubscribe when database closes
+      - [ ] Test cleanup on component unmount
+      - [ ] ESLint passed (no new warnings)
+      - [ ] Build passed (no errors)
+
+- [ ] **TASK-333**: Background Worker Message Forwarding (F-018)
+  - **Priority**: P0 (Blocker)
+  - **Dependencies**: None
+  - **Boundary**: `src/background/index.ts` (MODIFIED)
+  - **Maps to**: F-018: DevTools Real-time Communication
+  - **Feature**: [F-018: DevTools Real-time Communication](agent-docs/01-discovery/features/F-018-devtools-realtime-communication.md)
+  - **Micro-Spec**: [pending](agent-docs/08-task/active/TASK-333.md)
+  - **Estimated**: 1.5 hours
+  - **DoD**:
+    - [ ] **Message Forwarding Function** (0.75 hours)
+      - [ ] Create `forwardToDevToolsPanel(message, sender)` function
+        - [ ] Get tabId from sender.tab
+        - [ ] Get DevTools panel URL: `chrome.devtools.inspectedWindow.tabId`
+        - [ ] Send message via `chrome.runtime.sendMessage` to all extension pages
+        - [ ] DevTools panel filters by tabId in listener
+      - [ ] Add TSDoc comments with @example
+    - [ ] **Update onMessage Handler** (0.5 hours)
+      - [ ] Handle `DATABASE_LIST_MESSAGE`:
+        - [ ] Update databaseMap (existing behavior)
+        - [ ] Call `forwardToDevToolsPanel(message, sender)`
+      - [ ] Handle `LOG_ENTRY_MESSAGE`:
+        - [ ] Call `forwardToDevToolsPanel(message, sender)` directly
+      - [ ] Add error handling for message sending failures
+    - [ ] **TabId Filtering** (0.25 hours)
+      - [ ] Ensure messages only sent to DevTools panel for matching tab
+      - [ ] Test with multiple tabs open
+      - [ ] ESLint passed (no new warnings)
+      - [ ] Build passed (no errors)
+
+- [ ] **TASK-334**: useDatabaseList Hook (F-018)
+  - **Priority**: P0 (Blocker)
+  - **Dependencies**: TASK-333 (Background Worker Message Forwarding)
+  - **Boundary**: `src/devtools/hooks/useDatabaseList.ts` (NEW)
+  - **Maps to**: F-018: DevTools Real-time Communication
+  - **Feature**: [F-018: DevTools Real-time Communication](agent-docs/01-discovery/features/F-018-devtools-realtime-communication.md)
+  - **Micro-Spec**: [pending](agent-docs/08-task/active/TASK-334.md)
+  - **Estimated**: 1 hour
+  - **DoD**:
+    - [ ] **Hook Implementation** (0.5 hours)
+      - [ ] Create `useDatabaseList.ts` hook file
+      - [ ] Add state: `databases: string[]` (default: empty array)
+      - [ ] Add state: `isLoading: boolean` (default: true)
+      - [ ] Add `chrome.runtime.onMessage` listener
+        - [ ] Filter for `DATABASE_LIST_MESSAGE` type
+        - [ ] Filter by tabId (ensure message is for current tab)
+        - [ ] Update databases state on message
+        - [ ] Set isLoading to false
+      - [ ] Add useEffect cleanup: Remove listener on unmount
+      - [ ] Add TSDoc comments with @example
+    - [ ] **Initial Data Fetch** (0.25 hours)
+      - [ ] On mount, fetch initial database list via `databaseService.getDatabases()`
+      - [ ] Set databases state with response.data
+      - [ ] Handle error case
+    - [ ] **Integration & Testing** (0.25 hours)
+      - [ ] Update `OpenedDBList.tsx` to use `useDatabaseList()` hook
+      - [ ] Remove manual fetch logic (use hook state instead)
+      - [ ] Test auto-refresh when database opens
+      - [ ] Test auto-refresh when database closes
+      - [ ] Test no updates from other tabs
+      - [ ] ESLint passed (no new warnings)
+      - [ ] Build passed (no errors)
+
+- [ ] **TASK-335**: useLogStreaming Hook (F-018)
+  - **Priority**: P0 (Blocker)
+  - **Dependencies**: TASK-333 (Background Worker Message Forwarding)
+  - **Boundary**: `src/devtools/hooks/useLogStreaming.ts` (NEW)
+  - **Maps to**: F-018: DevTools Real-time Communication
+  - **Feature**: [F-018: DevTools Real-time Communication](agent-docs/01-discovery/features/F-018-devtools-realtime-communication.md)
+  - **Micro-Spec**: [pending](agent-docs/08-task/active/TASK-335.md)
+  - **Estimated**: 1 hour
+  - **DoD**:
+    - [ ] **Hook Implementation** (0.5 hours)
+      - [ ] Create `useLogStreaming.ts` hook file
+      - [ ] Accept parameter: `dbname: string`
+      - [ ] Add state: `logs: LogEntry[]` (default: empty array)
+      - [ ] Add `chrome.runtime.onMessage` listener
+        - [ ] Filter for `LOG_ENTRY_MESSAGE` type
+        - [ ] Filter by tabId (ensure message is for current tab)
+        - [ ] Filter by database: `entry.database === dbname`
+        - [ ] Append matching entry to logs state
+      - [ ] Add useEffect cleanup: Remove listener on unmount
+      - [ ] Add useEffect cleanup: Clear logs on dbname change
+      - [ ] Add TSDoc comments with @example
+    - [ ] **LogEntry Type Update** (0.25 hours)
+      - [ ] Update LogEntry interface to include `database: string`
+      - [ ] Update LogEntry interface: rename `data` to `message`
+      - [ ] Update LogTab components to use new LogEntry type
+    - [ ] **Integration & Testing** (0.25 hours)
+      - [ ] Update `LogView.tsx` to use `useLogStreaming(dbname)` hook
+      - [ ] Remove old subscription logic (use hook state instead)
+      - [ ] Test real-time log streaming when database is selected
+      - [ ] Test filtering by database name
+      - [ ] Test no logs from other databases appear
+      - [ ] Test logs clear when switching databases
+      - [ ] ESLint passed (no new warnings)
+      - [ ] Build passed (no errors)
+
+- [ ] **TASK-336**: Integration & Testing (F-018)
+  - **Priority**: P0 (Blocker)
+  - **Dependencies**: TASK-332, TASK-333, TASK-334, TASK-335
+  - **Boundary**: Full extension, manual testing
+  - **Maps to**: F-018: DevTools Real-time Communication
+  - **Feature**: [F-018: DevTools Real-time Communication](agent-docs/01-discovery/features/F-018-devtools-realtime-communication.md)
+  - **Micro-Spec**: [pending](agent-docs/08-task/active/TASK-336.md)
+  - **Estimated**: 0.5 hours
+  - **DoD**:
+    - [ ] **End-to-End Testing** (0.25 hours)
+      - [ ] Open page with database, verify database list auto-refreshes
+      - [ ] Close database, verify database list updates
+      - [ ] Execute query in database, verify log appears in DevTools panel
+      - [ ] Open multiple databases, verify logs filtered correctly
+      - [ ] Switch tabs, verify no cross-tab message leakage
+    - [ ] **Performance Testing** (0.25 hours)
+      - [ ] Measure message forwarding latency (< 10ms target)
+      - [ ] Test with high log frequency (100+ entries/second)
+      - [ ] Verify no memory leaks from subscriptions
+      - [ ] ESLint passed (no new warnings)
+      - [ ] Build passed (no errors)
+      - [ ] Update documentation:
+        - [ ] Feature spec marked complete (F-018)
+        - [ ] Status board marked complete (F-018)

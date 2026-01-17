@@ -32,14 +32,15 @@ interface StreamEvent {
 
 ### Channel: `LOG_EVENT`
 
-- **Description**: Stream log entries from content script to DevTools panel
-- **Direction**: Content Script → Background → DevTools Panel
+- **Description**: Stream log entries from content script to DevTools panel (F-018 UPDATED)
+- **Direction**: Content Script (MAIN) → Relay (ISOLATED) → Background → DevTools Panel
 - **Batching**: Sent every 100ms or when buffer reaches 50 entries
+- **Enrichment**: Log entries include database name for filtering (F-018)
 
 ### Channel: `DATABASE_CHANGED`
 
-- **Description**: Notify when databases are opened/closed
-- **Direction**: Content Script → Background (for icon state)
+- **Description**: Notify when databases are opened/closed (F-018 UPDATED)
+- **Direction**: Content Script → Background (for icon state) → DevTools Panel (for list update)
 - **Trigger**: `window.__web_sqlite.onDatabaseChange` callback
 
 ### Channel: `CONNECTION_STATE`
@@ -50,16 +51,16 @@ interface StreamEvent {
 
 ## 3) Event Definitions
 
-### Event: `LOG_ENTRY`
+### Event: `LOG_ENTRY` (F-018 UPDATED)
 
 - **Trigger**: Log callback from `db.onLog()` fires
 - **Payload (`data`)**:
   ```typescript
   {
+    database: string;  // Database name (F-018 enrichment)
     level: "info" | "debug" | "error",
-    data: unknown,
-    timestamp: number,
-    dbname: string
+    message: unknown;  // Renamed from 'data' for clarity (F-018)
+    timestamp: number
   }
   ```
 - **Batch Format** (as sent over `LOG_EVENT` channel):
@@ -69,10 +70,10 @@ interface StreamEvent {
     source: "content-script",
     timestamp: number,
     data: {
-      dbname: string,
+      database: string;  // Database name (F-018)
       logs: Array<{
         level: "info" | "debug" | "error",
-        data: unknown,
+        message: unknown;  // Renamed from 'data' (F-018)
         timestamp: number
       }>
     }

@@ -2,7 +2,6 @@ import { useParams } from "react-router-dom";
 import { decodeDatabaseName } from "@/devtools/utils/databaseNames";
 import { databaseService } from "@/devtools/services/databaseService";
 import { useInspectedWindowRequest } from "@/devtools/hooks/useInspectedWindowRequest";
-import { FaInfoCircle } from "react-icons/fa";
 
 /**
  * AboutTab component
@@ -46,16 +45,6 @@ export const AboutTab = () => {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="p-4 border-b border-gray-200 bg-gray-50">
-        <div className="flex items-center gap-2">
-          <FaInfoCircle className="text-blue-600" size={20} />
-          <h3 className="text-lg font-semibold text-gray-800">
-            Database Information
-          </h3>
-        </div>
-      </div>
-
       {/* Content */}
       <div className="flex-1 p-6 overflow-auto">
         <div className="max-w-2xl">
