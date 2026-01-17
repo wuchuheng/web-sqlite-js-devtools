@@ -6,6 +6,7 @@ export const DATABASE_LIST_MESSAGE = "database-list";
 export const LOG_ENTRY_MESSAGE = "log-entry";
 export const LOG_ENTRY_SOURCE = "web-sqlite-devtools";
 export const GET_TAB_DATABASE_STATUS = "get-tab-database-status";
+export const DATABASE_STATUS_CHANGED = "database-status-changed";
 
 /**
  * Log level types from web-sqlite-js
@@ -57,14 +58,14 @@ export interface DatabaseListMessage {
  *
  * @remarks
  * Used by popup component on mount to determine whether to show active or inactive icon.
- * Response includes {@link TabDatabaseStatusResponse}.
+ * Response is a simple boolean: true if databases exist, false otherwise.
  *
  * @example
  * ```typescript
  * chrome.runtime.sendMessage(
  *   { type: GET_TAB_DATABASE_STATUS },
- *   (response: TabDatabaseStatusResponse) => {
- *     console.log(response.hasDatabase);
+ *   (response: boolean) => {
+ *     console.log("Has database:", response);
  *   }
  * );
  * ```
@@ -74,24 +75,23 @@ export interface GetTabDatabaseStatusMessage {
 }
 
 /**
- * Response from background worker with current tab's database status.
+ * Message sent from background to popup when database status changes.
  *
  * @remarks
- * Indicates whether the current tab has any opened databases.
- * The `databaseCount` field is optional and provided for future use.
+ * Broadcasted whenever a database is opened or closed in the current tab.
+ * Popup listens for this to update UI in real-time.
  *
  * @example
  * ```typescript
- * // Active state (databases exist)
- * { hasDatabase: true, databaseCount: 3 }
- *
- * // Inactive state (no databases)
- * { hasDatabase: false }
+ * chrome.runtime.onMessage.addListener((message) => {
+ *   if (message?.type === DATABASE_STATUS_CHANGED) {
+ *     console.log("Status changed:", message.hasDatabase);
+ *   }
+ * });
  * ```
  */
-export interface TabDatabaseStatusResponse {
-  /** True if current tab has databases opened */
+export interface DatabaseStatusChangedMessage {
+  type: typeof DATABASE_STATUS_CHANGED;
+  /** True if databases now exist, false if no databases */
   hasDatabase: boolean;
-  /** Number of databases (optional, for future use) */
-  databaseCount?: number;
 }

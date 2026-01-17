@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import "./Popup.css";
+import { DATABASE_STATUS_CHANGED } from "@/shared/messages";
 
 const ACTIVE_ICON = "img/logo-48.png";
 const INACTIVE_ICON = "img/logo-48-inactive.png";
@@ -10,6 +11,7 @@ const INACTIVE_ICON = "img/logo-48-inactive.png";
  * @remarks
  * Shows the app logo (active or inactive) based on current tab's database state.
  * Hovering over the logo reveals a status text tooltip.
+ * Receives real-time updates from background when database status changes.
  *
  * @example
  * ```tsx
@@ -18,35 +20,48 @@ const INACTIVE_ICON = "img/logo-48-inactive.png";
  * ```
  */
 export const Popup = () => {
-  // 1. Track database state for current tab
+  // 1. Track database state for current tab (boolean)
   // 2. Track hover state for status text visibility
   const [hasDatabase, setHasDatabase] = useState<boolean | null>(null);
   const [showStatus, setShowStatus] = useState(false);
 
-  // 1. Query background for current tab's database status on mount
-  // 2. Update hasDatabase state with response
   useEffect(() => {
+    // 1. Query initial status on mount
     chrome.runtime.sendMessage(
       { type: "GET_TAB_DATABASE_STATUS" },
-      (response) => {
-        // Check for runtime errors (e.g., popup closed before response)
+      (response: boolean) => {
         if (chrome.runtime.lastError) {
-          // Silently handle - popup may have closed
           return;
         }
-        if (response) {
-          setHasDatabase(response.hasDatabase);
-        }
+        setHasDatabase(response);
       },
     );
+
+    // 2. Listen for proactive updates from background
+    const messageListener = (message: unknown) => {
+      if (
+        typeof message === "object"
+        && message !== null
+        && "type" in message
+        && message.type === DATABASE_STATUS_CHANGED
+        && "hasDatabase" in message
+      ) {
+        setHasDatabase(Boolean(message.hasDatabase));
+      }
+    };
+
+    chrome.runtime.onMessage.addListener(messageListener);
+
+    // Cleanup listener on unmount
+    return () => {
+      chrome.runtime.onMessage.removeListener(messageListener);
+    };
   }, []);
 
   const handleMouseEnter = () => setShowStatus(true);
   const handleMouseLeave = () => setShowStatus(false);
 
-  // 1. Show loading spinner while querying
-  // 2. Show active/inactive icon based on state
-  // 3. Show status text on hover
+  // Show loading spinner while querying
   if (hasDatabase === null) {
     return (
       <main className="popup-container">

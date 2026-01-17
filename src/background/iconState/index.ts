@@ -8,6 +8,7 @@
  */
 
 import type { FrameDatabases } from "@/shared/messages";
+import { DATABASE_STATUS_CHANGED } from "@/shared/messages";
 
 /**
  * Map of tab ID to array of frame database entries
@@ -168,7 +169,10 @@ export const handleDatabaseListMessage = (
   // Update icon if this is the active tab
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     if (tabs[0]?.id === tabId) {
+      const hasDatabase = tabHasDatabases(tabId);
       updateIconForTab(tabId);
+      // Broadcast status change to popup for real-time updates
+      broadcastStatusChange(hasDatabase);
     }
   });
 };
@@ -210,41 +214,44 @@ export const initializeIconState = (): void => {
  *
  * @example
  * ```typescript
- * const status = await getCurrentTabDatabaseStatus();
- * if (status.hasDatabase) {
- *   console.log(`Found ${status.databaseCount} databases`);
- * }
+ * const hasDatabase = await getCurrentTabDatabaseStatus();
+ * console.log("Has database:", hasDatabase);
  * ```
  *
- * @returns Promise resolving to status object
+ * @returns Promise resolving to boolean (true if databases exist)
  */
-export const getCurrentTabDatabaseStatus = async (): Promise<{
-  hasDatabase: boolean;
-  databaseCount?: number;
-}> => {
+export const getCurrentTabDatabaseStatus = async (): Promise<boolean> => {
   // 1. Query current active tab ID
   // 2. Look up tab in databaseMap
-  // 3. Return status with database count
+  // 3. Return boolean indicating if databases exist
   return new Promise((resolve) => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       const activeTab = tabs[0];
 
       // Handle case when activeTab is undefined
       if (!activeTab?.id) {
-        resolve({ hasDatabase: false });
+        resolve(false);
         return;
       }
 
-      const frames = databaseMap.get(activeTab.id) || [];
-      const databaseCount = frames.reduce(
-        (sum, frame) => sum + frame.databases.length,
-        0,
-      );
-
-      resolve({
-        hasDatabase: databaseCount > 0,
-        databaseCount,
-      });
+      resolve(tabHasDatabases(activeTab.id));
     });
   });
+};
+
+/**
+ * Broadcast database status change to popup
+ *
+ * @remarks
+ * Sends a message to the popup when the database status changes for the current tab.
+ * This allows the popup to update its UI in real-time without polling.
+ *
+ * @param hasDatabase - Current database status
+ */
+const broadcastStatusChange = (hasDatabase: boolean): void => {
+  chrome.runtime.sendMessage({
+    type: DATABASE_STATUS_CHANGED,
+    hasDatabase,
+  });
+  console.log(`[Icon State] Broadcast status change: ${hasDatabase}`);
 };
