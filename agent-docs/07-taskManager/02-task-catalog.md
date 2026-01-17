@@ -1819,23 +1819,23 @@ NOTES
     - [x] TypeScript strict mode compliance
     - [x] ESLint passed (no new warnings)
 
-- [ ] **TASK-339**: Background Message Handler (F-019)
+- [x] **TASK-339**: Background Message Handler (F-019)
   - **Priority**: P1 (High)
   - **Dependencies**: TASK-337, TASK-338
   - **Boundary**: `src/background/index.ts`
   - **Maps to**: F-019, FR-002
   - **Feature**: [F-019: Popup DevTools Status Indicator](agent-docs/01-discovery/features/F-019-popup-devtools-status.md)
-  - **Micro-Spec**: [pending](agent-docs/08-task/active/TASK-339.md)
+  - **Micro-Spec**: [complete](agent-docs/08-task/active/TASK-339.md)
   - **Estimated**: 0.2 hours
   - **DoD**:
-    - [ ] Update `chrome.runtime.onMessage` listener in `src/background/index.ts`
-    - [ ] Add handler for `message?.type === GET_TAB_DATABASE_STATUS`
-    - [ ] Call `getCurrentTabDatabaseStatus()` function
-    - [ ] Send response via `sendResponse(response)`
-    - [ ] Return `true` for async response
-    - [ ] Preserve existing message handlers (ICON_STATE, DATABASE_LIST, LOG_ENTRY)
-    - [ ] TypeScript strict mode compliance
-    - [ ] ESLint passed (no new warnings)
+    - [x] Update `chrome.runtime.onMessage` listener in `src/background/index.ts`
+    - [x] Add handler for `message?.type === GET_TAB_DATABASE_STATUS`
+    - [x] Call `getCurrentTabDatabaseStatus()` function
+    - [x] Send response via `sendResponse(response)`
+    - [x] Return `true` for async response
+    - [x] Preserve existing message handlers (ICON_STATE, DATABASE_LIST, LOG_ENTRY)
+    - [x] TypeScript strict mode compliance
+    - [x] ESLint passed (no new warnings)
 
 - [ ] **TASK-340**: Popup Component Rewrite (F-019)
   - **Priority**: P1 (High)

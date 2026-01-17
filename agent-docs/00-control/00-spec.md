@@ -38,10 +38,10 @@ NOTES
 
 ## 3) Current stage
 
-- **Current stage (1-8)**: Stage 8 - Worker (TASK-338)
+- **Current stage (1-8)**: Stage 8 - Worker (TASK-339)
 - **Active release**: v1.4.0 (Popup Status Indicator) - Target: 2026-01-18
-- **Status summary**: TASK-338 Complete (Background Status Query Function). TASK-337 Complete (Message Type Definition). F-019 Task Catalog Complete. F-019 Design Complete. F-019 Discovery Complete. F-018 Task Catalog Complete (DevTools Real-time Communication). F-017 Complete (TASK-331). F-015 Complete (TASK-326/327/328/329). F-016 Complete (Logo Generator: TASK-330). F-014 Complete (TASK-320 through TASK-325). F-013 Complete, F-012 Complete, F-011 Complete, F-010 Complete, F-009 Complete, F-008 Complete.
-- **Last updated (YYYY-MM-DD)**: 2026-01-18 (TASK-338: Background Status Query Function - Complete)
+- **Status summary**: TASK-339 Complete (Background Message Handler). TASK-338 Complete (Background Status Query Function). TASK-337 Complete (Message Type Definition). F-019 Task Catalog Complete. F-019 Design Complete. F-019 Discovery Complete. F-018 Task Catalog Complete (DevTools Real-time Communication). F-017 Complete (TASK-331). F-015 Complete (TASK-326/327/328/329). F-016 Complete (Logo Generator: TASK-330). F-014 Complete (TASK-320 through TASK-325). F-013 Complete, F-012 Complete, F-011 Complete, F-010 Complete, F-009 Complete, F-008 Complete.
+- **Last updated (YYYY-MM-DD)**: 2026-01-18 (TASK-339: Background Message Handler - Complete)
 
 ## 4) Technology stack (chosen in Stage 2)
 

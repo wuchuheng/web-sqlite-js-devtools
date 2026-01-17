@@ -14,12 +14,14 @@ import {
   updateIconForTab,
   handleDatabaseListMessage,
   cleanupTab,
+  getCurrentTabDatabaseStatus,
 } from "./iconState";
 import { initRouter } from "@/messaging/core";
 import {
   ICON_STATE_MESSAGE,
   DATABASE_LIST_MESSAGE,
   LOG_ENTRY_MESSAGE,
+  GET_TAB_DATABASE_STATUS,
 } from "@/shared/messages";
 
 console.log("[Background] Service worker starting...");
@@ -161,9 +163,11 @@ initializeBackground();
  * - ICON_STATE_MESSAGE: Backward compatibility (deprecated)
  * - DATABASE_LIST_MESSAGE: Per-tab, per-frame tracking + forward to DevTools (F-018)
  * - LOG_ENTRY_MESSAGE: Forward to DevTools panel (F-018)
+ * - GET_TAB_DATABASE_STATUS: Popup status query (F-019)
  * - "request": Wake up offscreen document
  */
-chrome.runtime.onMessage.addListener((message, sender) => {
+// eslint-disable-next-line consistent-return -- Chrome extension async message handling requires return true only for async handlers
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   // DEBUG: Log all messages
   console.log(
     "[Background DEBUG] Received message:",
@@ -200,6 +204,15 @@ chrome.runtime.onMessage.addListener((message, sender) => {
   if (message?.type === LOG_ENTRY_MESSAGE) {
     console.log("[Background DEBUG] Handling LOG_ENTRY_MESSAGE");
     forwardToDevToolsPanel(message, sender);
+  }
+
+  // F-019: Popup status query
+  if (message?.type === GET_TAB_DATABASE_STATUS) {
+    console.log("[Background DEBUG] Handling GET_TAB_DATABASE_STATUS");
+    getCurrentTabDatabaseStatus().then((status) => {
+      sendResponse(status);
+    });
+    return true; // Async response
   }
 
   // Wake up offscreen document
