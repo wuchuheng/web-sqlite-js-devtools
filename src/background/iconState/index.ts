@@ -2,9 +2,26 @@
  * Background Icon State Manager
  *
  * @remarks
- * Manages extension icon state based on web-sqlite-js availability.
+ * Manages extension icon state based on web-sqlite-js availability per tab and frame.
  * Updates icon to active (colored) or inactive (grayscale) based on database state.
+ * Tracks each tab's database list independently (including iframes) for correct icon when switching tabs.
  */
+
+import type { FrameDatabases } from "@/shared/messages";
+
+/**
+ * Map of tab ID to array of frame database entries
+ * Key: tabId (number)
+ * Value: Array of {databases: string[], frameId?: number}
+ * @remarks
+ * Enables per-tab, per-frame icon state tracking.
+ * - Top-level frame: {databases: string[], frameId: undefined}
+ * - Iframe: {databases: string[], frameId: number}
+ *
+ * When user switches tabs, we look up the tab in this map and check if ANY frame
+ * has databases to determine the correct icon state.
+ */
+const databaseMap = new Map<number, FrameDatabases[]>();
 
 /**
  * 1. Check if hasDatabase is true/false
@@ -49,8 +66,116 @@ export const setIconState = (hasDatabase: boolean): void => {
    * 2. Include current state (active/inactive)
    */
   console.log(
-    `[Background Icon State] Icon set to ${hasDatabase ? "active" : "inactive"}`,
+    `[Icon State] Icon set to ${hasDatabase ? "active" : "inactive"}`,
   );
+};
+
+/**
+ * Check if tab has any databases across all frames
+ *
+ * @remarks
+ * Iterates through all frame entries for a tab to determine if ANY frame
+ * has databases. Returns true if at least one frame has databases.
+ *
+ * @param tabId - Tab ID to check
+ * @returns true if tab has any databases, false otherwise
+ */
+const tabHasDatabases = (tabId: number): boolean => {
+  const frames = databaseMap.get(tabId);
+  if (!frames || frames.length === 0) {
+    return false;
+  }
+
+  // Check if ANY frame has databases
+  return frames.some((frame) => frame.databases.length > 0);
+};
+
+/**
+ * Update icon state based on tab's database list
+ *
+ * @remarks
+ * Looks up the tab in the database map and updates icon based on
+ * whether that tab has any databases across all frames.
+ *
+ * @param tabId - Tab ID to update icon for
+ */
+export const updateIconForTab = (tabId: number): void => {
+  const hasDatabase = tabHasDatabases(tabId);
+  setIconState(hasDatabase);
+
+  const frames = databaseMap.get(tabId);
+  const totalDatabases =
+    frames?.reduce((sum, frame) => sum + frame.databases.length, 0) ?? 0;
+  console.log(
+    `[Icon State] Tab ${tabId}: ${hasDatabase ? "active" : "inactive"} (${totalDatabases} databases in ${frames?.length || 0} frame(s))`,
+  );
+};
+
+/**
+ * Handle database list message from content script
+ *
+ * @remarks
+ * Updates the database map for the sender tab with the provided frame data.
+ * - If frameId is provided (iframe): finds and updates existing frame entry, or adds new one
+ * - If frameId is undefined (top-level): finds and updates top-level entry, or adds new one
+ * If the sender tab is currently active, immediately updates the icon.
+ *
+ * @param tabId - Tab ID that sent the message
+ * @param databases - Array of database names (empty if none)
+ * @param frameId - Frame ID (undefined for top-level, number for iframe)
+ */
+export const handleDatabaseListMessage = (
+  tabId: number,
+  databases: string[],
+  frameId?: number,
+): void => {
+  let frames = databaseMap.get(tabId);
+
+  if (!frames) {
+    frames = [];
+    databaseMap.set(tabId, frames);
+  }
+
+  // Find existing frame entry or create new one
+  const frameIndex = frames.findIndex((f) => f.frameId === frameId);
+  const frameEntry: FrameDatabases = { databases, frameId };
+
+  if (frameIndex >= 0) {
+    // Update existing frame entry
+    frames[frameIndex] = frameEntry;
+  } else {
+    // Add new frame entry
+    frames.push(frameEntry);
+  }
+
+  const frameInfo = frameId === undefined ? "top-level" : `iframe ${frameId}`;
+  console.log(
+    `[Icon State] Updated tab ${tabId} (${frameInfo}): ${databases.length} databases`,
+    databases,
+  );
+
+  // Update icon if this is the active tab
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    if (tabs[0]?.id === tabId) {
+      updateIconForTab(tabId);
+    }
+  });
+};
+
+/**
+ * Clean up when tab is closed
+ *
+ * @remarks
+ * Removes the tab from the database map to free memory.
+ * Icon will be updated when user switches to another tab.
+ *
+ * @param tabId - Tab ID that was closed
+ */
+export const cleanupTab = (tabId: number): void => {
+  const deleted = databaseMap.delete(tabId);
+  if (deleted) {
+    console.log(`[Icon State] Cleaned up tab ${tabId}`);
+  }
 };
 
 /**

@@ -4,11 +4,18 @@
  * @remarks
  * Main entry point for Chrome extension background service worker.
  * Initializes offscreen document and icon state handling.
+ * Tracks per-tab, per-frame database state for correct icon display.
  */
 
-import { initializeIconState, setIconState } from "./iconState";
+import {
+  initializeIconState,
+  setIconState,
+  updateIconForTab,
+  handleDatabaseListMessage,
+  cleanupTab,
+} from "./iconState";
 import { initRouter } from "@/messaging/core";
-import { ICON_STATE_MESSAGE } from "@/shared/messages";
+import { ICON_STATE_MESSAGE, DATABASE_LIST_MESSAGE } from "@/shared/messages";
 
 console.log("[Background] Service worker starting...");
 initRouter();
@@ -94,19 +101,63 @@ const initializeBackground = () => {
  */
 initializeBackground();
 
+// ============================================================================
+// MESSAGE HANDLING
+// ============================================================================
+
 /**
- * 1. Listen for any request and ensure offscreen is ready
- * 2. Safety measure to ensure offscreen document is awake
- * 3. Wakes offscreen when messages come through
+ * Listen for messages from content scripts
+ * @remarks
+ * - ICON_STATE_MESSAGE: Backward compatibility (deprecated)
+ * - DATABASE_LIST_MESSAGE: New per-tab, per-frame tracking
+ * - "request": Wake up offscreen document
  */
-chrome.runtime.onMessage.addListener((message) => {
+chrome.runtime.onMessage.addListener((message, sender) => {
+  // Backward compatibility: old icon state message
   if (message?.type === ICON_STATE_MESSAGE) {
     setIconState(Boolean(message.hasDatabase));
   }
 
+  // New per-tab, per-frame database tracking
+  if (message?.type === DATABASE_LIST_MESSAGE) {
+    if (sender.tab?.id !== undefined) {
+      // sender.frameId contains the frame ID (0 for top-level, >0 for iframes)
+      handleDatabaseListMessage(
+        sender.tab.id,
+        message.databases,
+        sender.frameId && sender.frameId > 0 ? sender.frameId : undefined,
+      );
+    }
+  }
+
+  // Wake up offscreen document
   if (message?.type === "request") {
     setupOffscreen();
   }
+});
+
+// ============================================================================
+// TAB EVENT HANDLERS
+// ============================================================================
+
+/**
+ * Listen for tab activation
+ * @remarks
+ * When user switches tabs, update icon based on that tab's database state.
+ * Icon shows active if ANY frame (top-level or iframe) has databases.
+ */
+chrome.tabs.onActivated.addListener(({ tabId }) => {
+  console.log(`[Background] Tab switched to ${tabId}`);
+  updateIconForTab(tabId);
+});
+
+/**
+ * Listen for tab removal
+ * @remarks
+ * When tab is closed, clean up the database map to free memory.
+ */
+chrome.tabs.onRemoved.addListener((tabId) => {
+  cleanupTab(tabId);
 });
 
 export {};

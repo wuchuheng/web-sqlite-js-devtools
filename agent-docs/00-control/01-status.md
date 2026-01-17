@@ -582,3 +582,22 @@ NOTES
   - **Documentation**: Created SVG filter research docs (SVG_FILTER_RESEARCH.md, SVG_COLOR_CONVERSION_RULES.md), updated feature spec as complete, marked TASK-331 complete in task catalog
   - **Feature F-016 Complete**: Developer tooling for logo generation ready for use
   - **Next Task**: Resume F-015 (OPFS Tree Enhancements) - TASK-326/327/328/329
+- **C51**: 2026-01-17 - F-017: Real-time Database Status Updates - Discovery Complete (S1)
+  - **User Request**: Enable real-time database status updates in DevTools panel when databases are opened/closed in the inspected page
+  - **Analysis**: Content script already uses `window.__web_sqlite.onDatabaseChange()` but only for icon state; need to extend to send detailed status to DevTools panel
+  - **Proposed Solution**: Runtime message + context refresh approach
+    - Content script sends `DATABASE_STATUS_MESSAGE` with `{ action, dbName, databases }` on each database change
+    - DevTools panel listens for message and triggers `DatabaseRefreshContext` refresh
+    - Existing components (Sidebar, OpenedDBList) auto-update via `refreshVersion` dependency
+  - **Implementation Scope** (estimated 1 hour):
+    - Add `DATABASE_STATUS_MESSAGE` constant to `src/shared/messages.ts`
+    - Modify `src/contentScript/App.tsx` to send detailed status on `onDatabaseChange`
+    - Add `chrome.runtime.onMessage` listener in `src/devtools/DevTools.tsx` to trigger refresh
+  - **Benefits**:
+    - Real-time database list updates without manual refresh
+    - Minimal code changes (3 files, ~20 lines)
+    - Reuses existing infrastructure (DatabaseRefreshContext, onDatabaseChange)
+    - Backward compatible (manual refresh still works)
+  - **Risk Level**: LOW (builds on existing patterns, graceful degradation if API unavailable)
+  - **Documentation**: Created feature spec at `agent-docs/01-discovery/features/F-017-realtime-database-status.md` with user stories, acceptance criteria, data flow, and implementation details
+  - **Next Stages**: Feasibility Analysis (S2) → Architecture (S3) → Design (S5) → Task Management (S7) → Implementation (S8)

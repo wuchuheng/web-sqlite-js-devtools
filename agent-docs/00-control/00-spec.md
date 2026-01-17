@@ -38,10 +38,10 @@ NOTES
 
 ## 3) Current stage
 
-- **Current stage (1-8)**: Stage 8 - Worker (TASK-326 through TASK-331)
+- **Current stage (1-8)**: Stage 1 - Discovery (F-017)
 - **Active release**: v1.3.1 (Tree Enhancements) - Target: 2026-01-22
-- **Status summary**: F-015 In Progress (TASK-326/327/328/329 in progress). F-016 Complete (Logo Generator: TASK-330/331 implemented). F-014 Complete (TASK-320 through TASK-325). F-013 Complete, F-012 Complete, F-011 Complete, F-010 Complete, F-009 Complete, F-008 Complete.
-- **Last updated (YYYY-MM-DD)**: 2026-01-17 (F-016: SVG to PNG Logo Generator implemented)
+- **Status summary**: F-017 Discovery (Real-time Database Status). F-015 Complete (TASK-326/327/328/329). F-016 Complete (Logo Generator: TASK-330/331). F-014 Complete (TASK-320 through TASK-325). F-013 Complete, F-012 Complete, F-011 Complete, F-010 Complete, F-009 Complete, F-008 Complete.
+- **Last updated (YYYY-MM-DD)**: 2026-01-17 (F-017: Real-time Database Status Updates - Discovery)
 
 ## 4) Technology stack (chosen in Stage 2)
 
@@ -80,7 +80,8 @@ NOTES
 - `agent-docs/01-discovery/features/F-013-opfs-two-panel-preview.md` (COMPLETED - Feature F-013)
 - `agent-docs/01-discovery/features/F-014-opfs-ui-redesign.md` (NEW - Feature F-014)
 - `agent-docs/01-discovery/features/F-015-opfs-tree-enhancements.md` (NEW - Feature F-015)
-- `agent-docs/01-discovery/features/F-016-svg-to-png-logo-generator.md` (NEW - Feature F-016)
+- `agent-docs/01-discovery/features/F-016-svg-to-png-logo-generator.md` (COMPLETED - Feature F-016)
+- `agent-docs/01-discovery/features/F-017-realtime-database-status.md` (NEW - Feature F-017)
 - `agent-docs/02-feasibility/01-options.md`
 - `agent-docs/02-feasibility/02-risk-assessment.md`
 - `agent-docs/02-feasibility/03-spike-plan.md`
