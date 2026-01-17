@@ -1,53 +1,60 @@
-@media (prefers-color-scheme: light) {
-  a:hover {
-    color: #61dafb;
-  }
-}
-
-main {
-  text-align: center;
-  padding: 1em;
-  margin: 0 auto;
-}
-
-h3 {
-  color: #61dafb;
-  text-transform: uppercase;
-  font-size: 1.5rem;
-  font-weight: 200;
-  line-height: 1.2rem;
-  margin: 2rem auto;
-}
-
-.calc {
+/* Popup container - 200×200px centered layout */
+.popup-container {
+  width: 200px;
+  height: 200px;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
-  margin: 2rem;
+  justify-content: center;
+  gap: 16px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
 
-  & > button {
-    font-size: 1rem;
-    padding: 0.5rem 1rem;
-    border: 1px solid #61dafb;
-    border-radius: 0.25rem;
-    background-color: transparent;
-    color: #61dafb;
-    cursor: pointer;
-    outline: none;
+/* Logo styles - 64×64px with hover animation */
+.popup-logo {
+  width: 64px;
+  height: 64px;
+  cursor: pointer;
+  transition: transform 150ms ease-in-out;
+}
 
-    width: 3rem;
-    margin: 0 a;
+.popup-logo:hover {
+  transform: scale(1.1);
+}
+
+/* Status text - 13px with fade-in animation */
+.popup-status {
+  font-size: 13px;
+  color: #4b5563; /* gray-600 */
+  text-align: center;
+  padding: 4px 8px;
+  border-radius: 4px;
+  animation: fadeIn 150ms ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
   }
-
-  & > label {
-    font-size: 1.5rem;
-    margin: 0 1rem;
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-a {
-  font-size: 0.5rem;
-  margin: 0.5rem;
-  color: #cccccc;
-  text-decoration: none;
+/* Loading spinner */
+.loading-spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid #e5e7eb;
+  border-top-color: #059669;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }

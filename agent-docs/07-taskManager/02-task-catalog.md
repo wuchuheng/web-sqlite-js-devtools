@@ -1873,17 +1873,17 @@ NOTES
     - [x] TypeScript strict mode compliance
     - [x] ESLint passed (no new warnings)
 
-- [ ] **TASK-341**: Popup Styles Update (F-019)
+- [x] **TASK-341**: Popup Styles Update (F-019)
   - **Priority**: P1 (High)
   - **Dependencies**: TASK-340
   - **Boundary**: `src/popup/Popup.css`
   - **Maps to**: F-019, FR-002
   - **Feature**: [F-019: Popup DevTools Status Indicator](agent-docs/01-discovery/features/F-019-popup-devtools-status.md)
-  - **Micro-Spec**: [pending](agent-docs/08-task/active/TASK-341.md)
+  - **Micro-Spec**: [complete](agent-docs/08-task/active/TASK-341.md)
   - **Estimated**: 0.3 hours
   - **DoD**:
-    - [ ] Update `src/popup/Popup.css` with new styles
-    - [ ] Popup container:
+    - [x] Update `src/popup/Popup.css` with new styles
+    - [x] Popup container:
       ```css
       .popup-container {
         width: 200px;
@@ -1897,7 +1897,7 @@ NOTES
           -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       }
       ```
-    - [ ] Logo styles:
+    - [x] Logo styles:
       ```css
       .popup-logo {
         width: 64px;
@@ -1909,7 +1909,7 @@ NOTES
         transform: scale(1.1);
       }
       ```
-    - [ ] Status text styles:
+    - [x] Status text styles:
       ```css
       .popup-status {
         font-size: 13px;
@@ -1930,9 +1930,9 @@ NOTES
         }
       }
       ```
-    - [ ] Loading spinner styles with spin animation
-    - [ ] Ensure responsive and accessible design
-    - [ ] Test color contrast (WCAG AA compliance)
+    - [x] Loading spinner styles with spin animation
+    - [x] Ensure responsive and accessible design
+    - [x] Test color contrast (WCAG AA compliance)
 
 - [ ] **TASK-342**: Testing & Validation (F-019)
   - **Priority**: P1 (High)
